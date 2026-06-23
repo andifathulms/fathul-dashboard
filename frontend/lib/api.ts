@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+// Use 127.0.0.1 (not localhost) so the browser reliably reaches Django over
+// IPv4 — on macOS `localhost` may resolve to ::1 first and collide with other
+// services (e.g. OrbStack) listening on :8000.
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'http://127.0.0.1:8000/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
