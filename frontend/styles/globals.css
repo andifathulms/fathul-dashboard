@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0D1117;
+  --surface: #161B22;
+  --border: #21262D;
+  --accent1: #0EA5E9;
+  --accent2: #D97706;
+  --highlight: #10B981;
+  --text: #F0F6FC;
+  --muted: #8B949E;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--border);
+}
+
+/* Thin custom scrollbars to match the dark surface */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2d333b;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b424c;
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-xl;
+  }
+  .card-pad {
+    @apply p-4;
+  }
+  .widget-title {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text transition-colors hover:border-accent1/50 hover:bg-border/40;
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent1 px-3 py-1.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90;
+  }
+  .input {
+    @apply w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-muted focus:border-accent1 focus:outline-none focus:ring-1 focus:ring-accent1;
+  }
+  .icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-border/60 hover:text-text;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium;
+  }
+}
