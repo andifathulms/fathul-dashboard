@@ -1,0 +1,33 @@
+# fathul-dashboard — local stack: Django API + Next.js, both published on the host.
+# The browser loads the frontend and calls the backend directly, so the API URL
+# baked into the frontend must match the host-published backend port.
+#
+# Host ports are configurable via .env (BACKEND_PORT / FRONTEND_PORT) so the
+# stack can sidestep ports already taken by other projects. Defaults: 8000/3000.
+services:
+  backend:
+    build: ./backend
+    container_name: fathul-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - DEBUG=True
+      - SQLITE_PATH=/data/db.sqlite3
+    volumes:
+      - backend-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:${BACKEND_PORT:-8000}/api
+    container_name: fathul-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend-data:

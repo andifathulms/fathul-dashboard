@@ -65,7 +65,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # Override with SQLITE_PATH to put the DB on a mounted volume (Docker).
+        'NAME': config('SQLITE_PATH', default=BASE_DIR / 'db.sqlite3'),
     }
 }
 
