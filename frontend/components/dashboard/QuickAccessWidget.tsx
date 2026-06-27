@@ -104,9 +104,14 @@ function CredentialsTab({ q }: { q: string }) {
   )
 }
 
+function projectRepos(p: Project) {
+  if (p.repos?.length > 0) return p.repos
+  return p.repo_url ? [{ label: 'Repo', url: p.repo_url }] : []
+}
+
 function LinksTab() {
   const { data } = useSWR<Project[]>('/projects/')
-  const withLinks = data?.filter((p) => p.repo_url || p.live_url)
+  const withLinks = data?.filter((p) => projectRepos(p).length > 0 || p.live_url)
   if (withLinks?.length === 0) return <Empty text="Belum ada link project." />
   return (
     <>
@@ -114,7 +119,9 @@ function LinksTab() {
         <div key={p.id} className="rounded-lg border border-border bg-bg px-3 py-2">
           <p className="mb-1.5 text-xs font-medium">{p.name}</p>
           <div className="flex flex-wrap gap-1.5">
-            {p.repo_url && <LinkChip href={p.repo_url} label="Repo" />}
+            {projectRepos(p).map((r, i) => (
+              <LinkChip key={i} href={r.url} label={r.label || 'Repo'} />
+            ))}
             {p.live_url && <LinkChip href={p.live_url} label="Live" />}
           </div>
         </div>

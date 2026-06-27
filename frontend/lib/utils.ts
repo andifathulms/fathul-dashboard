@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import type { ProjectCategory } from './types'
+import type { ProjectCategory, ProjectStatus } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -32,6 +32,21 @@ export const STATUS_STYLES: Record<string, string> = {
   paused: 'bg-accent2/15 text-accent2',
   done: 'bg-accent1/15 text-accent1',
   archived: 'bg-muted/20 text-muted',
+}
+
+// Friendly labels for the status/category dropdowns and badges.
+export const STATUS_LABELS: Record<ProjectStatus, string> = {
+  active: 'Active',
+  paused: 'Paused',
+  done: 'Done',
+  archived: 'Archived',
+}
+
+export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
+  oikn: 'OIKN',
+  freelance: 'Freelance',
+  personal: 'Personal',
+  side: 'Side Project',
 }
 
 export function formatDateID(date: Date | string): string {

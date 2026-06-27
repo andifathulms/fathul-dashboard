@@ -43,6 +43,14 @@ export default function ProjectDetailPage() {
   if (isLoading) return <p className="text-sm text-muted">Memuat…</p>
   if (!project) return <p className="text-sm text-muted">Project tidak ditemukan.</p>
 
+  // Prefer the repos list; fall back to the legacy single repo_url.
+  const repos =
+    project.repos?.length > 0
+      ? project.repos
+      : project.repo_url
+        ? [{ label: 'Repository', url: project.repo_url }]
+        : []
+
   return (
     <div className="space-y-5">
       <Link
@@ -74,13 +82,13 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {(project.repo_url || project.live_url) && (
+      {(repos.length > 0 || project.live_url) && (
         <div className="flex flex-wrap gap-2">
-          {project.repo_url && (
-            <a href={project.repo_url} target="_blank" rel="noreferrer" className="btn text-xs">
-              <Github size={14} /> Repository
+          {repos.map((r, i) => (
+            <a key={i} href={r.url} target="_blank" rel="noreferrer" className="btn text-xs">
+              <Github size={14} /> {r.label || 'Repository'}
             </a>
-          )}
+          ))}
           {project.live_url && (
             <a href={project.live_url} target="_blank" rel="noreferrer" className="btn text-xs">
               <ExternalLink size={14} /> Live

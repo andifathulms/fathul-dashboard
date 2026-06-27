@@ -19,8 +19,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'name', 'description', 'status', 'category', 'tech_stack',
-            'repo_url', 'live_url', 'notes', 'tasks_count', 'credentials_count',
-            'created_at', 'updated_at',
+            'repos', 'repo_url', 'live_url', 'notes', 'tasks_count',
+            'credentials_count', 'created_at', 'updated_at',
         ]
 
     def get_tasks_count(self, obj):

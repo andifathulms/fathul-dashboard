@@ -3,6 +3,11 @@
 export type ProjectStatus = 'active' | 'paused' | 'done' | 'archived'
 export type ProjectCategory = 'oikn' | 'freelance' | 'personal' | 'side'
 
+export interface Repo {
+  label: string
+  url: string
+}
+
 export interface Project {
   id: number
   name: string
@@ -10,6 +15,7 @@ export interface Project {
   status: ProjectStatus
   category: ProjectCategory
   tech_stack: string[]
+  repos: Repo[]
   repo_url: string
   live_url: string
   notes: string

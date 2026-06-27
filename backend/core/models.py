@@ -20,6 +20,9 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='personal')
     tech_stack = models.JSONField(default=list, blank=True)
+    # List of {"label": str, "url": str} — a project may have several repos
+    # (e.g. frontend + backend). repo_url is kept for backward compatibility.
+    repos = models.JSONField(default=list, blank=True)
     repo_url = models.URLField(blank=True)
     live_url = models.URLField(blank=True)
     notes = models.TextField(blank=True)
