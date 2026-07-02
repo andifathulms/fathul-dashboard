@@ -172,3 +172,23 @@ export interface IbadahLog {
   data: Record<string, Record<string, boolean>>
   updated_at: string
 }
+
+export interface UptimeCheck {
+  id: number
+  url: string
+  checked_at: string
+  is_up: boolean
+  status_code: number | null
+  response_ms: number | null
+  error: string
+  server: string
+  content_type: string
+  final_url: string
+  ssl_days_left: number | null
+}
+
+export interface UptimeData {
+  has_url: boolean
+  url: string
+  checks: UptimeCheck[]
+}

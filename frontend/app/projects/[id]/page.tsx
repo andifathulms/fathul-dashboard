@@ -8,6 +8,7 @@ import {
   KeyRound,
   Pencil,
   Plus,
+  Terminal,
   TerminalSquare,
   Trash2,
 } from 'lucide-react'
@@ -17,6 +18,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 
 import GithubActivity from '@/components/projects/GithubActivity'
+import UptimeWidget from '@/components/projects/UptimeWidget'
 import ProjectForm from '@/components/projects/ProjectForm'
 import CommandForm from '@/components/commands/CommandForm'
 import CredentialForm from '@/components/vault/CredentialForm'
@@ -27,6 +29,7 @@ import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
 import CopyButton from '@/components/ui/CopyButton'
 import RevealToggle from '@/components/ui/RevealToggle'
 import api from '@/lib/api'
+import { sshUrl } from '@/lib/ssh'
 import type { Command, Credential, EnvVar, Project, Task } from '@/lib/types'
 
 export default function ProjectDetailPage() {
@@ -141,6 +144,9 @@ export default function ProjectDetailPage() {
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {/* Web uptime/status — only when a live_url is set */}
+        <UptimeWidget projectId={pid} hasUrl={!!project.live_url} />
+
         {/* GitHub analytics — one card per linked repo, half-width in the grid */}
         <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
 
@@ -207,6 +213,16 @@ export default function ProjectDetailPage() {
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs font-medium">{c.title}</span>
                 <div className="flex items-center gap-1">
+                  {sshUrl(c.command) && (
+                    <a
+                      href={sshUrl(c.command)!}
+                      title="Buka di Terminal (SSH)"
+                      className="icon-btn h-7 w-7"
+                      aria-label="Open in Terminal"
+                    >
+                      <Terminal size={13} />
+                    </a>
+                  )}
                   <CopyButton value={c.command} />
                   <button
                     onClick={() => deleteCommand(c.id)}

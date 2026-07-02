@@ -9,6 +9,7 @@ import CommandForm, { CATEGORIES } from '@/components/commands/CommandForm'
 import WidgetCard from '@/components/ui/Card'
 import CopyButton from '@/components/ui/CopyButton'
 import api from '@/lib/api'
+import { sshUrl } from '@/lib/ssh'
 import type { Command, CommandCategory, Project } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -147,17 +148,6 @@ export default function CommandsPage() {
       />
     </div>
   )
-}
-
-// Parse an `ssh user@host [-p port]` command into an ssh:// URL that macOS
-// Terminal can open. Returns null if the command isn't a simple ssh invocation.
-function sshUrl(command: string): string | null {
-  const m = command.match(/\bssh\s+(?:-\w+\s+\S+\s+)*?([\w.-]+)@([\w.-]+)/)
-  if (!m) return null
-  const [, user, host] = m
-  const portMatch = command.match(/-p\s+(\d+)/)
-  const port = portMatch ? `:${portMatch[1]}` : ''
-  return `ssh://${user}@${host}${port}`
 }
 
 function Chip({

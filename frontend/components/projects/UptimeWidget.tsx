@@ -1,0 +1,192 @@
+'use client'
+
+import { Activity, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import useSWR from 'swr'
+
+import WidgetCard from '@/components/ui/Card'
+import api from '@/lib/api'
+import type { UptimeCheck, UptimeData } from '@/lib/types'
+import { cn } from '@/lib/utils'
+
+function timeAgo(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (s < 60) return 'baru saja'
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m} menit lalu`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} jam lalu`
+  const d = Math.floor(h / 24)
+  return `${d} hari lalu`
+}
+
+const STALE_MS = 5 * 60 * 1000
+
+interface UptimeWidgetProps {
+  projectId: number
+  hasUrl: boolean
+}
+
+export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
+  const key = hasUrl ? `/projects/${projectId}/uptime/` : null
+  const { data, isLoading, mutate } = useSWR<UptimeData>(key)
+  const [checking, setChecking] = useState(false)
+  const autoRan = useRef(false)
+
+  const runCheck = async () => {
+    setChecking(true)
+    try {
+      await api.post(`/projects/${projectId}/uptime/`)
+      await mutate()
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  // Auto-check once on load if there's no recent check.
+  useEffect(() => {
+    if (!data || autoRan.current) return
+    autoRan.current = true
+    const latest = data.checks?.[0]
+    const stale = !latest || Date.now() - new Date(latest.checked_at).getTime() > STALE_MS
+    if (data.has_url && stale) runCheck()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
+  if (!hasUrl) return null
+
+  const checks = data?.checks ?? []
+  const latest: UptimeCheck | undefined = checks[0]
+  const upCount = checks.filter((c) => c.is_up).length
+  const uptimePct = checks.length ? Math.round((upCount / checks.length) * 100) : null
+  const avgMs =
+    checks.length > 0
+      ? Math.round(checks.filter((c) => c.response_ms != null).reduce((s, c) => s + (c.response_ms ?? 0), 0) / checks.length)
+      : null
+
+  return (
+    <WidgetCard
+      title="Status Web"
+      icon={<Activity size={15} />}
+      action={
+        <div className="flex items-center gap-2.5">
+          {latest && <span className="text-[11px] text-muted">cek {timeAgo(latest.checked_at)}</span>}
+          <button
+            onClick={runCheck}
+            disabled={checking}
+            title="Cek sekarang"
+            className="icon-btn h-6 w-6"
+            aria-label="Cek sekarang"
+          >
+            <RefreshCw size={13} className={cn(checking && 'animate-spin')} />
+          </button>
+        </div>
+      }
+      bodyClassName="space-y-3"
+    >
+      {isLoading && !latest ? (
+        <p className="text-sm text-muted">Memuat…</p>
+      ) : (
+        <>
+          {/* Current status */}
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-sm font-semibold',
+                !latest
+                  ? 'bg-muted/20 text-muted'
+                  : latest.is_up
+                    ? 'bg-highlight/15 text-highlight'
+                    : 'bg-red-500/15 text-red-400'
+              )}
+            >
+              <span className={cn('h-2 w-2 rounded-full', latest?.is_up ? 'bg-highlight' : latest ? 'bg-red-500' : 'bg-muted')} />
+              {checking ? 'Mengecek…' : !latest ? 'Belum dicek' : latest.is_up ? 'Online' : 'Offline'}
+            </span>
+            {latest?.status_code != null && (
+              <span className="font-mono text-sm text-text/90">HTTP {latest.status_code}</span>
+            )}
+            {latest?.response_ms != null && (
+              <span className="font-mono text-sm text-highlight">{latest.response_ms}ms</span>
+            )}
+          </div>
+
+          {latest?.error && <p className="text-[11px] text-red-400">{latest.error}</p>}
+
+          {/* Stat row */}
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {uptimePct != null && <Stat label="Uptime" value={`${uptimePct}%`} sub={`${checks.length} cek`} />}
+            {avgMs != null && <Stat label="Rata-rata" value={`${avgMs}ms`} />}
+            {latest?.server && <Stat label="Server" value={latest.server} />}
+            {latest?.ssl_days_left != null && (
+              <Stat
+                label="SSL"
+                value={
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1',
+                      latest.ssl_days_left < 14 ? 'text-accent2' : 'text-highlight'
+                    )}
+                  >
+                    {latest.ssl_days_left < 14 ? <ShieldAlert size={13} /> : <ShieldCheck size={13} />}
+                    {latest.ssl_days_left}h
+                  </span>
+                }
+              />
+            )}
+          </div>
+
+          {/* History strip (oldest → newest) */}
+          {checks.length > 1 && <History checks={checks} />}
+
+          {data?.url && (
+            <a
+              href={data.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] text-accent1 hover:underline"
+            >
+              <ExternalLink size={11} /> {data.url}
+            </a>
+          )}
+        </>
+      )}
+    </WidgetCard>
+  )
+}
+
+function Stat({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-0.5 max-w-[160px] truncate text-[13px] font-medium">{value}</p>
+      {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
+    </div>
+  )
+}
+
+function History({ checks }: { checks: UptimeCheck[] }) {
+  const items = [...checks].slice(0, 40).reverse() // oldest → newest
+  const maxMs = Math.max(...items.map((c) => c.response_ms ?? 0), 1)
+  return (
+    <div>
+      <div className="flex h-10 items-end gap-[2px]">
+        {items.map((c) => {
+          const h = c.response_ms != null ? Math.max(10, (c.response_ms / maxMs) * 100) : 30
+          return (
+            <div
+              key={c.id}
+              className={cn('flex-1 rounded-sm', c.is_up ? 'bg-highlight/70' : 'bg-red-500/70')}
+              style={{ height: `${h}%` }}
+              title={`${new Date(c.checked_at).toLocaleString('id-ID')} · ${
+                c.is_up ? 'up' : 'down'
+              }${c.status_code ? ` · HTTP ${c.status_code}` : ''}${c.response_ms != null ? ` · ${c.response_ms}ms` : ''}`}
+            />
+          )
+        })}
+      </div>
+      <p className="mt-1 text-[10px] text-muted">Riwayat {items.length} pengecekan terakhir</p>
+    </div>
+  )
+}
