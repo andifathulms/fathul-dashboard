@@ -5,6 +5,7 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    IbadahLog,
     Project,
     Server,
     Task,
@@ -19,7 +20,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'name', 'description', 'status', 'category', 'tech_stack',
-            'repos', 'repo_url', 'live_url', 'notes', 'tasks_count',
+            'repos', 'repo_url', 'live_url', 'local_path', 'notes', 'tasks_count',
             'credentials_count', 'created_at', 'updated_at',
         ]
 
@@ -89,3 +90,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyLog
         fields = ['id', 'date', 'journal', 'updated_at']
+
+
+class IbadahLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IbadahLog
+        fields = ['id', 'date', 'data', 'updated_at']

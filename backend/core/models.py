@@ -25,6 +25,8 @@ class Project(models.Model):
     repos = models.JSONField(default=list, blank=True)
     repo_url = models.URLField(blank=True)
     live_url = models.URLField(blank=True)
+    # Absolute path on this machine — used to open the project in VS Code.
+    local_path = models.CharField(max_length=500, blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -139,3 +141,21 @@ class DailyLog(models.Model):
 
     def __str__(self):
         return f'Log {self.date}'
+
+
+class IbadahLog(models.Model):
+    """One record per day tracking prayers and their rawatib sunnah.
+
+    `data` holds a per-prayer map, e.g.
+    {"Subuh": {"fardhu": true, "jamaah": false, "qabliyah": true, "badiyah": false}}
+    The exact keys are defined by the frontend; the backend just persists JSON.
+    """
+    date = models.DateField(unique=True)
+    data = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'Ibadah {self.date}'

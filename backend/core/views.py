@@ -14,6 +14,7 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    IbadahLog,
     Project,
     Server,
     Task,
@@ -23,6 +24,7 @@ from .serializers import (
     CredentialSerializer,
     DailyLogSerializer,
     EnvVarSerializer,
+    IbadahLogSerializer,
     ProjectSerializer,
     ServerSerializer,
     TaskSerializer,
@@ -48,17 +50,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def github(self, request, pk=None):
-        """Proxy GitHub analytics for the project's repo (first GitHub URL)."""
+        """Proxy GitHub analytics for every GitHub repo linked to the project."""
         from . import github as gh
 
         project = self.get_object()
-        candidates = [r.get('url') for r in (project.repos or []) if r.get('url')]
-        if project.repo_url:
-            candidates.append(project.repo_url)
-        url = next((u for u in candidates if gh.parse_repo(u)), None)
-        if not url:
-            return Response({'ok': False, 'error': 'no_github_repo'})
-        return Response(gh.fetch(url, token=settings.GITHUB_TOKEN or None))
+        entries = list(project.repos or [])
+        if project.repo_url and not entries:
+            entries = [{'label': 'Repo', 'url': project.repo_url}]
+
+        # Keep only GitHub repos, cap at 4 to bound API calls.
+        gh_repos = [e for e in entries if e.get('url') and gh.parse_repo(e['url'])][:4]
+        if not gh_repos:
+            return Response({'ok': False, 'error': 'no_github_repo', 'repos': []})
+
+        token = settings.GITHUB_TOKEN or None
+        repos = []
+        for e in gh_repos:
+            result = gh.fetch(e['url'], token=token)
+            result['label'] = e.get('label') or 'Repo'
+            repos.append(result)
+        return Response({'ok': True, 'repos': repos})
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -174,6 +185,19 @@ class DailyLogViewSet(viewsets.ModelViewSet):
                 log = DailyLog.objects.get(date=date)
             except DailyLog.DoesNotExist:
                 raise Http404('No log for that date')
+            return Response(self.get_serializer(log).data)
+        return super().list(request, *args, **kwargs)
+
+
+class IbadahLogViewSet(viewsets.ModelViewSet):
+    queryset = IbadahLog.objects.all()
+    serializer_class = IbadahLogSerializer
+
+    def list(self, request, *args, **kwargs):
+        """If ?date= is given, return (or create) the log for that date."""
+        date = request.query_params.get('date')
+        if date:
+            log, _ = IbadahLog.objects.get_or_create(date=date, defaults={'data': {}})
             return Response(self.get_serializer(log).data)
         return super().list(request, *args, **kwargs)
 

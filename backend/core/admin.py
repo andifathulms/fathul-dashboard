@@ -5,6 +5,7 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    IbadahLog,
     Project,
     Server,
     Task,
@@ -54,4 +55,9 @@ class ServerAdmin(admin.ModelAdmin):
 
 @admin.register(DailyLog)
 class DailyLogAdmin(admin.ModelAdmin):
+    list_display = ('date', 'updated_at')
+
+
+@admin.register(IbadahLog)
+class IbadahLogAdmin(admin.ModelAdmin):
     list_display = ('date', 'updated_at')

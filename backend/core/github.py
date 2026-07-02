@@ -67,19 +67,30 @@ def fetch(url, token=None):
     if status != 200 or not meta:
         return {'ok': False, 'error': 'unavailable', 'repo': full}
 
+    license_obj = meta.get('license') or {}
     info = {
         'full_name': meta.get('full_name'),
         'html_url': meta.get('html_url'),
         'description': meta.get('description'),
+        'homepage': meta.get('homepage'),
         'default_branch': meta.get('default_branch'),
+        'created_at': meta.get('created_at'),
         'pushed_at': meta.get('pushed_at'),
         'updated_at': meta.get('updated_at'),
         'stargazers_count': meta.get('stargazers_count'),
+        'watchers_count': meta.get('subscribers_count') or meta.get('watchers_count'),
         'forks_count': meta.get('forks_count'),
         'open_issues_count': meta.get('open_issues_count'),
         'language': meta.get('language'),
+        'license': license_obj.get('spdx_id') if license_obj else None,
+        'topics': meta.get('topics') or [],
+        'size': meta.get('size'),
         'private': meta.get('private'),
     }
+
+    # Language breakdown (bytes per language) → share for a stacked bar.
+    _, langs = _get(f'/repos/{owner}/{repo}/languages', token)
+    languages = langs if isinstance(langs, dict) else {}
 
     # 52 weeks of daily commit counts — the contribution-graph data.
     # This endpoint returns 202 while GitHub computes stats for the first time.
@@ -106,6 +117,7 @@ def fetch(url, token=None):
         'ok': True,
         'repo': full,
         'info': info,
+        'languages': languages,
         'commit_activity': commit_activity,
         'computing': computing,
         'recent_commits': recent,

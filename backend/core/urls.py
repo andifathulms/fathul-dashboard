@@ -11,6 +11,7 @@ router.register('envvars', views.EnvVarViewSet)
 router.register('commands', views.CommandViewSet)
 router.register('servers', views.ServerViewSet)
 router.register('logs', views.DailyLogViewSet)
+router.register('ibadah', views.IbadahLogViewSet)
 
 urlpatterns = [
     path('ayat/today/', views.AyatTodayView.as_view(), name='ayat-today'),
