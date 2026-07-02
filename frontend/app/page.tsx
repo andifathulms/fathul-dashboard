@@ -1,6 +1,7 @@
 import AyatWidget from '@/components/dashboard/AyatWidget'
 import DailyLogWidget from '@/components/dashboard/DailyLogWidget'
 import DhikrCounter from '@/components/dashboard/DhikrCounter'
+import IbadahWidget from '@/components/dashboard/IbadahWidget'
 import PrayerBar from '@/components/dashboard/PrayerBar'
 import ProjectsWidget from '@/components/dashboard/ProjectsWidget'
 import QuickAccessWidget from '@/components/dashboard/QuickAccessWidget'
@@ -32,8 +33,9 @@ export default function DashboardPage() {
 
       {/* Bottom: Islamic corner */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="space-y-5 lg:col-span-2">
           <AyatWidget />
+          <IbadahWidget />
         </div>
         <DhikrCounter />
       </div>

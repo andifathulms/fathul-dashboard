@@ -9,30 +9,18 @@ import { useLocation } from '@/lib/location'
 import { fetchPrayerTimes, type PrayerTimings } from '@/lib/prayer'
 import api from '@/lib/api'
 import type { IbadahLog } from '@/lib/types'
-import { cn, formatDateID, todayISO, toISODate } from '@/lib/utils'
-
-// Fardhu prayers and which rawatib (sunnah muakkad) apply to each.
-// Ashar's qabliyah is ghairu muakkad but commonly tracked, so it's included.
-const PRAYERS: { key: string; qabliyah: boolean; badiyah: boolean }[] = [
-  { key: 'Subuh', qabliyah: true, badiyah: false },
-  { key: 'Dzuhur', qabliyah: true, badiyah: true },
-  { key: 'Ashar', qabliyah: true, badiyah: false },
-  { key: 'Maghrib', qabliyah: false, badiyah: true },
-  { key: 'Isya', qabliyah: false, badiyah: true },
-]
-
-type Field = 'qabliyah' | 'fardhu' | 'ontime' | 'jamaah' | 'badiyah'
-type Matrix = Record<string, Partial<Record<Field, boolean>>>
+import {
+  PRAYERS,
+  fardhuComplete,
+  shiftDate,
+  type IbadahField as Field,
+  type IbadahMatrix as Matrix,
+} from '@/lib/ibadah'
+import { cn, formatDateID, todayISO } from '@/lib/utils'
 
 const minutes = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number)
   return h * 60 + m
-}
-
-function shiftDate(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00`)
-  d.setDate(d.getDate() + days)
-  return toISODate(d)
 }
 
 export default function IbadahPage() {
@@ -258,10 +246,6 @@ export default function IbadahPage() {
 // ---- Weekly summary + streaks ----
 
 const DAY_ABBR = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
-
-function fardhuComplete(m?: Matrix) {
-  return PRAYERS.every((p) => m?.[p.key]?.fardhu)
-}
 
 function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; today: string }) {
   // Last 7 days (oldest → newest).
