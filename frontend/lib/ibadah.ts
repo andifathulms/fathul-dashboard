@@ -18,8 +18,11 @@ export const PRAYERS: PrayerDef[] = [
   { key: 'Isya', qabliyah: false, badiyah: true },
 ]
 
-export type IbadahField = 'qabliyah' | 'fardhu' | 'ontime' | 'jamaah' | 'badiyah'
+export type IbadahField = 'qabliyah' | 'fardhu' | 'ontime' | 'jamaah' | 'badiyah' | 'done'
 export type IbadahMatrix = Record<string, Partial<Record<IbadahField, boolean>>>
+
+// Standalone sunnah prayers tracked with a single check (stored as {done}).
+export const SUNNAH = ['Dhuha', 'Tahajjud', 'Witir'] as const
 
 export function shiftDate(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00`)

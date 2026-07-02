@@ -1,5 +1,6 @@
-// Prayer times via the Aladhan API using the Kemenag method (method=20).
-// Coords are hardcoded to Balikpapan.
+// Prayer times computed locally with the Kemenag method (Fajr 20°, Isha 18°,
+// Shafi'i Asr) — see lib/prayerCalc. Default coords: Balikpapan.
+import { computePrayerTimes } from './prayerCalc'
 
 export const BALIKPAPAN = { lat: -1.2654, lng: 116.8312 }
 
@@ -23,28 +24,28 @@ export const PRAYER_SEQUENCE: { key: keyof PrayerTimings; label: string }[] = [
   { key: 'Isha', label: 'Isya' },
 ]
 
+// Computed locally (Kemenag method) — no network. `date` is DD-MM-YYYY.
+// Kept async + same signature so callers (usePrayer, Ibadah page) don't change.
 export async function fetchPrayerTimes(
   date: string,
   lat: number = BALIKPAPAN.lat,
   lng: number = BALIKPAPAN.lng
 ): Promise<PrayerTimings> {
-  const res = await fetch(
-    `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=20`
-  )
-  const data = await res.json()
-  return data.data.timings
+  const [dd, mm, yyyy] = date.split('-').map(Number)
+  return computePrayerTimes(yyyy, mm, dd, lat, lng)
 }
 
 // Given timings and "now", return the next prayer and minutes until it.
 export function getNextPrayer(timings: PrayerTimings, now: Date) {
-  const today = now.toISOString().slice(0, 10)
   const prayersOnly = PRAYER_SEQUENCE.filter((p) => p.key !== 'Sunrise')
 
   for (const p of prayersOnly) {
     const time = timings[p.key]
     if (!time) continue
     const [h, m] = time.split(':').map(Number)
-    const target = new Date(`${today}T00:00:00`)
+    // Build the target from `now` in LOCAL time (not UTC) so the comparison is
+    // correct regardless of timezone.
+    const target = new Date(now)
     target.setHours(h, m, 0, 0)
     if (target > now) {
       const diffMs = target.getTime() - now.getTime()

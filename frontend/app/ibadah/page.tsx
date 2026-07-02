@@ -11,6 +11,7 @@ import api from '@/lib/api'
 import type { IbadahLog } from '@/lib/types'
 import {
   PRAYERS,
+  SUNNAH,
   fardhuComplete,
   shiftDate,
   type IbadahField as Field,
@@ -236,6 +237,44 @@ export default function IbadahPage() {
           Bisa dicentang kapan saja (termasuk di awal waktu). <b className="text-text/80">Tepat Waktu</b> = sholat di
           awal waktu; kosongkan jika di akhir waktu. Centang Fardhu dulu untuk mengaktifkan Tepat Waktu &amp; Berjamaah.
         </p>
+
+        {/* Sunnah (non-rawatib) prayers — single check each */}
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Sholat Sunnah</p>
+          <div className="flex flex-wrap gap-2">
+            {SUNNAH.map((name) => {
+              const on = !!data[name]?.done
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => toggle(name, 'done')}
+                  aria-pressed={on}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors',
+                    on
+                      ? 'border-highlight/50 bg-highlight/15 text-highlight'
+                      : 'border-border bg-bg text-muted hover:text-text'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-4 w-4 items-center justify-center rounded-[4px] border',
+                      on ? 'border-highlight bg-highlight text-bg' : 'border-muted'
+                    )}
+                  >
+                    {on && (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6.5L4.8 9L9.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  {name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </WidgetCard>
 
       <WeeklySummary merged={merged} today={today} />
@@ -452,6 +491,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
   const segments = [
     { label: 'Isya', start: 0, end: fajr, color: SEG_COLORS.Isya, faded: true },
     { label: 'Subuh', start: fajr, end: sunrise, color: SEG_COLORS.Subuh },
+    { label: 'Dhuha', start: sunrise + 15, end: dhuhr - 6, color: '#eab308', faded: true },
     { label: 'Dzuhur', start: dhuhr, end: asr, color: SEG_COLORS.Dzuhur },
     { label: 'Ashar', start: asr, end: maghrib, color: SEG_COLORS.Ashar },
     { label: 'Maghrib', start: maghrib, end: isha, color: SEG_COLORS.Maghrib },
