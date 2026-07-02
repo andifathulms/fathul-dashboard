@@ -48,10 +48,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
             qs = qs.filter(name__icontains=search)
         return qs
 
+    # GitHub analytics are cached for an hour so opening a project is instant.
+    GITHUB_CACHE_TTL = 3600
+
     @action(detail=True, methods=['get'])
     def github(self, request, pk=None):
-        """Proxy GitHub analytics for every GitHub repo linked to the project."""
+        """Proxy GitHub analytics for every GitHub repo linked to the project.
+
+        Served from a per-project cache (TTL 1h). Pass ?refresh=true to force a
+        fresh fetch and update the cache. The response includes `fetched_at`.
+        """
+        from django.utils import timezone
+
         from . import github as gh
+        from .models import GithubCache
 
         project = self.get_object()
         entries = list(project.repos or [])
@@ -63,13 +73,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not gh_repos:
             return Response({'ok': False, 'error': 'no_github_repo', 'repos': []})
 
+        refresh = request.query_params.get('refresh') in ('1', 'true', 'True')
+        cache = GithubCache.objects.filter(project=project).first()
+        if cache and not refresh:
+            age = (timezone.now() - cache.fetched_at).total_seconds()
+            if age < self.GITHUB_CACHE_TTL:
+                data = dict(cache.payload)
+                data['fetched_at'] = cache.fetched_at.isoformat()
+                data['cached'] = True
+                return Response(data)
+
         token = settings.GITHUB_TOKEN or None
         repos = []
         for e in gh_repos:
             result = gh.fetch(e['url'], token=token)
             result['label'] = e.get('label') or 'Repo'
             repos.append(result)
-        return Response({'ok': True, 'repos': repos})
+        payload = {'ok': True, 'repos': repos}
+
+        now = timezone.now()
+        GithubCache.objects.update_or_create(
+            project=project, defaults={'payload': payload, 'fetched_at': now}
+        )
+        payload['fetched_at'] = now.isoformat()
+        payload['cached'] = False
+        return Response(payload)
 
 
 class TaskViewSet(viewsets.ModelViewSet):

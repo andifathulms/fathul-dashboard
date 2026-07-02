@@ -143,6 +143,18 @@ class DailyLog(models.Model):
         return f'Log {self.date}'
 
 
+class GithubCache(models.Model):
+    """Cached GitHub analytics payload per project (refreshed on demand / TTL)."""
+    project = models.OneToOneField(
+        Project, on_delete=models.CASCADE, related_name='github_cache'
+    )
+    payload = models.JSONField(default=dict)
+    fetched_at = models.DateTimeField()
+
+    def __str__(self):
+        return f'GitHub cache for {self.project_id}'
+
+
 class IbadahLog(models.Model):
     """One record per day tracking prayers and their rawatib sunnah.
 
