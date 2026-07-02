@@ -1,9 +1,11 @@
 'use client'
 
 import { Github, GitCommitHorizontal, Lock, RefreshCw, Star, CircleDot, GitFork } from 'lucide-react'
+import { useState } from 'react'
 import useSWR from 'swr'
 
 import WidgetCard from '@/components/ui/Card'
+import api from '@/lib/api'
 import type { GithubData, GithubRepo, GithubWeek } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -59,9 +61,23 @@ interface GithubActivityProps {
 
 /** Renders one card per linked GitHub repo — placed directly in the page grid. */
 export default function GithubActivity({ projectId, hasRepo }: GithubActivityProps) {
-  const { data, isLoading } = useSWR<GithubData>(hasRepo ? `/projects/${projectId}/github/` : null, {
-    refreshInterval: (d) => (d?.repos?.some((r) => r.computing) ? 3000 : 0),
-  })
+  const { data, isLoading, mutate } = useSWR<GithubData>(
+    hasRepo ? `/projects/${projectId}/github/` : null,
+    {
+      refreshInterval: (d) => (d?.repos?.some((r) => r.computing) ? 3000 : 0),
+    }
+  )
+  const [refreshing, setRefreshing] = useState(false)
+
+  const refresh = async () => {
+    setRefreshing(true)
+    try {
+      const res = await api.get<GithubData>(`/projects/${projectId}/github/?refresh=true`)
+      mutate(res.data, { revalidate: false })
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   if (!hasRepo) return null
 
@@ -84,13 +100,23 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
   return (
     <>
       {data.repos.map((repo, i) => (
-        <RepoCard key={i} repo={repo} />
+        <RepoCard
+          key={i}
+          repo={repo}
+          meta={i === 0 ? { fetchedAt: data.fetched_at, onRefresh: refresh, refreshing } : undefined}
+        />
       ))}
     </>
   )
 }
 
-function RepoCard({ repo }: { repo: GithubRepo }) {
+interface RepoCardMeta {
+  fetchedAt?: string
+  onRefresh: () => void
+  refreshing: boolean
+}
+
+function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
   if (!repo.ok) {
     return (
       <WidgetCard
@@ -112,17 +138,33 @@ function RepoCard({ repo }: { repo: GithubRepo }) {
       title={`GitHub · ${repo.label}`}
       icon={<Github size={15} />}
       action={
-        info && (
-          <a
-            href={info.html_url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 text-xs text-accent1 hover:underline"
-          >
-            {info.private && <Lock size={11} />}
-            <span className="max-w-[180px] truncate">{info.full_name}</span>
-          </a>
-        )
+        <div className="flex items-center gap-2.5">
+          {meta && (
+            <span className="flex items-center gap-1.5 text-[11px] text-muted">
+              {meta.fetchedAt && <span title={new Date(meta.fetchedAt).toLocaleString('id-ID')}>diperbarui {timeAgo(meta.fetchedAt)}</span>}
+              <button
+                onClick={meta.onRefresh}
+                disabled={meta.refreshing}
+                title="Ambil data terbaru dari GitHub"
+                className="icon-btn h-6 w-6"
+                aria-label="Refresh"
+              >
+                <RefreshCw size={13} className={cn(meta.refreshing && 'animate-spin')} />
+              </button>
+            </span>
+          )}
+          {info && (
+            <a
+              href={info.html_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-xs text-accent1 hover:underline"
+            >
+              {info.private && <Lock size={11} />}
+              <span className="max-w-[160px] truncate">{info.full_name}</span>
+            </a>
+          )}
+        </div>
       }
       bodyClassName="space-y-3"
     >

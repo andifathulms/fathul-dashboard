@@ -162,6 +162,8 @@ export interface GithubData {
   ok: boolean
   error?: string
   repos: GithubRepo[]
+  fetched_at?: string
+  cached?: boolean
 }
 
 export interface IbadahLog {

@@ -126,7 +126,17 @@ export default function ServersPage() {
                   <Terminal size={13} className="shrink-0 text-muted" />
                   {ssh}
                 </code>
-                <CopyButton value={ssh} label="Copy SSH" />
+                <div className="flex items-center gap-1">
+                  <a
+                    href={`ssh://${s.ssh_user}@${s.ip_address}:${s.ssh_port}`}
+                    title="Buka di Terminal (SSH)"
+                    className="icon-btn"
+                    aria-label="Open in Terminal"
+                  >
+                    <Terminal size={15} />
+                  </a>
+                  <CopyButton value={ssh} label="Copy SSH" />
+                </div>
               </div>
 
               {s.project_names?.length > 0 && (

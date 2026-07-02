@@ -1,6 +1,6 @@
 'use client'
 
-import { TerminalSquare, Plus, Search, Pencil, Trash2 } from 'lucide-react'
+import { TerminalSquare, Plus, Search, Pencil, Trash2, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
@@ -100,6 +100,16 @@ export default function CommandsPage() {
                 <span className="text-sm font-medium">{c.title}</span>
               </div>
               <div className="flex items-center gap-1">
+                {sshUrl(c.command) && (
+                  <a
+                    href={sshUrl(c.command)!}
+                    title="Buka di Terminal (SSH)"
+                    className="icon-btn h-7 w-7"
+                    aria-label="Open in Terminal"
+                  >
+                    <Terminal size={13} />
+                  </a>
+                )}
                 <CopyButton value={c.command} />
                 <button
                   onClick={() => {
@@ -137,6 +147,17 @@ export default function CommandsPage() {
       />
     </div>
   )
+}
+
+// Parse an `ssh user@host [-p port]` command into an ssh:// URL that macOS
+// Terminal can open. Returns null if the command isn't a simple ssh invocation.
+function sshUrl(command: string): string | null {
+  const m = command.match(/\bssh\s+(?:-\w+\s+\S+\s+)*?([\w.-]+)@([\w.-]+)/)
+  if (!m) return null
+  const [, user, host] = m
+  const portMatch = command.match(/-p\s+(\d+)/)
+  const port = portMatch ? `:${portMatch[1]}` : ''
+  return `ssh://${user}@${host}${port}`
 }
 
 function Chip({
