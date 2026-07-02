@@ -1,6 +1,6 @@
 'use client'
 
-import { Server as ServerIcon } from 'lucide-react'
+import { Server as ServerIcon, Terminal } from 'lucide-react'
 import Link from 'next/link'
 
 import WidgetCard from '@/components/ui/Card'
@@ -40,10 +40,18 @@ export default function ServerStatusWidget() {
                 <p className="font-mono text-[11px] text-muted">{s.ip_address}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {ping?.latency_ms != null && (
                 <span className="font-mono text-[11px] text-highlight">{ping.latency_ms}ms</span>
               )}
+              <a
+                href={`ssh://${s.ssh_user}@${s.ip_address}:${s.ssh_port}`}
+                title="Buka di Terminal (SSH)"
+                className="icon-btn"
+                aria-label="Open in Terminal"
+              >
+                <Terminal size={15} />
+              </a>
               <CopyButton value={ssh} label="Copy SSH" />
             </div>
           </div>

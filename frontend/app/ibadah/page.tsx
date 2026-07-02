@@ -46,6 +46,20 @@ export default function IbadahPage() {
   const [data, setData] = useState<Matrix>({})
   const [logId, setLogId] = useState<number | null>(null)
   const [saved, setSaved] = useState<'idle' | 'saving' | 'done'>('idle')
+  const [rangeLogs, setRangeLogs] = useState<Record<string, Matrix>>({})
+
+  // Last 30 days of logs for the weekly summary + streaks.
+  useEffect(() => {
+    const start = shiftDate(today, -29)
+    api
+      .get<IbadahLog[]>(`/ibadah/?start=${start}&end=${today}`)
+      .then((res) => {
+        const map: Record<string, Matrix> = {}
+        for (const log of res.data) map[log.date] = log.data || {}
+        setRangeLogs(map)
+      })
+      .catch(() => {})
+  }, [today])
 
   // Prayer times for the selected date + location.
   useEffect(() => {
@@ -109,6 +123,9 @@ export default function IbadahPage() {
     (n, p) => n + (p.qabliyah && data[p.key]?.qabliyah ? 1 : 0) + (p.badiyah && data[p.key]?.badiyah ? 1 : 0),
     0
   )
+
+  // Range map with the currently-edited day merged in for instant updates.
+  const merged = { ...rangeLogs, [date]: data }
 
   return (
     <div className="space-y-5">
@@ -232,7 +249,121 @@ export default function IbadahPage() {
           awal waktu; kosongkan jika di akhir waktu. Centang Fardhu dulu untuk mengaktifkan Tepat Waktu &amp; Berjamaah.
         </p>
       </WidgetCard>
+
+      <WeeklySummary merged={merged} today={today} />
     </div>
+  )
+}
+
+// ---- Weekly summary + streaks ----
+
+const DAY_ABBR = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+
+function fardhuComplete(m?: Matrix) {
+  return PRAYERS.every((p) => m?.[p.key]?.fardhu)
+}
+
+function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; today: string }) {
+  // Last 7 days (oldest → newest).
+  const week = Array.from({ length: 7 }, (_, i) => shiftDate(today, -(6 - i)))
+
+  const count = (field: Field) =>
+    week.reduce((sum, d) => sum + PRAYERS.filter((p) => merged[d]?.[p.key]?.[field]).length, 0)
+  const fardhuWeek = count('fardhu')
+  const jamaahWeek = count('jamaah')
+  const ontimeWeek = count('ontime')
+
+  // Consecutive days (ending today) with all 5 fardhu. Today may still be in
+  // progress, so an incomplete today doesn't break the streak — it's skipped.
+  let streak = 0
+  for (let i = 0; i < 30; i++) {
+    const d = shiftDate(today, -i)
+    const complete = fardhuComplete(merged[d])
+    if (i === 0 && !complete) continue
+    if (complete) streak++
+    else break
+  }
+
+  // Cell tone per prayer/day: best achievement wins.
+  const tone = (d: string, prayer: string): string => {
+    const c = merged[d]?.[prayer]
+    if (!c?.fardhu) return 'bg-bg'
+    if (c.jamaah) return 'bg-accent1'
+    if (c.ontime) return 'bg-highlight'
+    return 'bg-highlight/40'
+  }
+
+  return (
+    <WidgetCard title="Ringkasan 7 Hari" bodyClassName="space-y-4">
+      <div className="grid grid-cols-4 gap-3 text-center">
+        <SummaryStat value={`${streak}`} label="Hari beruntun" sub="fardhu lengkap" color="text-accent2" />
+        <SummaryStat value={`${fardhuWeek}/35`} label="Fardhu" color="text-highlight" />
+        <SummaryStat value={`${jamaahWeek}/35`} label="Berjamaah" color="text-accent1" />
+        <SummaryStat value={`${ontimeWeek}/35`} label="Tepat waktu" color="text-highlight" />
+      </div>
+
+      {/* 5 prayers × 7 days grid */}
+      <div className="overflow-x-auto">
+        <table className="min-w-[420px] border-separate border-spacing-1">
+          <thead>
+            <tr>
+              <th className="w-14" />
+              {week.map((d) => {
+                const dow = new Date(`${d}T00:00:00`).getDay()
+                const dayNum = d.slice(8)
+                return (
+                  <th key={d} className="text-center text-[10px] font-medium text-muted">
+                    <div>{DAY_ABBR[dow]}</div>
+                    <div className="text-[9px] opacity-70">{dayNum}</div>
+                  </th>
+                )
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {PRAYERS.map((p) => (
+              <tr key={p.key}>
+                <td className="pr-1 text-right text-[11px] text-muted">{p.key}</td>
+                {week.map((d) => (
+                  <td key={d} className="text-center">
+                    <span
+                      className={cn('inline-block h-5 w-5 rounded-[5px]', tone(d, p.key))}
+                      title={`${p.key} · ${d}`}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
+        <Legend cls="bg-bg border border-border" label="Belum" />
+        <Legend cls="bg-highlight/40" label="Fardhu" />
+        <Legend cls="bg-highlight" label="Tepat waktu" />
+        <Legend cls="bg-accent1" label="Berjamaah" />
+      </div>
+    </WidgetCard>
+  )
+}
+
+function SummaryStat({ value, label, sub, color }: { value: string; label: string; sub?: string; color: string }) {
+  return (
+    <div className="rounded-lg bg-bg px-2 py-3">
+      <p className={cn('font-mono text-xl font-semibold', color)}>{value}</p>
+      <p className="mt-0.5 text-[11px] text-muted">{label}</p>
+      {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
+    </div>
+  )
+}
+
+function Legend({ cls, label }: { cls: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={cn('h-3 w-3 rounded-[3px]', cls)} /> {label}
+    </span>
   )
 }
 

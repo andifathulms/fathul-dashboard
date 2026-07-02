@@ -222,11 +222,17 @@ class IbadahLogViewSet(viewsets.ModelViewSet):
     serializer_class = IbadahLogSerializer
 
     def list(self, request, *args, **kwargs):
-        """If ?date= is given, return (or create) the log for that date."""
+        """?date= → single log (get_or_create); ?start=&end= → logs in range."""
         date = request.query_params.get('date')
         if date:
             log, _ = IbadahLog.objects.get_or_create(date=date, defaults={'data': {}})
             return Response(self.get_serializer(log).data)
+
+        start = request.query_params.get('start')
+        end = request.query_params.get('end')
+        if start and end:
+            qs = IbadahLog.objects.filter(date__range=[start, end])
+            return Response(self.get_serializer(qs, many=True).data)
         return super().list(request, *args, **kwargs)
 
 
