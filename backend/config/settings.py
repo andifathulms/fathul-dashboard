@@ -17,6 +17,9 @@ SECRET_KEY = config(
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+# Optional GitHub token for repo analytics (private repos + higher rate limit).
+GITHUB_TOKEN = config('GITHUB_TOKEN', default='')
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 INSTALLED_APPS = [

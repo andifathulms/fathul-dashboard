@@ -12,16 +12,25 @@ interface CredentialFormProps {
   onSaved: () => void
   projects?: Project[]
   initial?: Credential | null
+  /** When set (creating from a project page), pin the project and hide the picker. */
+  lockedProjectId?: number
 }
 
-export default function CredentialForm({ open, onClose, onSaved, projects, initial }: CredentialFormProps) {
-  const [form, setForm] = useState(() => seed(initial))
+export default function CredentialForm({
+  open,
+  onClose,
+  onSaved,
+  projects,
+  initial,
+  lockedProjectId,
+}: CredentialFormProps) {
+  const [form, setForm] = useState(() => seed(initial, lockedProjectId))
   const [saving, setSaving] = useState(false)
 
   const [seedId, setSeedId] = useState(initial?.id ?? 0)
   if ((initial?.id ?? 0) !== seedId) {
     setSeedId(initial?.id ?? 0)
-    setForm(seed(initial))
+    setForm(seed(initial, lockedProjectId))
   }
 
   const set = (k: keyof ReturnType<typeof seed>, v: string) => setForm((f) => ({ ...f, [k]: v }))
@@ -84,16 +93,18 @@ export default function CredentialForm({ open, onClose, onSaved, projects, initi
               onChange={(e) => set('category', e.target.value)}
             />
           </Field>
-          <Field label="Project">
-            <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
-              <option value="">Tanpa project</option>
-              {projects?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {lockedProjectId == null && (
+            <Field label="Project">
+              <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
+                <option value="">Tanpa project</option>
+                {projects?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
         </div>
         <Field label="Catatan">
           <textarea
@@ -117,7 +128,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function seed(c?: Credential | null) {
+function seed(c?: Credential | null, lockedProjectId?: number) {
   return {
     label: c?.label ?? '',
     username: c?.username ?? '',
@@ -125,6 +136,6 @@ function seed(c?: Credential | null) {
     url: c?.url ?? '',
     category: c?.category ?? '',
     notes: c?.notes ?? '',
-    project: c?.project ? String(c.project) : '',
+    project: c?.project ? String(c.project) : lockedProjectId != null ? String(lockedProjectId) : '',
   }
 }

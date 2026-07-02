@@ -23,16 +23,25 @@ interface CommandFormProps {
   onSaved: () => void
   projects?: Project[]
   initial?: Command | null
+  /** When set (creating from a project page), pin the project and hide the picker. */
+  lockedProjectId?: number
 }
 
-export default function CommandForm({ open, onClose, onSaved, projects, initial }: CommandFormProps) {
-  const [form, setForm] = useState(() => seed(initial))
+export default function CommandForm({
+  open,
+  onClose,
+  onSaved,
+  projects,
+  initial,
+  lockedProjectId,
+}: CommandFormProps) {
+  const [form, setForm] = useState(() => seed(initial, lockedProjectId))
   const [saving, setSaving] = useState(false)
 
   const [seedId, setSeedId] = useState(initial?.id ?? 0)
   if ((initial?.id ?? 0) !== seedId) {
     setSeedId(initial?.id ?? 0)
-    setForm(seed(initial))
+    setForm(seed(initial, lockedProjectId))
   }
 
   const set = (k: keyof ReturnType<typeof seed>, v: string) => setForm((f) => ({ ...f, [k]: v }))
@@ -92,28 +101,30 @@ export default function CommandForm({ open, onClose, onSaved, projects, initial 
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Project</span>
-            <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
-              <option value="">Tanpa project</option>
-              {projects?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {lockedProjectId == null && (
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-muted">Project</span>
+              <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
+                <option value="">Tanpa project</option>
+                {projects?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       </div>
     </Modal>
   )
 }
 
-function seed(c?: Command | null) {
+function seed(c?: Command | null, lockedProjectId?: number) {
   return {
     title: c?.title ?? '',
     command: c?.command ?? '',
     category: c?.category ?? 'general',
-    project: c?.project ? String(c.project) : '',
+    project: c?.project ? String(c.project) : lockedProjectId != null ? String(lockedProjectId) : '',
   }
 }

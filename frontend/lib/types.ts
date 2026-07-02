@@ -108,3 +108,41 @@ export interface PingResult {
   status: 'up' | 'down'
   latency_ms: number | null
 }
+
+export interface GithubWeek {
+  total: number
+  week: number // unix seconds (start of week)
+  days: number[] // 7 daily commit counts, Sun..Sat
+}
+
+export interface GithubCommit {
+  sha: string
+  message: string
+  author: string | null
+  date: string | null
+  html_url: string | null
+}
+
+export interface GithubInfo {
+  full_name: string
+  html_url: string
+  description: string | null
+  default_branch: string
+  pushed_at: string | null
+  updated_at: string | null
+  stargazers_count: number
+  forks_count: number
+  open_issues_count: number
+  language: string | null
+  private: boolean
+}
+
+export interface GithubData {
+  ok: boolean
+  error?: string
+  repo?: string
+  info?: GithubInfo
+  commit_activity?: GithubWeek[]
+  computing?: boolean
+  recent_commits?: GithubCommit[]
+}

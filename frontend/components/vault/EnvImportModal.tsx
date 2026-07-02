@@ -11,9 +11,17 @@ interface EnvImportModalProps {
   onClose: () => void
   onSaved: () => void
   projects?: Project[]
+  /** When set (creating from a project page), pin the project and hide the picker. */
+  lockedProjectId?: number
 }
 
-export default function EnvImportModal({ open, onClose, onSaved, projects }: EnvImportModalProps) {
+export default function EnvImportModal({
+  open,
+  onClose,
+  onSaved,
+  projects,
+  lockedProjectId,
+}: EnvImportModalProps) {
   const [content, setContent] = useState('')
   const [project, setProject] = useState('')
   const [saving, setSaving] = useState(false)
@@ -22,9 +30,10 @@ export default function EnvImportModal({ open, onClose, onSaved, projects }: Env
     if (!content.trim()) return
     setSaving(true)
     try {
+      const projectId = lockedProjectId != null ? lockedProjectId : project ? Number(project) : null
       const { data } = await api.post('/envvars/bulk/', {
         content,
-        project: project ? Number(project) : null,
+        project: projectId,
       })
       onSaved()
       onClose()
@@ -62,17 +71,19 @@ export default function EnvImportModal({ open, onClose, onSaved, projects }: Env
             onChange={(e) => setContent(e.target.value)}
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Tautkan ke project</span>
-          <select className="input" value={project} onChange={(e) => setProject(e.target.value)}>
-            <option value="">Tanpa project</option>
-            {projects?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {lockedProjectId == null && (
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted">Tautkan ke project</span>
+            <select className="input" value={project} onChange={(e) => setProject(e.target.value)}>
+              <option value="">Tanpa project</option>
+              {projects?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <p className="text-[11px] text-muted">
           Baris kosong dan komentar (#) dilewati. Setiap KEY=VALUE disimpan terpisah.
         </p>

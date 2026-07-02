@@ -6,6 +6,7 @@ import {
   Github,
   KeyRound,
   Pencil,
+  Plus,
   TerminalSquare,
   Trash2,
 } from 'lucide-react'
@@ -14,7 +15,11 @@ import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import useSWR from 'swr'
 
+import GithubActivity from '@/components/projects/GithubActivity'
 import ProjectForm from '@/components/projects/ProjectForm'
+import CommandForm from '@/components/commands/CommandForm'
+import CredentialForm from '@/components/vault/CredentialForm'
+import EnvImportModal from '@/components/vault/EnvImportModal'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
 import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
@@ -25,19 +30,47 @@ import type { Command, Credential, EnvVar, Project, Task } from '@/lib/types'
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const pid = Number(id)
   const router = useRouter()
   const [editing, setEditing] = useState(false)
+  const [showCred, setShowCred] = useState(false)
+  const [showCmd, setShowCmd] = useState(false)
+  const [showEnv, setShowEnv] = useState(false)
+  const [newTask, setNewTask] = useState('')
 
   const { data: project, isLoading, mutate } = useSWR<Project>(`/projects/${id}/`)
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?project=${id}`)
-  const { data: creds } = useSWR<Credential[]>(`/credentials/?project=${id}`)
-  const { data: envs } = useSWR<EnvVar[]>(`/envvars/?project=${id}`)
-  const { data: commands } = useSWR<Command[]>(`/commands/?project=${id}`)
+  const { data: creds, mutate: mutateCreds } = useSWR<Credential[]>(`/credentials/?project=${id}`)
+  const { data: envs, mutate: mutateEnvs } = useSWR<EnvVar[]>(`/envvars/?project=${id}`)
+  const { data: commands, mutate: mutateCommands } = useSWR<Command[]>(`/commands/?project=${id}`)
 
   const remove = async () => {
     if (!confirm('Hapus project ini? Tindakan tidak bisa dibatalkan.')) return
     await api.delete(`/projects/${id}/`)
     router.push('/projects')
+  }
+
+  const addTask = async () => {
+    const title = newTask.trim()
+    if (!title) return
+    await api.post('/tasks/', { title, project: pid })
+    setNewTask('')
+    mutateTasks()
+  }
+
+  const deleteCred = async (cid: number) => {
+    if (!confirm('Hapus kredensial ini?')) return
+    await api.delete(`/credentials/${cid}/`)
+    mutateCreds()
+  }
+  const deleteCommand = async (cid: number) => {
+    if (!confirm('Hapus command ini?')) return
+    await api.delete(`/commands/${cid}/`)
+    mutateCommands()
+  }
+  const deleteEnv = async (eid: number) => {
+    await api.delete(`/envvars/${eid}/`)
+    mutateEnvs()
   }
 
   if (isLoading) return <p className="text-sm text-muted">Memuat…</p>
@@ -97,21 +130,52 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
+      {/* GitHub activity — only if a GitHub repo is linked */}
+      <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
+
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <WidgetCard title="Tugas" bodyClassName="space-y-0.5">
-          {tasks?.length === 0 && <p className="px-2 py-3 text-sm text-muted">Belum ada tugas.</p>}
-          {tasks?.map((t) => (
-            <TaskItem key={t.id} task={t} onChange={mutateTasks} showDelete />
-          ))}
+        <WidgetCard title="Tugas" bodyClassName="space-y-2">
+          <div className="flex gap-2">
+            <input
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addTask()}
+              placeholder="Tambah tugas untuk project ini…"
+              className="input"
+            />
+            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Tambah tugas">
+              <Plus size={16} />
+            </button>
+          </div>
+          <div className="space-y-0.5">
+            {tasks?.length === 0 && <p className="px-2 py-2 text-sm text-muted">Belum ada tugas.</p>}
+            {tasks?.map((t) => (
+              <TaskItem key={t.id} task={t} onChange={mutateTasks} showDelete />
+            ))}
+          </div>
         </WidgetCard>
 
-        <WidgetCard title="Kredensial" icon={<KeyRound size={15} />} bodyClassName="space-y-2">
+        <WidgetCard
+          title="Kredensial"
+          icon={<KeyRound size={15} />}
+          action={<AddButton onClick={() => setShowCred(true)} />}
+          bodyClassName="space-y-2"
+        >
           {creds?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada kredensial.</p>}
           {creds?.map((c) => (
-            <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2">
+            <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-medium">{c.label}</span>
-                <CopyButton value={c.password} label="Copy password" />
+                <div className="flex items-center gap-1">
+                  <CopyButton value={c.password} label="Copy password" />
+                  <button
+                    onClick={() => deleteCred(c.id)}
+                    className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                    aria-label="Hapus kredensial"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
               {c.username && <p className="text-[11px] text-muted">{c.username}</p>}
               <div className="mt-1">
@@ -121,30 +185,55 @@ export default function ProjectDetailPage() {
           ))}
         </WidgetCard>
 
-        <WidgetCard title="Commands" icon={<TerminalSquare size={15} />} bodyClassName="space-y-1.5">
+        <WidgetCard
+          title="Commands"
+          icon={<TerminalSquare size={15} />}
+          action={<AddButton onClick={() => setShowCmd(true)} />}
+          bodyClassName="space-y-1.5"
+        >
           {commands?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada command.</p>}
           {commands?.map((c) => (
-            <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2">
+            <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs font-medium">{c.title}</span>
-                <CopyButton value={c.command} />
+                <div className="flex items-center gap-1">
+                  <CopyButton value={c.command} />
+                  <button
+                    onClick={() => deleteCommand(c.id)}
+                    className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                    aria-label="Hapus command"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
               <code className="mt-1 block truncate font-mono text-[11px] text-muted">{c.command}</code>
             </div>
           ))}
         </WidgetCard>
 
-        <WidgetCard title="Environment Variables" bodyClassName="space-y-1.5">
+        <WidgetCard
+          title="Environment Variables"
+          action={<AddButton onClick={() => setShowEnv(true)} />}
+          bodyClassName="space-y-1.5"
+        >
           {envs?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada env var.</p>}
           {envs?.map((e) => (
             <div
               key={e.id}
-              className="flex items-center justify-between gap-2 rounded-lg border border-border bg-bg px-3 py-2"
+              className="group flex items-center justify-between gap-2 rounded-lg border border-border bg-bg px-3 py-2"
             >
               <code className="truncate font-mono text-[11px] text-accent2">{e.key}</code>
               <div className="flex items-center gap-1">
                 <RevealToggle value={e.value} />
                 <CopyButton value={e.value} />
+                <button
+                  onClick={() => deleteEnv(e.id)}
+                  className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                  aria-label="Hapus env var"
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
           ))}
@@ -157,12 +246,33 @@ export default function ProjectDetailPage() {
         </WidgetCard>
       )}
 
-      <ProjectForm
-        open={editing}
-        onClose={() => setEditing(false)}
-        onSaved={mutate}
-        initial={project}
+      <ProjectForm open={editing} onClose={() => setEditing(false)} onSaved={mutate} initial={project} />
+      <CredentialForm
+        open={showCred}
+        onClose={() => setShowCred(false)}
+        onSaved={mutateCreds}
+        lockedProjectId={pid}
+      />
+      <CommandForm
+        open={showCmd}
+        onClose={() => setShowCmd(false)}
+        onSaved={mutateCommands}
+        lockedProjectId={pid}
+      />
+      <EnvImportModal
+        open={showEnv}
+        onClose={() => setShowEnv(false)}
+        onSaved={mutateEnvs}
+        lockedProjectId={pid}
       />
     </div>
+  )
+}
+
+function AddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="btn text-xs" aria-label="Tambah">
+      <Plus size={13} /> Tambah
+    </button>
   )
 }

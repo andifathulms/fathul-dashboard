@@ -13,6 +13,7 @@ services:
     environment:
       - DEBUG=True
       - SQLITE_PATH=/data/db.sqlite3
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
     volumes:
       - backend-data:/data
     restart: unless-stopped

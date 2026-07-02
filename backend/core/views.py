@@ -46,6 +46,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
             qs = qs.filter(name__icontains=search)
         return qs
 
+    @action(detail=True, methods=['get'])
+    def github(self, request, pk=None):
+        """Proxy GitHub analytics for the project's repo (first GitHub URL)."""
+        from . import github as gh
+
+        project = self.get_object()
+        candidates = [r.get('url') for r in (project.repos or []) if r.get('url')]
+        if project.repo_url:
+            candidates.append(project.repo_url)
+        url = next((u for u in candidates if gh.parse_repo(u)), None)
+        if not url:
+            return Response({'ok': False, 'error': 'no_github_repo'})
+        return Response(gh.fetch(url, token=settings.GITHUB_TOKEN or None))
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
