@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  Code2,
   ExternalLink,
   Github,
   KeyRound,
@@ -53,9 +54,13 @@ export default function ProjectDetailPage() {
   const addTask = async () => {
     const title = newTask.trim()
     if (!title) return
-    await api.post('/tasks/', { title, project: pid })
-    setNewTask('')
-    mutateTasks()
+    try {
+      await api.post('/tasks/', { title, project: pid })
+      setNewTask('')
+      mutateTasks()
+    } catch (e) {
+      alert('Gagal menambah tugas: ' + (e as Error).message)
+    }
   }
 
   const deleteCred = async (cid: number) => {
@@ -115,7 +120,7 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {(repos.length > 0 || project.live_url) && (
+      {(repos.length > 0 || project.live_url || project.local_path) && (
         <div className="flex flex-wrap gap-2">
           {repos.map((r, i) => (
             <a key={i} href={r.url} target="_blank" rel="noreferrer" className="btn text-xs">
@@ -127,13 +132,18 @@ export default function ProjectDetailPage() {
               <ExternalLink size={14} /> Live
             </a>
           )}
+          {project.local_path && (
+            <a href={`vscode://file/${project.local_path}`} className="btn text-xs">
+              <Code2 size={14} /> Buka di VS Code
+            </a>
+          )}
         </div>
       )}
 
-      {/* GitHub activity — only if a GitHub repo is linked */}
-      <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
-
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {/* GitHub analytics — one card per linked repo, half-width in the grid */}
+        <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
+
         <WidgetCard title="Tugas" bodyClassName="space-y-2">
           <div className="flex gap-2">
             <input

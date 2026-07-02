@@ -82,9 +82,13 @@ export default function LogPage() {
 
   const addTask = async () => {
     if (!newTask.trim()) return
-    await api.post('/tasks/', { title: newTask.trim(), due_date: date })
-    setNewTask('')
-    mutateTasks()
+    try {
+      await api.post('/tasks/', { title: newTask.trim(), due_date: date })
+      setNewTask('')
+      mutateTasks()
+    } catch (e) {
+      alert('Gagal menambah tugas: ' + (e as Error).message)
+    }
   }
 
   return (

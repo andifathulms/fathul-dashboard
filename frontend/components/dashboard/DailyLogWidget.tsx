@@ -44,9 +44,13 @@ export default function DailyLogWidget() {
   const addTask = async () => {
     const title = newTask.trim()
     if (!title) return
-    await api.post('/tasks/', { title, due_date: today })
-    setNewTask('')
-    mutateTasks()
+    try {
+      await api.post('/tasks/', { title, due_date: today })
+      setNewTask('')
+      mutateTasks()
+    } catch (e) {
+      alert('Gagal menambah tugas: ' + (e as Error).message)
+    }
   }
 
   const saveJournal = () => {

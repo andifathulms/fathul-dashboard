@@ -1,15 +1,18 @@
 'use client'
 
-import { Github, GitCommitHorizontal, Lock, RefreshCw, Star, CircleDot } from 'lucide-react'
+import { Github, GitCommitHorizontal, Lock, RefreshCw, Star, CircleDot, GitFork } from 'lucide-react'
 import useSWR from 'swr'
 
 import WidgetCard from '@/components/ui/Card'
-import type { GithubData } from '@/lib/types'
+import type { GithubData, GithubRepo, GithubWeek } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 // Sequential single-hue ramp (empty → bright green), monotonic in lightness on
 // the dark surface — GitHub's own contribution scale.
 const LEVELS = ['#1b2129', '#0e4429', '#006d32', '#26a641', '#39d353']
+
+// Small fixed categorical palette for the language bar (distinct hues, labeled).
+const LANG_COLORS = ['#0EA5E9', '#D97706', '#10B981', '#a371f7', '#f778ba', '#8B949E']
 
 function bucket(count: number): number {
   if (count <= 0) return 0
@@ -41,18 +44,24 @@ function cellDate(weekTs: number, dayIdx: number): string {
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+const ERR: Record<string, string> = {
+  no_github_repo: 'Repo bukan GitHub.',
+  not_a_github_repo: 'Repo bukan GitHub.',
+  not_found: 'Repo privat/tidak ada — set GITHUB_TOKEN untuk repo privat.',
+  rate_limited: 'Rate limit GitHub tercapai — set GITHUB_TOKEN.',
+  unavailable: 'Data GitHub tidak tersedia saat ini.',
+}
 
 interface GithubActivityProps {
   projectId: number
   hasRepo: boolean
 }
 
+/** Renders one card per linked GitHub repo — placed directly in the page grid. */
 export default function GithubActivity({ projectId, hasRepo }: GithubActivityProps) {
-  const { data, isLoading } = useSWR<GithubData>(
-    hasRepo ? `/projects/${projectId}/github/` : null,
-    // While GitHub is still computing stats (202), poll until they're ready.
-    { refreshInterval: (d) => (d?.computing ? 3000 : 0) }
-  )
+  const { data, isLoading } = useSWR<GithubData>(hasRepo ? `/projects/${projectId}/github/` : null, {
+    refreshInterval: (d) => (d?.repos?.some((r) => r.computing) ? 3000 : 0),
+  })
 
   if (!hasRepo) return null
 
@@ -64,31 +73,43 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
     )
   }
 
-  if (!data?.ok) {
-    const msg: Record<string, string> = {
-      no_github_repo: 'Repo bukan GitHub.',
-      not_a_github_repo: 'Repo bukan GitHub.',
-      not_found: 'Repo tidak ditemukan atau privat — set GITHUB_TOKEN untuk repo privat.',
-      rate_limited: 'Rate limit GitHub tercapai — set GITHUB_TOKEN untuk menaikkan limit.',
-      unavailable: 'Data GitHub tidak tersedia saat ini.',
-    }
+  if (!data?.ok || !data.repos?.length) {
     return (
       <WidgetCard title="GitHub Activity" icon={<Github size={15} />}>
-        <p className="text-sm text-muted">{msg[data?.error ?? 'unavailable'] ?? 'Data GitHub tidak tersedia.'}</p>
+        <p className="text-sm text-muted">{ERR[data?.error ?? 'unavailable'] ?? 'Data GitHub tidak tersedia.'}</p>
       </WidgetCard>
     )
   }
 
-  const info = data.info
-  const weeks = data.commit_activity ?? []
+  return (
+    <>
+      {data.repos.map((repo, i) => (
+        <RepoCard key={i} repo={repo} />
+      ))}
+    </>
+  )
+}
+
+function RepoCard({ repo }: { repo: GithubRepo }) {
+  if (!repo.ok) {
+    return (
+      <WidgetCard
+        title={`GitHub · ${repo.label}`}
+        icon={<Github size={15} />}
+      >
+        <p className="text-sm text-muted">{ERR[repo.error ?? 'unavailable'] ?? 'Data GitHub tidak tersedia.'}</p>
+      </WidgetCard>
+    )
+  }
+
+  const info = repo.info
+  const weeks = repo.commit_activity ?? []
   const yearTotal = weeks.reduce((sum, w) => sum + (w.total ?? 0), 0)
-  const active = info?.pushed_at
-    ? Date.now() - new Date(info.pushed_at).getTime() < 30 * 86400 * 1000
-    : false
+  const active = info?.pushed_at ? Date.now() - new Date(info.pushed_at).getTime() < 30 * 86400 * 1000 : false
 
   return (
     <WidgetCard
-      title="GitHub Activity"
+      title={`GitHub · ${repo.label}`}
       icon={<Github size={15} />}
       action={
         info && (
@@ -99,57 +120,62 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
             className="flex items-center gap-1.5 text-xs text-accent1 hover:underline"
           >
             {info.private && <Lock size={11} />}
-            {info.full_name}
+            <span className="max-w-[180px] truncate">{info.full_name}</span>
           </a>
         )
       }
-      bodyClassName="space-y-4"
+      bodyClassName="space-y-3"
     >
       {/* Stat row */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         <Stat
           label="Status"
           value={
-            <span className={cn('inline-flex items-center gap-1.5', active ? 'text-highlight' : 'text-muted')}>
-              <CircleDot size={13} /> {active ? 'Aktif' : 'Idle'}
+            <span className={cn('inline-flex items-center gap-1', active ? 'text-highlight' : 'text-muted')}>
+              <CircleDot size={12} /> {active ? 'Aktif' : 'Idle'}
             </span>
           }
         />
-        <Stat label="Commit terakhir" value={timeAgo(info?.pushed_at)} />
-        <Stat label="Commit 1 tahun" value={`${yearTotal}`} icon={<GitCommitHorizontal size={13} />} />
+        <Stat label="Terakhir" value={timeAgo(info?.pushed_at)} />
+        <Stat label="Commit/thn" value={`${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
         <Stat label="Branch" value={info?.default_branch ?? '—'} />
-        {info?.language && <Stat label="Bahasa" value={info.language} />}
         {(info?.stargazers_count ?? 0) > 0 && (
-          <Stat label="Stars" value={`${info?.stargazers_count}`} icon={<Star size={13} />} />
+          <Stat label="Stars" value={`${info?.stargazers_count}`} icon={<Star size={12} />} />
+        )}
+        {(info?.forks_count ?? 0) > 0 && (
+          <Stat label="Forks" value={`${info?.forks_count}`} icon={<GitFork size={12} />} />
+        )}
+        {(info?.open_issues_count ?? 0) > 0 && (
+          <Stat label="Issues" value={`${info?.open_issues_count}`} />
         )}
       </div>
 
-      {/* Contribution heatmap */}
-      {data.computing ? (
-        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-4 text-sm text-muted">
-          <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik… sebentar ya.
+      {repo.languages && Object.keys(repo.languages).length > 0 && <Languages langs={repo.languages} />}
+
+      {repo.computing ? (
+        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
+          <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
         </div>
       ) : weeks.length > 0 ? (
         <Heatmap weeks={weeks} />
       ) : (
-        <p className="text-sm text-muted">Belum ada aktivitas commit dalam setahun terakhir.</p>
+        <p className="text-sm text-muted">Belum ada commit setahun terakhir.</p>
       )}
 
-      {/* Recent commits */}
-      {data.recent_commits && data.recent_commits.length > 0 && (
+      {repo.recent_commits && repo.recent_commits.length > 0 && (
         <div>
-          <p className="widget-title mb-2">Commit Terbaru</p>
-          <div className="space-y-1">
-            {data.recent_commits.map((c) => (
+          <p className="widget-title mb-1.5">Commit Terbaru</p>
+          <div className="space-y-0.5">
+            {repo.recent_commits.slice(0, 5).map((c) => (
               <a
                 key={c.sha}
                 href={c.html_url ?? undefined}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-bg"
+                className="flex items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
               >
                 <code className="shrink-0 font-mono text-[11px] text-accent2">{c.sha}</code>
-                <span className="min-w-0 flex-1 truncate text-sm text-text/90">{c.message}</span>
+                <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{c.message}</span>
                 <span className="shrink-0 text-[11px] text-muted">{timeAgo(c.date)}</span>
               </a>
             ))}
@@ -160,19 +186,11 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
   )
 }
 
-function Stat({
-  label,
-  value,
-  icon,
-}: {
-  label: string
-  value: React.ReactNode
-  icon?: React.ReactNode
-}) {
+function Stat({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-0.5 flex items-center gap-1 font-medium">
+      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-0.5 flex items-center gap-1 text-[13px] font-medium">
         {icon && <span className="text-muted">{icon}</span>}
         {value}
       </p>
@@ -180,8 +198,36 @@ function Stat({
   )
 }
 
-function Heatmap({ weeks }: { weeks: { total: number; week: number; days: number[] }[] }) {
-  // Month labels: mark the first column whose first day falls in a new month.
+function Languages({ langs }: { langs: Record<string, number> }) {
+  const total = Object.values(langs).reduce((a, b) => a + b, 0)
+  if (!total) return null
+  const top = Object.entries(langs)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+  return (
+    <div className="space-y-1.5">
+      <div className="flex h-2 overflow-hidden rounded-full bg-bg">
+        {top.map(([name, bytes], i) => (
+          <div
+            key={name}
+            style={{ width: `${(bytes / total) * 100}%`, backgroundColor: LANG_COLORS[i] }}
+            title={`${name} ${((bytes / total) * 100).toFixed(1)}%`}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">
+        {top.map(([name, bytes], i) => (
+          <span key={name} className="inline-flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: LANG_COLORS[i] }} />
+            {name} {((bytes / total) * 100).toFixed(0)}%
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
   let lastMonth = -1
   const monthLabels = weeks.map((w) => {
     const m = new Date(w.week * 1000).getMonth()
@@ -195,25 +241,22 @@ function Heatmap({ weeks }: { weeks: { total: number; week: number; days: number
   return (
     <div className="overflow-x-auto">
       <div className="inline-flex flex-col gap-1">
-        {/* Month labels */}
-        <div className="flex gap-[3px] pl-1 text-[10px] text-muted">
+        <div className="flex gap-[2px] pl-0.5 text-[9px] text-muted">
           {monthLabels.map((label, i) => (
-            <div key={i} className="w-[11px] shrink-0">
+            <div key={i} className="w-[9px] shrink-0">
               {label}
             </div>
           ))}
         </div>
-
-        {/* Weeks × days grid */}
-        <div className="flex gap-[3px] pl-1">
+        <div className="flex gap-[2px] pl-0.5">
           {weeks.map((w, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex flex-col gap-[2px]">
               {Array.from({ length: 7 }, (_, di) => {
                 const count = w.days?.[di] ?? 0
                 return (
                   <div
                     key={di}
-                    className="h-[11px] w-[11px] rounded-[2px]"
+                    className="h-[9px] w-[9px] rounded-[2px]"
                     style={{ backgroundColor: LEVELS[bucket(count)] }}
                     title={`${count} commit · ${cellDate(w.week, di)}`}
                   />
@@ -222,12 +265,10 @@ function Heatmap({ weeks }: { weeks: { total: number; week: number; days: number
             </div>
           ))}
         </div>
-
-        {/* Legend */}
-        <div className="flex items-center justify-end gap-1.5 pt-0.5 text-[10px] text-muted">
+        <div className="flex items-center justify-end gap-1 pt-0.5 text-[9px] text-muted">
           <span>Sedikit</span>
           {LEVELS.map((c, i) => (
-            <div key={i} className="h-[11px] w-[11px] rounded-[2px]" style={{ backgroundColor: c }} />
+            <div key={i} className="h-[9px] w-[9px] rounded-[2px]" style={{ backgroundColor: c }} />
           ))}
           <span>Banyak</span>
         </div>

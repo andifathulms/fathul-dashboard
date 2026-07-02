@@ -8,6 +8,7 @@ import {
   TerminalSquare,
   Server,
   NotebookPen,
+  Moon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,6 +19,7 @@ const NAV = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { href: '/ibadah', label: 'Ibadah', icon: Moon },
   { href: '/vault', label: 'Vault', icon: KeyRound },
   { href: '/commands', label: 'Commands', icon: TerminalSquare },
   { href: '/servers', label: 'Servers', icon: Server },

@@ -18,6 +18,7 @@ export interface Project {
   repos: Repo[]
   repo_url: string
   live_url: string
+  local_path: string
   notes: string
   tasks_count: number
   credentials_count: number
@@ -127,22 +128,45 @@ export interface GithubInfo {
   full_name: string
   html_url: string
   description: string | null
+  homepage: string | null
   default_branch: string
+  created_at: string | null
   pushed_at: string | null
   updated_at: string | null
   stargazers_count: number
+  watchers_count: number
   forks_count: number
   open_issues_count: number
   language: string | null
+  license: string | null
+  topics: string[]
+  size: number
   private: boolean
 }
 
-export interface GithubData {
+/** Analytics for a single repo. */
+export interface GithubRepo {
+  label: string
   ok: boolean
   error?: string
   repo?: string
   info?: GithubInfo
+  languages?: Record<string, number>
   commit_activity?: GithubWeek[]
   computing?: boolean
   recent_commits?: GithubCommit[]
+}
+
+/** Response from GET /projects/{id}/github/ — one entry per linked GitHub repo. */
+export interface GithubData {
+  ok: boolean
+  error?: string
+  repos: GithubRepo[]
+}
+
+export interface IbadahLog {
+  id: number
+  date: string
+  data: Record<string, Record<string, boolean>>
+  updated_at: string
 }

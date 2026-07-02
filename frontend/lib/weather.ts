@@ -6,9 +6,12 @@ export interface Weather {
   weathercode: number
 }
 
-export async function fetchWeather(): Promise<Weather> {
+export async function fetchWeather(
+  lat: number = BALIKPAPAN.lat,
+  lng: number = BALIKPAPAN.lng
+): Promise<Weather> {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${BALIKPAPAN.lat}&longitude=${BALIKPAPAN.lng}&current=temperature_2m,weathercode&timezone=Asia/Makassar`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode&timezone=auto`
   )
   const data = await res.json()
   return {

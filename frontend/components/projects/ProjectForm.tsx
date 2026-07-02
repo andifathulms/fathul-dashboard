@@ -159,6 +159,14 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         <Field label="Live URL">
           <input className="input" value={form.live_url} onChange={(e) => set('live_url', e.target.value)} />
         </Field>
+        <Field label="Path lokal (untuk tombol Buka di VS Code)">
+          <input
+            className="input font-mono"
+            placeholder="/Users/fathul/Documents/Project/nama-project"
+            value={form.local_path}
+            onChange={(e) => set('local_path', e.target.value)}
+          />
+        </Field>
         <Field label="Catatan">
           <textarea
             className="input resize-none"
@@ -197,6 +205,7 @@ function seed(p?: Project | null) {
     tech_stack: p?.tech_stack?.join(', ') ?? '',
     repos,
     live_url: p?.live_url ?? '',
+    local_path: p?.local_path ?? '',
     notes: p?.notes ?? '',
   }
 }

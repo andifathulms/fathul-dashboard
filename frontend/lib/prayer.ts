@@ -23,9 +23,13 @@ export const PRAYER_SEQUENCE: { key: keyof PrayerTimings; label: string }[] = [
   { key: 'Isha', label: 'Isya' },
 ]
 
-export async function fetchPrayerTimes(date: string): Promise<PrayerTimings> {
+export async function fetchPrayerTimes(
+  date: string,
+  lat: number = BALIKPAPAN.lat,
+  lng: number = BALIKPAPAN.lng
+): Promise<PrayerTimings> {
   const res = await fetch(
-    `https://api.aladhan.com/v1/timings/${date}?latitude=${BALIKPAPAN.lat}&longitude=${BALIKPAPAN.lng}&method=20`
+    `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=20`
   )
   const data = await res.json()
   return data.data.timings

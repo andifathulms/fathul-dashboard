@@ -2,10 +2,9 @@
 
 import { Trash2 } from 'lucide-react'
 
-import { CategoryBadge } from '@/components/ui/Badge'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { CATEGORY_STYLES, cn } from '@/lib/utils'
 
 interface TaskItemProps {
   task: Task
@@ -18,13 +17,21 @@ export default function TaskItem({ task, projects, onChange, showDelete = false 
   const project = projects?.find((p) => p.id === task.project)
 
   const toggle = async () => {
-    await api.patch(`/tasks/${task.id}/`, { is_done: !task.is_done })
-    onChange()
+    try {
+      await api.patch(`/tasks/${task.id}/`, { is_done: !task.is_done })
+      onChange()
+    } catch (e) {
+      alert('Gagal memperbarui tugas: ' + (e as Error).message)
+    }
   }
 
   const remove = async () => {
-    await api.delete(`/tasks/${task.id}/`)
-    onChange()
+    try {
+      await api.delete(`/tasks/${task.id}/`)
+      onChange()
+    } catch (e) {
+      alert('Gagal menghapus tugas: ' + (e as Error).message)
+    }
   }
 
   return (
@@ -52,7 +59,17 @@ export default function TaskItem({ task, projects, onChange, showDelete = false 
       {task.due_date && (
         <span className="font-mono text-[11px] text-muted">{task.due_date}</span>
       )}
-      {project && <CategoryBadge category={project.category} />}
+      {/* Project name chip — colored by category when the project is known. */}
+      {task.project_name && (
+        <span
+          className={cn(
+            'chip shrink-0',
+            project ? CATEGORY_STYLES[project.category].chip : 'bg-accent1/15 text-accent1'
+          )}
+        >
+          {task.project_name}
+        </span>
+      )}
 
       {showDelete && (
         <button

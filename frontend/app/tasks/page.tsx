@@ -29,15 +29,19 @@ export default function TasksPage() {
 
   const add = async () => {
     if (!title.trim()) return
-    await api.post('/tasks/', {
-      title: title.trim(),
-      project: project ? Number(project) : null,
-      due_date: due || null,
-    })
-    setTitle('')
-    setProject('')
-    setDue('')
-    mutate()
+    try {
+      await api.post('/tasks/', {
+        title: title.trim(),
+        project: project ? Number(project) : null,
+        due_date: due || null,
+      })
+      setTitle('')
+      setProject('')
+      setDue('')
+      mutate()
+    } catch (e) {
+      alert('Gagal menambah tugas: ' + (e as Error).message)
+    }
   }
 
   const visible = tasks?.filter((t) =>

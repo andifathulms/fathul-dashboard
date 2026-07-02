@@ -1,17 +1,32 @@
 'use client'
 
-import { MapPin } from 'lucide-react'
+import { LocateFixed, MapPin } from 'lucide-react'
+import { useState } from 'react'
 
 import { usePrayer } from '@/hooks/usePrayer'
 import { useWeather } from '@/hooks/useWeather'
+import { detectLocation } from '@/lib/location'
 import { PRAYER_SEQUENCE, formatCountdown } from '@/lib/prayer'
 import { describeWeather } from '@/lib/weather'
 import { cn } from '@/lib/utils'
 
 export default function TopBar() {
-  const { timings, now, next } = usePrayer()
+  const { timings, now, next, location } = usePrayer()
   const { weather } = useWeather()
   const w = weather ? describeWeather(weather.weathercode) : null
+
+  const [locating, setLocating] = useState(false)
+
+  const detect = async () => {
+    setLocating(true)
+    try {
+      await detectLocation()
+    } catch (e) {
+      alert((e as Error).message)
+    } finally {
+      setLocating(false)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-bg/80 backdrop-blur-md">
@@ -59,9 +74,18 @@ export default function TopBar() {
               <span className="text-lg leading-none">{w.icon}</span>
               <div className="leading-tight">
                 <p className="text-sm font-semibold">{Math.round(weather.temperature)}°C</p>
-                <p className="flex items-center gap-1 text-[10px] text-muted">
-                  <MapPin size={9} /> Balikpapan
-                </p>
+                <button
+                  onClick={detect}
+                  title="Perbarui lokasi (GPS)"
+                  className="flex items-center gap-1 text-[10px] text-muted transition-colors hover:text-accent1"
+                >
+                  {locating ? (
+                    <LocateFixed size={9} className="animate-spin" />
+                  ) : (
+                    <MapPin size={9} />
+                  )}
+                  <span className="max-w-[100px] truncate">{locating ? 'Mencari…' : location.label}</span>
+                </button>
               </div>
             </div>
           )}
