@@ -143,6 +143,29 @@ class DailyLog(models.Model):
         return f'Log {self.date}'
 
 
+class UptimeCheck(models.Model):
+    """A single web availability check for a project's live_url (history)."""
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name='uptime_checks'
+    )
+    url = models.URLField()
+    checked_at = models.DateTimeField(auto_now_add=True)
+    is_up = models.BooleanField(default=False)
+    status_code = models.IntegerField(null=True, blank=True)
+    response_ms = models.IntegerField(null=True, blank=True)
+    error = models.CharField(max_length=300, blank=True)
+    server = models.CharField(max_length=200, blank=True)
+    content_type = models.CharField(max_length=200, blank=True)
+    final_url = models.URLField(blank=True)
+    ssl_days_left = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-checked_at']
+
+    def __str__(self):
+        return f'{self.url} @ {self.checked_at:%Y-%m-%d %H:%M} ({"up" if self.is_up else "down"})'
+
+
 class GithubCache(models.Model):
     """Cached GitHub analytics payload per project (refreshed on demand / TTL)."""
     project = models.OneToOneField(

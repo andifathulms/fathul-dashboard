@@ -18,6 +18,7 @@ from .models import (
     Project,
     Server,
     Task,
+    UptimeCheck,
 )
 from .serializers import (
     CommandSerializer,
@@ -28,6 +29,7 @@ from .serializers import (
     ProjectSerializer,
     ServerSerializer,
     TaskSerializer,
+    UptimeCheckSerializer,
 )
 
 
@@ -98,6 +100,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
         payload['fetched_at'] = now.isoformat()
         payload['cached'] = False
         return Response(payload)
+
+    @action(detail=True, methods=['get', 'post'], url_path='uptime')
+    def uptime(self, request, pk=None):
+        """GET → recent check history; POST → run a check now and save it."""
+        project = self.get_object()
+
+        if request.method == 'POST':
+            if not project.live_url:
+                return Response({'detail': 'no_live_url'}, status=400)
+            from .uptime import check_url
+
+            data = check_url(project.live_url)
+            check = UptimeCheck.objects.create(project=project, url=project.live_url, **data)
+            # Keep only the most recent 200 checks per project.
+            old_ids = project.uptime_checks.values_list('id', flat=True)[200:]
+            if old_ids:
+                UptimeCheck.objects.filter(id__in=list(old_ids)).delete()
+            return Response(UptimeCheckSerializer(check).data)
+
+        checks = project.uptime_checks.all()[:100]
+        return Response({
+            'has_url': bool(project.live_url),
+            'url': project.live_url,
+            'checks': UptimeCheckSerializer(checks, many=True).data,
+        })
 
 
 class TaskViewSet(viewsets.ModelViewSet):

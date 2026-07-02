@@ -9,6 +9,7 @@ from .models import (
     Project,
     Server,
     Task,
+    UptimeCheck,
 )
 
 
@@ -96,3 +97,12 @@ class IbadahLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = IbadahLog
         fields = ['id', 'date', 'data', 'updated_at']
+
+
+class UptimeCheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UptimeCheck
+        fields = [
+            'id', 'url', 'checked_at', 'is_up', 'status_code', 'response_ms',
+            'error', 'server', 'content_type', 'final_url', 'ssl_days_left',
+        ]

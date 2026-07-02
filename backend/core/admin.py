@@ -9,6 +9,7 @@ from .models import (
     Project,
     Server,
     Task,
+    UptimeCheck,
 )
 
 
@@ -61,3 +62,9 @@ class DailyLogAdmin(admin.ModelAdmin):
 @admin.register(IbadahLog)
 class IbadahLogAdmin(admin.ModelAdmin):
     list_display = ('date', 'updated_at')
+
+
+@admin.register(UptimeCheck)
+class UptimeCheckAdmin(admin.ModelAdmin):
+    list_display = ('project', 'url', 'is_up', 'status_code', 'response_ms', 'checked_at')
+    list_filter = ('is_up', 'project')
