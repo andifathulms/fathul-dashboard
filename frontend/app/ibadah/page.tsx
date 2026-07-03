@@ -188,7 +188,7 @@ export default function IbadahPage() {
           </thead>
           <tbody>
             {PRAYERS.map((p) => (
-              <tr key={p.key} className="border-t border-border">
+              <tr key={p.key} className="border-t border-border transition-colors hover:bg-bg/60">
                 <td className="py-2.5 font-medium">
                   {p.key}
                   {timings && (

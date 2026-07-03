@@ -8,9 +8,9 @@ interface StatusDotProps {
 }
 
 const COLORS: Record<Status, string> = {
-  up: 'bg-highlight',
-  down: 'bg-red-500',
-  checking: 'bg-accent2 animate-pulse-dot',
+  up: 'bg-highlight shadow-[0_0_0_3px_rgba(16,185,129,0.16)]',
+  down: 'bg-red-500 shadow-[0_0_0_3px_rgba(239,68,68,0.16)]',
+  checking: 'bg-accent2 animate-pulse-dot shadow-[0_0_0_3px_rgba(217,119,6,0.16)]',
 }
 
 export default function StatusDot({ status, className }: StatusDotProps) {

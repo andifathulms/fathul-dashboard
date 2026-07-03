@@ -130,9 +130,9 @@ export default function ProjectDetailPage() {
         </div>
         <div className="flex shrink-0 gap-2">
           <button onClick={() => setEditing(true)} className="btn">
-            <Pencil size={14} /> Edit
+            <Pencil size={14} /> <span className="hidden sm:inline">Edit</span>
           </button>
-          <button onClick={remove} className="btn hover:border-red-500/50 hover:text-red-400">
+          <button onClick={remove} className="btn-danger" aria-label="Hapus project">
             <Trash2 size={14} />
           </button>
         </div>

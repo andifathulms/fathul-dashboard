@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import PageTransition from './PageTransition'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { cn } from '@/lib/utils'
@@ -53,7 +54,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopBar onMenu={() => setMobileOpen(true)} />
-        <main className="flex-1 px-4 py-5 sm:px-6">{children}</main>
+        <main className="flex-1 px-4 py-5 sm:px-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </>
   )
