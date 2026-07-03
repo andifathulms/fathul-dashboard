@@ -94,9 +94,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
         payload = {'ok': True, 'repos': repos}
 
         now = timezone.now()
-        GithubCache.objects.update_or_create(
-            project=project, defaults={'payload': payload, 'fetched_at': now}
-        )
+        # Only cache a settled result. Never cache while GitHub is still computing
+        # stats (202) or when a repo hit a transient error — otherwise that bad
+        # state would stick for the whole TTL. (not_found is stable → cacheable.)
+        def settled(r):
+            if r.get('computing'):
+                return False
+            if not r.get('ok') and r.get('error') in ('unavailable', 'rate_limited'):
+                return False
+            return True
+
+        if all(settled(r) for r in repos):
+            GithubCache.objects.update_or_create(
+                project=project, defaults={'payload': payload, 'fetched_at': now}
+            )
         payload['fetched_at'] = now.isoformat()
         payload['cached'] = False
         return Response(payload)

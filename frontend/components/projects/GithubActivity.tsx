@@ -208,7 +208,7 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
           }
         />
         <Stat label="Terakhir" value={timeAgo(lastPush)} />
-        <Stat label="Commit/thn" value={`${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
+        <Stat label="Commit/thn" value={computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
         <Stat label="Repo" value={`${repos.length}`} />
         {stars > 0 && <Stat label="Stars" value={`${stars}`} icon={<Star size={12} />} />}
         {forks > 0 && <Stat label="Forks" value={`${forks}`} icon={<GitFork size={12} />} />}
@@ -331,7 +331,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
           }
         />
         <Stat label="Terakhir" value={timeAgo(info?.pushed_at)} />
-        <Stat label="Commit/thn" value={`${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
+        <Stat label="Commit/thn" value={repo.computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
         <Stat label="Branch" value={info?.default_branch ?? '—'} />
         {(info?.stargazers_count ?? 0) > 0 && (
           <Stat label="Stars" value={`${info?.stargazers_count}`} icon={<Star size={12} />} />
