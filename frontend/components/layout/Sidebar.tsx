@@ -11,6 +11,7 @@ import {
   Moon,
   ChevronsLeft,
   ChevronsRight,
+  Search,
   X,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -85,6 +86,24 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
           <ChevronsRight size={16} />
         </button>
       )}
+
+      {/* Command palette trigger */}
+      <div className={cn('px-3 pb-1', collapsed && 'lg:px-2')}>
+        <button
+          onClick={() => window.dispatchEvent(new Event('fd-open-cmdk'))}
+          title="Cari (⌘K)"
+          className={cn(
+            'flex w-full items-center gap-2 rounded-lg border border-border bg-bg text-sm text-muted transition-colors hover:border-accent1/40 hover:text-text',
+            collapsed ? 'lg:h-10 lg:w-10 lg:justify-center lg:px-0 px-3 py-2' : 'px-3 py-2'
+          )}
+        >
+          <Search size={16} className="shrink-0" />
+          <span className={cn('flex-1 text-left', collapsed && 'lg:hidden')}>Cari…</span>
+          <kbd className={cn('rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px]', collapsed && 'lg:hidden')}>
+            ⌘K
+          </kbd>
+        </button>
+      </div>
 
       <nav className={cn('flex flex-1 flex-col gap-1 py-2', collapsed ? 'px-3 lg:items-center lg:px-2' : 'px-3')}>
         {NAV.map(({ href, label, icon: Icon }) => {

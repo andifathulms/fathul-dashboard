@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import CommandPalette from './CommandPalette'
 import PageTransition from './PageTransition'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
@@ -58,6 +59,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <PageTransition>{children}</PageTransition>
         </main>
       </div>
+
+      <CommandPalette />
     </>
   )
 }

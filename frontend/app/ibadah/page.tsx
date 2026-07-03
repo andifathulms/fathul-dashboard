@@ -190,10 +190,16 @@ export default function IbadahPage() {
             {PRAYERS.map((p) => (
               <tr key={p.key} className="border-t border-border transition-colors hover:bg-bg/60">
                 <td className="py-2.5 font-medium">
-                  {p.key}
-                  {timings && (
-                    <span className="ml-2 font-mono text-[11px] text-muted">{timings[keyOf(p.key)]}</span>
-                  )}
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: SEG_COLORS[p.key] }}
+                    />
+                    {p.key}
+                    {timings && (
+                      <span className="font-mono text-[11px] text-muted">{timings[keyOf(p.key)]}</span>
+                    )}
+                  </span>
                 </td>
                 <td className="py-2.5 text-center">
                   {p.qabliyah ? (
@@ -374,9 +380,9 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
 
 function SummaryStat({ value, label, sub, color }: { value: string; label: string; sub?: string; color: string }) {
   return (
-    <div className="rounded-lg bg-bg px-2 py-3">
-      <p className={cn('font-mono text-xl font-semibold', color)}>{value}</p>
-      <p className="mt-0.5 text-[11px] text-muted">{label}</p>
+    <div className="rounded-lg border border-border/60 bg-bg px-2 py-3">
+      <p className={cn('font-mono text-2xl font-bold tabular-nums', color)}>{value}</p>
+      <p className="mt-0.5 text-[11px] font-medium text-muted">{label}</p>
       {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
     </div>
   )
@@ -406,13 +412,17 @@ function ProgressStat({ label, done, total, color }: { label: string; done: numb
   return (
     <WidgetCard bodyClassName="space-y-2">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-muted">{label}</span>
-        <span className={cn('font-mono text-sm font-semibold', color)}>
-          {done}/{total}
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</span>
+        <span className={cn('font-mono text-lg font-bold tabular-nums', color)}>
+          {done}
+          <span className="text-xs font-medium text-muted">/{total}</span>
         </span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-bg">
-        <div className={cn('h-full rounded-full bg-current', color)} style={{ width: `${pct}%` }} />
+        <div
+          className={cn('h-full rounded-full bg-current transition-all duration-500', color)}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </WidgetCard>
   )

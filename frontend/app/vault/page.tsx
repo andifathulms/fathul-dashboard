@@ -16,7 +16,7 @@ import { useToast } from '@/components/ui/Toast'
 import { CategoryBadge } from '@/components/ui/Badge'
 import api from '@/lib/api'
 import type { Credential, EnvVar, Project } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { CATEGORY_STYLES, cn } from '@/lib/utils'
 
 type Tab = 'credentials' | 'envvars'
 
@@ -108,11 +108,22 @@ export default function VaultPage() {
           {filteredCreds?.map((c) => {
             const project = projects?.find((p) => p.id === c.project)
             return (
-              <div key={c.id} className="card group p-4">
+              <div key={c.id} className="card card-hover group relative overflow-hidden p-4 pl-5">
+                <span
+                  className={cn(
+                    'absolute inset-y-0 left-0 w-1',
+                    project ? CATEGORY_STYLES[project.category].bar : 'bg-accent1/60'
+                  )}
+                />
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{c.label}</h3>
-                    {c.category && <p className="mt-0.5 text-[11px] text-muted">{c.category}</p>}
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/15">
+                      <KeyRound size={15} />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold leading-tight">{c.label}</h3>
+                      {c.category && <p className="mt-0.5 text-[11px] text-muted">{c.category}</p>}
+                    </div>
                   </div>
                   <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
@@ -175,7 +186,7 @@ export default function VaultPage() {
             return (
               <div
                 key={e.id}
-                className="group flex items-center gap-3 rounded-lg border border-border bg-bg px-3 py-2"
+                className="group flex items-center gap-3 rounded-lg border border-border bg-bg px-3 py-2 transition-all hover:border-borderStrong hover:bg-surface2/40"
               >
                 <code className="shrink-0 font-mono text-[13px] text-accent2">{e.key}</code>
                 <span className="text-muted">=</span>
