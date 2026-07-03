@@ -9,6 +9,7 @@ import { CategoryBadge } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonRows } from '@/components/ui/Skeleton'
 import type { Project } from '@/lib/types'
+import { CATEGORY_STYLES, cn } from '@/lib/utils'
 
 export default function ProjectsWidget() {
   const { data: projects, isLoading } = useSWR<Project[]>('/projects/?status=active')
@@ -32,8 +33,9 @@ export default function ProjectsWidget() {
         <Link
           key={p.id}
           href={`/projects/${p.id}`}
-          className="group flex items-center justify-between rounded-lg border border-border bg-bg px-3 py-2.5 transition-colors hover:border-accent1/40"
+          className="group relative flex items-center justify-between overflow-hidden rounded-lg border border-border bg-bg px-3 py-2.5 pl-4 transition-all hover:border-accent1/40 hover:bg-surface2/50"
         >
+          <span className={cn('absolute inset-y-0 left-0 w-[3px]', CATEGORY_STYLES[p.category].bar)} />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{p.name}</p>
             <p className="mt-0.5 text-[11px] text-muted">

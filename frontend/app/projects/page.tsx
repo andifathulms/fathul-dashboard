@@ -11,7 +11,7 @@ import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import Skeleton from '@/components/ui/Skeleton'
 import type { Project, ProjectStatus } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { CATEGORY_STYLES, cn } from '@/lib/utils'
 
 const FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
   { key: 'all', label: 'Semua' },
@@ -98,8 +98,9 @@ export default function ProjectsPage() {
           <Link
             key={p.id}
             href={`/projects/${p.id}`}
-            className="group card card-hover p-4"
+            className="group card card-hover relative overflow-hidden p-4 pl-5"
           >
+            <span className={cn('absolute inset-y-0 left-0 w-1', CATEGORY_STYLES[p.category].bar)} />
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold leading-tight">{p.name}</h3>
               <ArrowUpRight size={16} className="shrink-0 text-muted group-hover:text-accent1" />
