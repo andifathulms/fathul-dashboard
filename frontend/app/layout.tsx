@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: 'Personal local command center — projects, tasks, vault, servers, and more.',
 }
 
+// Render pages per-request (not prerendered with a year-long cache header) so a
+// rebuild is always reflected on the next refresh — this is a local-only app.
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
