@@ -29,7 +29,7 @@ export default function PrayerBar() {
           </div>
         </div>
         <div className="text-right">
-          <p className="bg-gradient-to-b from-accent1 to-[#0b84bd] bg-clip-text text-3xl font-extrabold tabular-nums text-transparent">
+          <p className="bg-gradient-to-br from-accent1 to-accent2 bg-clip-text text-3xl font-extrabold tabular-nums text-transparent">
             {formatCountdown(next.minutesUntil)}
           </p>
           <p className="text-[11px] text-muted">lagi</p>

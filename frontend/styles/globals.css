@@ -5,16 +5,17 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #1b222c;
-  --border: #21262d;
-  --border-strong: #2b333d;
-  --accent1: #0ea5e9;
-  --accent2: #d97706;
-  --highlight: #10b981;
-  --text: #f0f6fc;
-  --muted: #8b949e;
+  /* Nocturne — deep navy + cyan/violet. */
+  --bg: #0b0f17;
+  --surface: #141a24;
+  --surface-2: #1c2431;
+  --border: #232b37;
+  --border-strong: #2e3a4d;
+  --accent1: #38bdf8;
+  --accent2: #a78bfa;
+  --highlight: #34d399;
+  --text: #e6edf6;
+  --muted: #8a94a6;
 }
 
 html,
@@ -34,9 +35,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(70% 55% at 12% -5%, rgba(14, 165, 233, 0.07), transparent 60%),
-    radial-gradient(55% 45% at 105% 0%, rgba(217, 119, 6, 0.05), transparent 55%),
-    radial-gradient(60% 50% at 50% 120%, rgba(16, 185, 129, 0.04), transparent 60%);
+    radial-gradient(70% 55% at 12% -5%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(55% 45% at 105% 0%, rgba(167, 139, 250, 0.06), transparent 55%),
+    radial-gradient(60% 50% at 50% 120%, rgba(52, 211, 153, 0.04), transparent 60%);
 }
 
 * {
@@ -50,7 +51,7 @@ body::before {
 }
 
 ::selection {
-  background: rgba(14, 165, 233, 0.28);
+  background: rgba(56, 189, 248, 0.28);
   color: #fff;
 }
 
@@ -83,11 +84,11 @@ h3 {
   /* Cards get a subtle top-light highlight + layered shadow for real depth. */
   .card {
     @apply rounded-xl border border-border;
-    background-image: linear-gradient(180deg, #1a212c 0%, var(--surface) 58%);
+    background-image: linear-gradient(180deg, #1b2230 0%, var(--surface) 58%);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.28),
-      0 10px 28px -16px rgba(0, 0, 0, 0.65);
+      0 1px 2px rgba(0, 0, 0, 0.32),
+      0 10px 28px -16px rgba(0, 0, 0, 0.7);
   }
   .card-hover {
     @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-accent1/40;
@@ -95,8 +96,8 @@ h3 {
   .card-hover:hover {
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      0 10px 30px -12px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(14, 165, 233, 0.12);
+      0 10px 30px -12px rgba(0, 0, 0, 0.75),
+      0 0 0 1px rgba(56, 189, 248, 0.14);
   }
   .card-pad {
     @apply p-4;
@@ -111,13 +112,13 @@ h3 {
   }
   .btn-accent {
     @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-bg transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
-    background-image: linear-gradient(180deg, #22b0f2 0%, var(--accent1) 100%);
+    background-image: linear-gradient(180deg, #5cc7fb 0%, var(--accent1) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.25),
-      0 4px 14px -4px rgba(14, 165, 233, 0.5);
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 4px 14px -4px rgba(56, 189, 248, 0.5);
   }
   .btn-accent:hover {
-    background-image: linear-gradient(180deg, #38b9f5 0%, #10a8ec 100%);
+    background-image: linear-gradient(180deg, #6fcffc 0%, #22b3f2 100%);
   }
   .btn-ghost {
     @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-border/50 hover:text-text active:scale-[0.97];

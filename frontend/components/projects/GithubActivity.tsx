@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 const LEVELS = ['#1b2129', '#0e4429', '#006d32', '#26a641', '#39d353']
 
 // Small fixed categorical palette for the language bar (distinct hues, labeled).
-const LANG_COLORS = ['#0EA5E9', '#D97706', '#10B981', '#a371f7', '#f778ba', '#8B949E']
+const LANG_COLORS = ['#38BDF8', '#FBBF24', '#34D399', '#A78BFA', '#F472B6', '#8A94A6']
 
 function bucket(count: number): number {
   if (count <= 0) return 0
@@ -496,9 +496,9 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
 
 function ciTone(run?: GithubWorkflowRun) {
   if (!run) return { cls: 'text-muted', dot: 'bg-muted', label: '—' }
-  if (run.status !== 'completed') return { cls: 'text-accent2', dot: 'bg-accent2 animate-pulse-dot', label: 'Berjalan' }
+  if (run.status !== 'completed') return { cls: 'text-warning', dot: 'bg-warning animate-pulse-dot', label: 'Berjalan' }
   if (run.conclusion === 'success') return { cls: 'text-highlight', dot: 'bg-highlight', label: 'Passing' }
-  if (run.conclusion === 'failure') return { cls: 'text-red-400', dot: 'bg-red-500', label: 'Failing' }
+  if (run.conclusion === 'failure') return { cls: 'text-danger', dot: 'bg-danger', label: 'Failing' }
   return { cls: 'text-muted', dot: 'bg-muted', label: run.conclusion ?? '—' }
 }
 

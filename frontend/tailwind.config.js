@@ -4,16 +4,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: '#0D1117',
-        surface: '#161B22',
-        surface2: '#1B222C',
-        border: '#21262D',
-        borderStrong: '#2B333D',
-        accent1: '#0EA5E9',
-        accent2: '#D97706',
-        highlight: '#10B981',
-        text: '#F0F6FC',
-        muted: '#8B949E',
+        // Nocturne — deep navy base with cyan + violet accents.
+        bg: '#0B0F17',
+        surface: '#141A24',
+        surface2: '#1C2431',
+        border: '#232B37',
+        borderStrong: '#2E3A4D',
+        accent1: '#38BDF8', // cyan — primary / info / links
+        accent2: '#A78BFA', // violet — secondary highlight
+        highlight: '#34D399', // emerald — good / up
+        warning: '#FBBF24', // amber — caution
+        danger: '#F87171', // soft red — down / critical
+        text: '#E6EDF6',
+        muted: '#8A94A6',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

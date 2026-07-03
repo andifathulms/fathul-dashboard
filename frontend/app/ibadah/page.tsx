@@ -478,11 +478,11 @@ function Dash() {
 // ---- Timeline ----
 
 const SEG_COLORS: Record<string, string> = {
-  Subuh: '#0EA5E9',
-  Dzuhur: '#D97706',
-  Ashar: '#10B981',
-  Maghrib: '#a371f7',
-  Isya: '#6366f1',
+  Subuh: '#38BDF8',
+  Dzuhur: '#FBBF24',
+  Ashar: '#34D399',
+  Maghrib: '#A78BFA',
+  Isya: '#818CF8',
 }
 
 // Diagonal red hatch for forbidden (haram) prayer windows.

@@ -124,7 +124,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
                   <span
                     className={cn(
                       'inline-flex items-center gap-1',
-                      latest.ssl_days_left < 14 ? 'text-accent2' : 'text-highlight'
+                      latest.ssl_days_left < 14 ? 'text-warning' : 'text-highlight'
                     )}
                   >
                     {latest.ssl_days_left < 14 ? <ShieldAlert size={13} /> : <ShieldCheck size={13} />}
@@ -184,7 +184,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
 
 function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; total: number } }) {
   const pct = sla.pct
-  const color = pct == null ? 'text-muted' : pct >= 99 ? 'text-highlight' : pct >= 95 ? 'text-accent2' : 'text-red-400'
+  const color = pct == null ? 'text-muted' : pct >= 99 ? 'text-highlight' : pct >= 95 ? 'text-warning' : 'text-danger'
   return (
     <div className="rounded-lg border border-border/60 bg-bg px-2 py-2.5 text-center">
       <p className={cn('font-mono text-lg font-bold tabular-nums', color)}>{pct == null ? '—' : `${pct}%`}</p>

@@ -54,7 +54,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
     >
       {/* Brand + toggle */}
       <div className={cn('flex items-center gap-2.5 px-5 py-5', collapsed && 'lg:justify-center lg:px-0')}>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent1 to-[#0b84bd] font-mono text-sm font-bold text-white shadow-[0_2px_10px_-2px_rgba(14,165,233,0.6)]">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent1 to-accent2 font-mono text-sm font-bold text-white shadow-[0_2px_12px_-2px_rgba(56,189,248,0.6)]">
           f.
         </span>
         <span className={cn('font-mono text-sm font-semibold tracking-tight', collapsed && 'lg:hidden')}>
@@ -118,14 +118,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
                 'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
                 collapsed && 'lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:px-0',
                 active
-                  ? 'bg-accent1/12 text-accent1 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.18)]'
+                  ? 'bg-accent1/12 text-accent1 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.18)]'
                   : 'text-muted hover:bg-border/50 hover:text-text'
               )}
             >
               {active && (
                 <span
                   className={cn(
-                    'absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent1 shadow-[0_0_10px_rgba(14,165,233,0.7)]',
+                    'absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent1 shadow-[0_0_10px_rgba(56,189,248,0.7)]',
                     collapsed && 'lg:hidden'
                   )}
                 />
