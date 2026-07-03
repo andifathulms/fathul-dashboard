@@ -1,12 +1,22 @@
 'use client'
 
-import { Github, GitCommitHorizontal, Lock, RefreshCw, Star, CircleDot, GitFork } from 'lucide-react'
+import {
+  Github,
+  GitCommitHorizontal,
+  GitPullRequest,
+  CircleAlert,
+  Lock,
+  RefreshCw,
+  Star,
+  CircleDot,
+  GitFork,
+} from 'lucide-react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
 import WidgetCard from '@/components/ui/Card'
 import api from '@/lib/api'
-import type { GithubData, GithubRepo, GithubWeek } from '@/lib/types'
+import type { GithubData, GithubRepo, GithubWeek, GithubWorkflowRun } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 // Sequential single-hue ramp (empty → bright green), monotonic in lightness on
@@ -207,6 +217,8 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
 
       {Object.keys(langs).length > 0 && <Languages langs={langs} />}
 
+      <CiChips items={repos.map((r) => ({ label: r.label, run: r.workflow_runs?.[0] }))} />
+
       {computing && weeks.length === 0 ? (
         <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
           <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
@@ -238,6 +250,33 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
           </div>
         </div>
       )}
+
+      <ItemList
+        title="Pull Requests"
+        icon={<GitPullRequest size={13} />}
+        items={repos.flatMap((r) =>
+          (r.pull_requests ?? []).map((p) => ({
+            number: p.number,
+            title: p.title,
+            user: p.user,
+            html_url: p.html_url,
+            label: r.label,
+          }))
+        )}
+      />
+      <ItemList
+        title="Issues"
+        icon={<CircleAlert size={13} />}
+        items={repos.flatMap((r) =>
+          (r.open_issues ?? []).map((i) => ({
+            number: i.number,
+            title: i.title,
+            user: i.user,
+            html_url: i.html_url,
+            label: r.label,
+          }))
+        )}
+      />
     </WidgetCard>
   )
 }
@@ -307,6 +346,8 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
 
       {repo.languages && Object.keys(repo.languages).length > 0 && <Languages langs={repo.languages} />}
 
+      <CiChips items={[{ run: repo.workflow_runs?.[0] }]} />
+
       {repo.computing ? (
         <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
           <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
@@ -337,6 +378,27 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
           </div>
         </div>
       )}
+
+      <ItemList
+        title="Pull Requests"
+        icon={<GitPullRequest size={13} />}
+        items={(repo.pull_requests ?? []).map((p) => ({
+          number: p.number,
+          title: p.title,
+          user: p.user,
+          html_url: p.html_url,
+        }))}
+      />
+      <ItemList
+        title="Issues"
+        icon={<CircleAlert size={13} />}
+        items={(repo.open_issues ?? []).map((i) => ({
+          number: i.number,
+          title: i.title,
+          user: i.user,
+          html_url: i.html_url,
+        }))}
+      />
     </WidgetCard>
   )
 }
@@ -427,6 +489,81 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
           ))}
           <span>Banyak</span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ciTone(run?: GithubWorkflowRun) {
+  if (!run) return { cls: 'text-muted', dot: 'bg-muted', label: '—' }
+  if (run.status !== 'completed') return { cls: 'text-accent2', dot: 'bg-accent2 animate-pulse-dot', label: 'Berjalan' }
+  if (run.conclusion === 'success') return { cls: 'text-highlight', dot: 'bg-highlight', label: 'Passing' }
+  if (run.conclusion === 'failure') return { cls: 'text-red-400', dot: 'bg-red-500', label: 'Failing' }
+  return { cls: 'text-muted', dot: 'bg-muted', label: run.conclusion ?? '—' }
+}
+
+function CiChips({ items }: { items: { label?: string; run?: GithubWorkflowRun }[] }) {
+  const valid = items.filter((i) => i.run)
+  if (!valid.length) return null
+  return (
+    <div>
+      <p className="widget-title mb-1.5">CI / CD</p>
+      <div className="flex flex-wrap gap-1.5">
+        {valid.map((i, idx) => {
+          const t = ciTone(i.run)
+          return (
+            <a
+              key={idx}
+              href={i.run!.html_url ?? undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="chip inline-flex items-center gap-1.5 border border-border bg-bg"
+              title={i.run!.name ?? undefined}
+            >
+              <span className={cn('h-2 w-2 rounded-full', t.dot)} />
+              <span className={t.cls}>{t.label}</span>
+              <span className="text-muted">
+                {i.label ? `${i.label} · ` : ''}
+                {i.run!.branch}
+              </span>
+            </a>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface ListItem {
+  number: number
+  title: string
+  user: string | null
+  html_url: string | null
+  label?: string
+}
+
+function ItemList({ title, icon, items }: { title: string; icon: React.ReactNode; items: ListItem[] }) {
+  if (!items.length) return null
+  return (
+    <div>
+      <p className="widget-title mb-1.5 flex items-center gap-1.5">
+        {icon} {title} · {items.length}
+      </p>
+      <div className="space-y-0.5">
+        {items.slice(0, 4).map((it) => (
+          <a
+            key={`${it.label ?? ''}-${it.number}`}
+            href={it.html_url ?? undefined}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
+          >
+            {it.label && <span className="chip shrink-0 bg-border/40 text-[10px] text-muted">{it.label}</span>}
+            <span className="shrink-0 font-mono text-[11px] text-muted">#{it.number}</span>
+            <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{it.title}</span>
+            {it.user && <span className="shrink-0 text-[11px] text-muted">{it.user}</span>}
+          </a>
+        ))}
       </div>
     </div>
   )

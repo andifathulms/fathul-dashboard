@@ -144,6 +144,34 @@ export interface GithubInfo {
   private: boolean
 }
 
+export interface GithubWorkflowRun {
+  name: string | null
+  status: string | null
+  conclusion: string | null
+  branch: string | null
+  event: string | null
+  html_url: string | null
+  created_at: string | null
+}
+
+export interface GithubPull {
+  number: number
+  title: string
+  user: string | null
+  draft: boolean
+  created_at: string | null
+  html_url: string | null
+}
+
+export interface GithubIssue {
+  number: number
+  title: string
+  user: string | null
+  comments: number
+  created_at: string | null
+  html_url: string | null
+}
+
 /** Analytics for a single repo. */
 export interface GithubRepo {
   label: string
@@ -155,6 +183,9 @@ export interface GithubRepo {
   commit_activity?: GithubWeek[]
   computing?: boolean
   recent_commits?: GithubCommit[]
+  workflow_runs?: GithubWorkflowRun[]
+  pull_requests?: GithubPull[]
+  open_issues?: GithubIssue[]
 }
 
 /** Response from GET /projects/{id}/github/ — one entry per linked GitHub repo. */
@@ -187,8 +218,26 @@ export interface UptimeCheck {
   ssl_days_left: number | null
 }
 
+export interface UptimeSla {
+  up: number
+  total: number
+  pct: number | null
+}
+
+export interface UptimeIncident {
+  start: string
+  end: string | null
+  duration_min: number
+  status_code: number | null
+  error: string
+  ongoing: boolean
+}
+
 export interface UptimeData {
   has_url: boolean
   url: string
+  latest: UptimeCheck | null
   checks: UptimeCheck[]
+  sla: { h24: UptimeSla; d7: UptimeSla; d30: UptimeSla }
+  incidents: UptimeIncident[]
 }

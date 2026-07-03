@@ -48,7 +48,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
   useEffect(() => {
     if (!data || autoRan.current) return
     autoRan.current = true
-    const latest = data.checks?.[0]
+    const latest = data.latest
     const stale = !latest || Date.now() - new Date(latest.checked_at).getTime() > STALE_MS
     if (data.has_url && stale) runCheck()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,9 +57,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
   if (!hasUrl) return null
 
   const checks = data?.checks ?? []
-  const latest: UptimeCheck | undefined = checks[0]
-  const upCount = checks.filter((c) => c.is_up).length
-  const uptimePct = checks.length ? Math.round((upCount / checks.length) * 100) : null
+  const latest: UptimeCheck | null | undefined = data?.latest
   const avgMs =
     checks.length > 0
       ? Math.round(checks.filter((c) => c.response_ms != null).reduce((s, c) => s + (c.response_ms ?? 0), 0) / checks.length)
@@ -116,9 +114,9 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
 
           {/* Stat row */}
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            {uptimePct != null && <Stat label="Uptime" value={`${uptimePct}%`} sub={`${checks.length} cek`} />}
             {avgMs != null && <Stat label="Rata-rata" value={`${avgMs}ms`} />}
             {latest?.server && <Stat label="Server" value={latest.server} />}
+            {latest?.content_type && <Stat label="Tipe" value={latest.content_type.split(';')[0]} />}
             {latest?.ssl_days_left != null && (
               <Stat
                 label="SSL"
@@ -137,8 +135,36 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
             )}
           </div>
 
+          {/* SLA windows */}
+          {data?.sla && (
+            <div className="grid grid-cols-3 gap-2">
+              <SlaTile label="24 jam" sla={data.sla.h24} />
+              <SlaTile label="7 hari" sla={data.sla.d7} />
+              <SlaTile label="30 hari" sla={data.sla.d30} />
+            </div>
+          )}
+
           {/* History strip (oldest → newest) */}
           {checks.length > 1 && <History checks={checks} />}
+
+          {/* Downtime incidents */}
+          {data?.incidents && data.incidents.length > 0 && (
+            <div>
+              <p className="widget-title mb-1.5">Insiden Downtime</p>
+              <div className="space-y-1">
+                {data.incidents.map((inc, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg bg-bg px-2.5 py-1.5 text-[12px]">
+                    <span className={cn('h-2 w-2 shrink-0 rounded-full', inc.ongoing ? 'bg-red-500 animate-pulse-dot' : 'bg-muted')} />
+                    <span className="text-text/90">{new Date(inc.start).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-muted">
+                      {inc.ongoing ? 'sedang down' : `${inc.duration_min}m`}
+                      {inc.status_code ? ` · HTTP ${inc.status_code}` : inc.error ? ` · ${inc.error}` : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {data?.url && (
             <a
@@ -153,6 +179,18 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
         </>
       )}
     </WidgetCard>
+  )
+}
+
+function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; total: number } }) {
+  const pct = sla.pct
+  const color = pct == null ? 'text-muted' : pct >= 99 ? 'text-highlight' : pct >= 95 ? 'text-accent2' : 'text-red-400'
+  return (
+    <div className="rounded-lg bg-bg px-2 py-2 text-center">
+      <p className={cn('font-mono text-base font-semibold', color)}>{pct == null ? '—' : `${pct}%`}</p>
+      <p className="text-[10px] text-muted">{label}</p>
+      <p className="text-[9px] text-muted/60">{sla.total} cek</p>
+    </div>
   )
 }
 
