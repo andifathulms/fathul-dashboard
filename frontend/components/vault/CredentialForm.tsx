@@ -1,5 +1,6 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import Modal from '@/components/ui/Modal'
@@ -59,7 +60,8 @@ export default function CredentialForm({
           <button onClick={onClose} className="btn">
             Batal
           </button>
-          <button onClick={submit} disabled={saving} className="btn-accent disabled:opacity-50">
+          <button onClick={submit} disabled={saving} className="btn-accent">
+            {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? 'Menyimpan…' : 'Simpan'}
           </button>
         </>
