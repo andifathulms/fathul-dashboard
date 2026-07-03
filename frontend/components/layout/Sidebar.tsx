@@ -9,6 +9,8 @@ import {
   Server,
   NotebookPen,
   Moon,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -26,45 +28,76 @@ const NAV = [
   { href: '/log', label: 'Daily Log', icon: NotebookPen },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean
+  onToggle: () => void
+}
+
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-[220px] flex-col border-r border-border bg-surface">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent1/15 font-mono text-sm font-bold text-accent1">
+    <aside
+      className={cn(
+        'fixed inset-y-0 left-0 z-30 flex flex-col border-r border-border bg-surface transition-[width] duration-200',
+        collapsed ? 'w-[64px]' : 'w-[220px]'
+      )}
+    >
+      {/* Brand + toggle */}
+      <div className={cn('flex items-center py-5', collapsed ? 'justify-center px-0' : 'gap-2 px-5')}>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent1/15 font-mono text-sm font-bold text-accent1">
           f.
         </span>
-        <span className="font-mono text-sm font-semibold tracking-tight">
-          fathul<span className="text-muted">-dashboard</span>
-        </span>
+        {!collapsed && (
+          <>
+            <span className="font-mono text-sm font-semibold tracking-tight">
+              fathul<span className="text-muted">-dashboard</span>
+            </span>
+            <button onClick={onToggle} className="icon-btn ml-auto" title="Ciutkan sidebar" aria-label="Ciutkan sidebar">
+              <ChevronsLeft size={16} />
+            </button>
+          </>
+        )}
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
+      {collapsed && (
+        <button
+          onClick={onToggle}
+          className="icon-btn mx-auto mb-2"
+          title="Lebarkan sidebar"
+          aria-label="Lebarkan sidebar"
+        >
+          <ChevronsRight size={16} />
+        </button>
+      )}
+
+      <nav className={cn('flex flex-1 flex-col gap-1 py-2', collapsed ? 'items-center px-2' : 'px-3')}>
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
+              title={collapsed ? label : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                active
-                  ? 'bg-accent1/10 text-accent1'
-                  : 'text-muted hover:bg-border/50 hover:text-text'
+                'flex items-center rounded-lg text-sm font-medium transition-colors',
+                collapsed ? 'h-10 w-10 justify-center' : 'gap-3 px-3 py-2',
+                active ? 'bg-accent1/10 text-accent1' : 'text-muted hover:bg-border/50 hover:text-text'
               )}
             >
-              <Icon size={17} />
-              {label}
+              <Icon size={17} className="shrink-0" />
+              {!collapsed && label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="border-t border-border px-5 py-4 text-[11px] text-muted">
-        <p className="font-mono">localhost only</p>
-        <p className="mt-0.5">Balikpapan · IKN</p>
-      </div>
+      {!collapsed && (
+        <div className="border-t border-border px-5 py-4 text-[11px] text-muted">
+          <p className="font-mono">localhost only</p>
+          <p className="mt-0.5">Balikpapan · IKN</p>
+        </div>
+      )}
     </aside>
   )
 }

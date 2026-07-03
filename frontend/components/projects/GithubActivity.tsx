@@ -97,23 +97,149 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
     )
   }
 
-  return (
-    <>
-      {data.repos.map((repo, i) => (
-        <RepoCard
-          key={i}
-          repo={repo}
-          meta={i === 0 ? { fetchedAt: data.fetched_at, onRefresh: refresh, refreshing } : undefined}
-        />
-      ))}
-    </>
-  )
+  const meta = { fetchedAt: data.fetched_at, onRefresh: refresh, refreshing }
+  const okRepos = data.repos.filter((r) => r.ok)
+
+  // A single card: combined view when there's more than one working repo.
+  if (okRepos.length > 1) return <CombinedCard repos={okRepos} meta={meta} />
+  if (okRepos.length === 1) return <RepoCard repo={okRepos[0]} meta={meta} />
+  return <RepoCard repo={data.repos[0]} meta={meta} />
 }
 
 interface RepoCardMeta {
   fetchedAt?: string
   onRefresh: () => void
   refreshing: boolean
+}
+
+function MetaControl({ meta }: { meta?: RepoCardMeta }) {
+  if (!meta) return null
+  return (
+    <span className="flex items-center gap-1.5 text-[11px] text-muted">
+      {meta.fetchedAt && (
+        <span title={new Date(meta.fetchedAt).toLocaleString('id-ID')}>diperbarui {timeAgo(meta.fetchedAt)}</span>
+      )}
+      <button
+        onClick={meta.onRefresh}
+        disabled={meta.refreshing}
+        title="Ambil data terbaru dari GitHub"
+        className="icon-btn h-6 w-6"
+        aria-label="Refresh"
+      >
+        <RefreshCw size={13} className={cn(meta.refreshing && 'animate-spin')} />
+      </button>
+    </span>
+  )
+}
+
+// Aggregate several repos into a single card: summed heatmap + stats, merged
+// languages, and one commit list sorted across repos.
+function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMeta }) {
+  const weekMap = new Map<number, { total: number; days: number[] }>()
+  for (const r of repos)
+    for (const w of r.commit_activity ?? []) {
+      const e = weekMap.get(w.week) ?? { total: 0, days: [0, 0, 0, 0, 0, 0, 0] }
+      e.total += w.total ?? 0
+      ;(w.days ?? []).forEach((d, j) => (e.days[j] += d))
+      weekMap.set(w.week, e)
+    }
+  const weeks: GithubWeek[] = [...weekMap.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([week, e]) => ({ week, total: e.total, days: e.days }))
+  const yearTotal = weeks.reduce((s, w) => s + w.total, 0)
+
+  const langs: Record<string, number> = {}
+  for (const r of repos)
+    for (const [k, v] of Object.entries(r.languages ?? {})) langs[k] = (langs[k] ?? 0) + v
+
+  const commits = repos
+    .flatMap((r) => (r.recent_commits ?? []).map((c) => ({ ...c, repoLabel: r.label })))
+    .filter((c) => c.date)
+    .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime())
+    .slice(0, 8)
+
+  const pushes = repos.map((r) => r.info?.pushed_at).filter(Boolean) as string[]
+  const lastPush = pushes.sort().slice(-1)[0]
+  const active = lastPush ? Date.now() - new Date(lastPush).getTime() < 30 * 86400 * 1000 : false
+  const stars = repos.reduce((s, r) => s + (r.info?.stargazers_count ?? 0), 0)
+  const forks = repos.reduce((s, r) => s + (r.info?.forks_count ?? 0), 0)
+  const issues = repos.reduce((s, r) => s + (r.info?.open_issues_count ?? 0), 0)
+  const computing = repos.some((r) => r.computing)
+
+  return (
+    <WidgetCard title="GitHub" icon={<Github size={15} />} action={<MetaControl meta={meta} />} bodyClassName="space-y-3">
+      {/* Repo chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {repos.map(
+          (r) =>
+            r.info && (
+              <a
+                key={r.info.full_name}
+                href={r.info.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="chip inline-flex items-center gap-1 border border-border bg-bg text-accent1 hover:underline"
+              >
+                {r.info.private && <Lock size={10} />}
+                {r.label} · {r.info.full_name.split('/')[1]}
+              </a>
+            )
+        )}
+      </div>
+
+      {/* Aggregated stats */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <Stat
+          label="Status"
+          value={
+            <span className={cn('inline-flex items-center gap-1', active ? 'text-highlight' : 'text-muted')}>
+              <CircleDot size={12} /> {active ? 'Aktif' : 'Idle'}
+            </span>
+          }
+        />
+        <Stat label="Terakhir" value={timeAgo(lastPush)} />
+        <Stat label="Commit/thn" value={`${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
+        <Stat label="Repo" value={`${repos.length}`} />
+        {stars > 0 && <Stat label="Stars" value={`${stars}`} icon={<Star size={12} />} />}
+        {forks > 0 && <Stat label="Forks" value={`${forks}`} icon={<GitFork size={12} />} />}
+        {issues > 0 && <Stat label="Issues" value={`${issues}`} />}
+      </div>
+
+      {Object.keys(langs).length > 0 && <Languages langs={langs} />}
+
+      {computing && weeks.length === 0 ? (
+        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
+          <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
+        </div>
+      ) : weeks.length > 0 ? (
+        <Heatmap weeks={weeks} />
+      ) : (
+        <p className="text-sm text-muted">Belum ada commit setahun terakhir.</p>
+      )}
+
+      {commits.length > 0 && (
+        <div>
+          <p className="widget-title mb-1.5">Commit Terbaru (gabungan)</p>
+          <div className="space-y-0.5">
+            {commits.map((c) => (
+              <a
+                key={`${c.repoLabel}-${c.sha}`}
+                href={c.html_url ?? undefined}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
+              >
+                <span className="chip shrink-0 bg-border/40 text-[10px] text-muted">{c.repoLabel}</span>
+                <code className="shrink-0 font-mono text-[11px] text-accent2">{c.sha}</code>
+                <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{c.message}</span>
+                <span className="shrink-0 text-[11px] text-muted">{timeAgo(c.date)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </WidgetCard>
+  )
 }
 
 function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
@@ -139,20 +265,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
       icon={<Github size={15} />}
       action={
         <div className="flex items-center gap-2.5">
-          {meta && (
-            <span className="flex items-center gap-1.5 text-[11px] text-muted">
-              {meta.fetchedAt && <span title={new Date(meta.fetchedAt).toLocaleString('id-ID')}>diperbarui {timeAgo(meta.fetchedAt)}</span>}
-              <button
-                onClick={meta.onRefresh}
-                disabled={meta.refreshing}
-                title="Ambil data terbaru dari GitHub"
-                className="icon-btn h-6 w-6"
-                aria-label="Refresh"
-              >
-                <RefreshCw size={13} className={cn(meta.refreshing && 'animate-spin')} />
-              </button>
-            </span>
-          )}
+          <MetaControl meta={meta} />
           {info && (
             <a
               href={info.html_url}
