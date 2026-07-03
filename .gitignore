@@ -28,3 +28,15 @@ yarn-error.log*
 # Build
 dist/
 build/
+*.tsbuildinfo
+
+# Brand source exports (the used copies live in frontend/app + components/ui/Logo)
+exports/
+
+# Unused root scaffolding / local-only docs (kept on disk, out of git).
+# NOTE: anchored to root so backend/requirements.txt is NOT ignored.
+/CLAUDE.md
+/PRD.md
+/Makefile
+/start.sh
+/requirements.txt

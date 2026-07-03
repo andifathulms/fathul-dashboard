@@ -17,6 +17,7 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import Logo from '@/components/ui/Logo'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -54,9 +55,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
     >
       {/* Brand + toggle */}
       <div className={cn('flex items-center gap-2.5 px-5 py-5', collapsed && 'lg:justify-center lg:px-0')}>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent1 to-accent2 font-mono text-sm font-bold text-white shadow-[0_2px_12px_-2px_rgba(56,189,248,0.6)]">
-          f.
-        </span>
+        <Logo size={32} className="rounded-lg shadow-[0_2px_12px_-3px_rgba(141,95,240,0.7)]" />
         <span className={cn('font-mono text-sm font-semibold tracking-tight', collapsed && 'lg:hidden')}>
           fathul<span className="text-muted">-dashboard</span>
         </span>
