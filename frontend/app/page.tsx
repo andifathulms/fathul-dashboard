@@ -13,7 +13,7 @@ export default function DashboardPage() {
       <PrayerBar />
 
       {/* 3-column grid */}
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="stagger-in grid grid-cols-1 gap-5 xl:grid-cols-3">
         {/* Left */}
         <div className="space-y-5">
           <ProjectsWidget />
@@ -32,7 +32,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom: Islamic corner */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="stagger-in grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <AyatWidget />
           <IbadahWidget />

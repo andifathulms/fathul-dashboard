@@ -70,7 +70,7 @@ function CommandsTab({ q }: { q: string }) {
   return (
     <>
       {data?.map((c) => (
-        <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2">
+        <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2 transition-all hover:border-borderStrong hover:bg-surface2/40">
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-xs font-medium">{c.title}</span>
             <CopyButton value={c.command} />
@@ -89,7 +89,7 @@ function CredentialsTab({ q }: { q: string }) {
   return (
     <>
       {filtered?.map((c) => (
-        <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2">
+        <div key={c.id} className="rounded-lg border border-border bg-bg px-3 py-2 transition-all hover:border-borderStrong hover:bg-surface2/40">
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-xs font-medium">{c.label}</span>
             <CopyButton value={c.password} label="Copy password" />
@@ -116,7 +116,7 @@ function LinksTab() {
   return (
     <>
       {withLinks?.map((p) => (
-        <div key={p.id} className="rounded-lg border border-border bg-bg px-3 py-2">
+        <div key={p.id} className="rounded-lg border border-border bg-bg px-3 py-2 transition-all hover:border-borderStrong hover:bg-surface2/40">
           <p className="mb-1.5 text-xs font-medium">{p.name}</p>
           <div className="flex flex-wrap gap-1.5">
             {projectRepos(p).map((r, i) => (

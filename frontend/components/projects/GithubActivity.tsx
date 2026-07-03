@@ -406,8 +406,8 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
 function Stat({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-0.5 flex items-center gap-1 text-[13px] font-medium">
+      <p className="text-[10px] uppercase tracking-[0.06em] text-muted">{label}</p>
+      <p className="mt-0.5 flex items-center gap-1 text-[15px] font-semibold tabular-nums">
         {icon && <span className="text-muted">{icon}</span>}
         {value}
       </p>

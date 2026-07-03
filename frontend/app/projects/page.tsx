@@ -93,7 +93,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="stagger-in grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered?.map((p) => (
           <Link
             key={p.id}

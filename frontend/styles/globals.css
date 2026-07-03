@@ -152,3 +152,37 @@ h3 {
     animation: shimmer 1.5s infinite;
   }
 }
+
+@layer utilities {
+  /* Fade + rise the direct children in sequence — a gentle entrance for grids. */
+  .stagger-in > * {
+    animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .stagger-in > *:nth-child(1) {
+    animation-delay: 40ms;
+  }
+  .stagger-in > *:nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .stagger-in > *:nth-child(3) {
+    animation-delay: 140ms;
+  }
+  .stagger-in > *:nth-child(4) {
+    animation-delay: 190ms;
+  }
+  .stagger-in > *:nth-child(5) {
+    animation-delay: 240ms;
+  }
+  .stagger-in > *:nth-child(6) {
+    animation-delay: 290ms;
+  }
+  .stagger-in > *:nth-child(n + 7) {
+    animation-delay: 340ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger-in > * {
+      animation: none;
+    }
+  }
+}

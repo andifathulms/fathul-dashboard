@@ -186,9 +186,9 @@ function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; tot
   const pct = sla.pct
   const color = pct == null ? 'text-muted' : pct >= 99 ? 'text-highlight' : pct >= 95 ? 'text-accent2' : 'text-red-400'
   return (
-    <div className="rounded-lg bg-bg px-2 py-2 text-center">
-      <p className={cn('font-mono text-base font-semibold', color)}>{pct == null ? '—' : `${pct}%`}</p>
-      <p className="text-[10px] text-muted">{label}</p>
+    <div className="rounded-lg border border-border/60 bg-bg px-2 py-2.5 text-center">
+      <p className={cn('font-mono text-lg font-bold tabular-nums', color)}>{pct == null ? '—' : `${pct}%`}</p>
+      <p className="mt-0.5 text-[10px] font-medium text-muted">{label}</p>
       <p className="text-[9px] text-muted/60">{sla.total} cek</p>
     </div>
   )
@@ -197,8 +197,8 @@ function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; tot
 function Stat({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-0.5 max-w-[160px] truncate text-[13px] font-medium">{value}</p>
+      <p className="text-[10px] uppercase tracking-[0.06em] text-muted">{label}</p>
+      <p className="mt-0.5 max-w-[160px] truncate text-[15px] font-semibold tabular-nums">{value}</p>
       {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
     </div>
   )
