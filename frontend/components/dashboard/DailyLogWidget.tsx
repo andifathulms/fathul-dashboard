@@ -13,7 +13,7 @@ import { formatDateID, todayISO } from '@/lib/utils'
 
 export default function DailyLogWidget() {
   const today = todayISO()
-  const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?date=${today}`)
+  const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?agenda=${today}`)
   const { data: projects } = useSWR<Project[]>('/projects/')
   const toast = useToast()
 

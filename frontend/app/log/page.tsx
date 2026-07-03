@@ -30,7 +30,7 @@ export default function LogPage() {
   const [saved, setSaved] = useState<'idle' | 'saving' | 'done'>('idle')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?date=${date}`)
+  const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?agenda=${date}`)
   const { data: projects } = useSWR<Project[]>('/projects/')
   const [newTask, setNewTask] = useState('')
   const toast = useToast()

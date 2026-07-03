@@ -183,12 +183,21 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     def get_queryset(self):
+        from django.db.models import Q
+
         qs = super().get_queryset()
         date = self.request.query_params.get('date')
+        agenda = self.request.query_params.get('agenda')
         project = self.request.query_params.get('project')
         is_done = self.request.query_params.get('is_done')
         if date:
             qs = qs.filter(due_date=date)
+        # A day's agenda = tasks due that day OR undated tasks created that day
+        # (so a project task with no due date still shows on today's Daily Log).
+        if agenda:
+            qs = qs.filter(
+                Q(due_date=agenda) | (Q(due_date__isnull=True) & Q(created_at__date=agenda))
+            )
         if project:
             qs = qs.filter(project=project)
         if is_done is not None:

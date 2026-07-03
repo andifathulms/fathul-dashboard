@@ -15,8 +15,9 @@ import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 
 import PageHeader from '@/components/layout/PageHeader'
+import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
-import { CategoryBadge, PriorityBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import Skeleton from '@/components/ui/Skeleton'
 import type { Project, ProjectCategory, ProjectStatus } from '@/lib/types'
@@ -208,7 +209,7 @@ export default function ProjectsPage() {
               </div>
               {p.description && <p className="mt-1 line-clamp-2 text-[13px] text-muted">{p.description}</p>}
               <div className="mt-2.5 flex flex-wrap gap-1.5">
-                <PriorityBadge priority={p.priority} />
+                <PriorityToggle project={p} onChanged={mutate} />
                 <CategoryBadge category={p.category} />
                 <StatusBadge status={p.status} />
               </div>
@@ -260,7 +261,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
               <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
-                <PriorityBadge priority={p.priority} />
+                <PriorityToggle project={p} onChanged={mutate} />
                 <CategoryBadge category={p.category} />
                 <StatusBadge status={p.status} />
               </div>
