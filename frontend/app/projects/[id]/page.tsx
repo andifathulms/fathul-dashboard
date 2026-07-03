@@ -27,7 +27,7 @@ import CredentialForm from '@/components/vault/CredentialForm'
 import EnvImportModal from '@/components/vault/EnvImportModal'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
-import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import { CategoryBadge, PriorityBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
 import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
 import EmptyState from '@/components/ui/EmptyState'
@@ -124,6 +124,7 @@ export default function ProjectDetailPage() {
           <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
           {project.description && <p className="mt-1.5 max-w-2xl text-muted">{project.description}</p>}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <PriorityBadge priority={project.priority} />
             <CategoryBadge category={project.category} />
             <StatusBadge status={project.status} />
             {project.tech_stack?.map((t) => (

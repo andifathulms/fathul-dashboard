@@ -14,11 +14,17 @@ class Project(models.Model):
         ('personal', 'Personal'),
         ('side', 'Side Project'),
     ]
+    PRIORITY_CHOICES = [
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ]
 
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='personal')
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     tech_stack = models.JSONField(default=list, blank=True)
     # List of {"label": str, "url": str} — a project may have several repos
     # (e.g. frontend + backend). repo_url is kept for backward compatibility.

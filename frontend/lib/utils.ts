@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import type { ProjectCategory, ProjectStatus } from './types'
+import type { ProjectCategory, ProjectPriority, ProjectStatus } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -50,6 +50,23 @@ export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   freelance: 'Freelance',
   personal: 'Personal',
   side: 'Side Project',
+}
+
+// Priority: styling, label, and sort rank (lower = more urgent / sorts first).
+export const PRIORITY_STYLES: Record<
+  ProjectPriority,
+  { label: string; chip: string; dot: string; rank: number }
+> = {
+  high: { label: 'High', chip: 'bg-danger/15 text-danger ring-1 ring-inset ring-danger/25', dot: 'bg-danger', rank: 0 },
+  medium: { label: 'Medium', chip: 'bg-warning/15 text-warning ring-1 ring-inset ring-warning/25', dot: 'bg-warning', rank: 1 },
+  low: { label: 'Low', chip: 'bg-muted/20 text-muted ring-1 ring-inset ring-muted/25', dot: 'bg-muted', rank: 2 },
+}
+
+export const STATUS_RANK: Record<ProjectStatus, number> = {
+  active: 0,
+  paused: 1,
+  done: 2,
+  archived: 3,
 }
 
 export function formatDateID(date: Date | string): string {

@@ -7,11 +7,11 @@ import useSWR from 'swr'
 
 import PageHeader from '@/components/layout/PageHeader'
 import ProjectForm from '@/components/projects/ProjectForm'
-import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import { CategoryBadge, PriorityBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import Skeleton from '@/components/ui/Skeleton'
-import type { Project, ProjectStatus } from '@/lib/types'
-import { CATEGORY_STYLES, cn } from '@/lib/utils'
+import type { Project, ProjectCategory, ProjectStatus } from '@/lib/types'
+import { CATEGORY_LABELS, CATEGORY_STYLES, PRIORITY_STYLES, STATUS_RANK, cn } from '@/lib/utils'
 
 const FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
   { key: 'all', label: 'Semua' },
@@ -21,8 +21,20 @@ const FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
   { key: 'archived', label: 'Arsip' },
 ]
 
+const CATEGORIES: ProjectCategory[] = ['oikn', 'freelance', 'personal', 'side']
+
+type Sort = 'priority' | 'status' | 'recent' | 'name'
+const SORTS: { key: Sort; label: string }[] = [
+  { key: 'priority', label: 'Prioritas' },
+  { key: 'status', label: 'Status' },
+  { key: 'recent', label: 'Terbaru' },
+  { key: 'name', label: 'Nama' },
+]
+
 export default function ProjectsPage() {
   const [status, setStatus] = useState<ProjectStatus | 'all'>('all')
+  const [category, setCategory] = useState<ProjectCategory | 'all'>('all')
+  const [sort, setSort] = useState<Sort>('priority')
   const [q, setQ] = useState('')
   const [showForm, setShowForm] = useState(false)
 
@@ -30,7 +42,20 @@ export default function ProjectsPage() {
 
   const filtered = projects
     ?.filter((p) => status === 'all' || p.status === status)
+    .filter((p) => category === 'all' || p.category === category)
     .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
+    .slice()
+    .sort((a, b) => {
+      if (sort === 'name') return a.name.localeCompare(b.name)
+      if (sort === 'recent') return b.updated_at.localeCompare(a.updated_at)
+      const pa = PRIORITY_STYLES[a.priority].rank
+      const pb = PRIORITY_STYLES[b.priority].rank
+      const sa = STATUS_RANK[a.status]
+      const sb = STATUS_RANK[b.status]
+      // priority → status, or status → priority, depending on the chosen sort.
+      if (sort === 'status') return sa - sb || pa - pb || a.name.localeCompare(b.name)
+      return pa - pb || sa - sb || a.name.localeCompare(b.name)
+    })
 
   return (
     <div>
@@ -60,14 +85,41 @@ export default function ProjectsPage() {
             </button>
           ))}
         </div>
-        <div className="relative ml-auto w-full max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari project…"
-            className="input pl-9"
-          />
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ProjectCategory | 'all')}
+            className="input w-auto text-xs"
+            aria-label="Filter kategori"
+          >
+            <option value="all">Semua kategori</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+            className="input w-auto text-xs"
+            aria-label="Urutkan"
+          >
+            {SORTS.map((s) => (
+              <option key={s.key} value={s.key}>
+                Urut: {s.label}
+              </option>
+            ))}
+          </select>
+          <div className="relative w-full max-w-[200px] sm:w-48">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Cari…"
+              className="input pl-9"
+            />
+          </div>
         </div>
       </div>
 
@@ -83,7 +135,7 @@ export default function ProjectsPage() {
           <EmptyState
             icon={<FolderKanban size={22} />}
             title="Belum ada project di sini"
-            hint={q || status !== 'all' ? 'Coba ubah filter atau kata kunci.' : 'Buat project pertamamu untuk mulai.'}
+            hint={q || status !== 'all' || category !== 'all' ? 'Coba ubah filter atau kata kunci.' : 'Buat project pertamamu untuk mulai.'}
             action={
               <button onClick={() => setShowForm(true)} className="btn-accent">
                 <Plus size={16} /> Project Baru
@@ -109,6 +161,7 @@ export default function ProjectsPage() {
               <p className="mt-1.5 line-clamp-2 text-sm text-muted">{p.description}</p>
             )}
             <div className="mt-3 flex flex-wrap gap-1.5">
+              <PriorityBadge priority={p.priority} />
               <CategoryBadge category={p.category} />
               <StatusBadge status={p.status} />
             </div>

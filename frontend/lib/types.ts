@@ -2,6 +2,7 @@
 
 export type ProjectStatus = 'active' | 'paused' | 'done' | 'archived'
 export type ProjectCategory = 'oikn' | 'freelance' | 'personal' | 'side'
+export type ProjectPriority = 'high' | 'medium' | 'low'
 
 export interface Repo {
   label: string
@@ -14,6 +15,7 @@ export interface Project {
   description: string
   status: ProjectStatus
   category: ProjectCategory
+  priority: ProjectPriority
   tech_stack: string[]
   repos: Repo[]
   repo_url: string

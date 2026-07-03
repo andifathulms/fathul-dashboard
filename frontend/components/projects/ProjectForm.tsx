@@ -5,11 +5,12 @@ import { useState } from 'react'
 
 import Modal from '@/components/ui/Modal'
 import api from '@/lib/api'
-import type { Project, ProjectCategory, ProjectStatus, Repo } from '@/lib/types'
-import { CATEGORY_LABELS, STATUS_LABELS } from '@/lib/utils'
+import type { Project, ProjectCategory, ProjectPriority, ProjectStatus, Repo } from '@/lib/types'
+import { CATEGORY_LABELS, PRIORITY_STYLES, STATUS_LABELS } from '@/lib/utils'
 
 const STATUSES: ProjectStatus[] = ['active', 'paused', 'done', 'archived']
 const CATEGORIES: ProjectCategory[] = ['oikn', 'freelance', 'personal', 'side']
+const PRIORITIES: ProjectPriority[] = ['high', 'medium', 'low']
 
 interface ProjectFormProps {
   open: boolean
@@ -89,7 +90,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
             onChange={(e) => set('description', e.target.value)}
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Field label="Status">
             <select className="input" value={form.status} onChange={(e) => set('status', e.target.value)}>
               {STATUSES.map((s) => (
@@ -104,6 +105,15 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {CATEGORY_LABELS[c]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Prioritas">
+            <select className="input" value={form.priority} onChange={(e) => set('priority', e.target.value)}>
+              {PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {PRIORITY_STYLES[p].label}
                 </option>
               ))}
             </select>
@@ -203,6 +213,7 @@ function seed(p?: Project | null) {
     description: p?.description ?? '',
     status: p?.status ?? 'active',
     category: p?.category ?? 'personal',
+    priority: p?.priority ?? 'medium',
     tech_stack: p?.tech_stack?.join(', ') ?? '',
     repos,
     live_url: p?.live_url ?? '',
