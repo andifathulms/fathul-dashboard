@@ -113,6 +113,51 @@ def fetch(url, token=None):
                 'html_url': c.get('html_url'),
             })
 
+    # CI/CD — latest GitHub Actions runs.
+    _, runs = _get(f'/repos/{owner}/{repo}/actions/runs?per_page=5', token)
+    workflow_runs = []
+    if isinstance(runs, dict):
+        for r in runs.get('workflow_runs', [])[:5]:
+            workflow_runs.append({
+                'name': r.get('name'),
+                'status': r.get('status'),          # queued | in_progress | completed
+                'conclusion': r.get('conclusion'),  # success | failure | cancelled | None
+                'branch': r.get('head_branch'),
+                'event': r.get('event'),
+                'html_url': r.get('html_url'),
+                'created_at': r.get('created_at'),
+            })
+
+    # Open pull requests.
+    _, pulls = _get(f'/repos/{owner}/{repo}/pulls?state=open&per_page=10', token)
+    pull_requests = []
+    if isinstance(pulls, list):
+        for p in pulls:
+            pull_requests.append({
+                'number': p.get('number'),
+                'title': p.get('title'),
+                'user': (p.get('user') or {}).get('login'),
+                'draft': p.get('draft'),
+                'created_at': p.get('created_at'),
+                'html_url': p.get('html_url'),
+            })
+
+    # Open issues (the issues endpoint also returns PRs — filter them out).
+    _, issues = _get(f'/repos/{owner}/{repo}/issues?state=open&per_page=10', token)
+    open_issues = []
+    if isinstance(issues, list):
+        for it in issues:
+            if it.get('pull_request'):
+                continue
+            open_issues.append({
+                'number': it.get('number'),
+                'title': it.get('title'),
+                'user': (it.get('user') or {}).get('login'),
+                'comments': it.get('comments'),
+                'created_at': it.get('created_at'),
+                'html_url': it.get('html_url'),
+            })
+
     return {
         'ok': True,
         'repo': full,
@@ -121,4 +166,7 @@ def fetch(url, token=None):
         'commit_activity': commit_activity,
         'computing': computing,
         'recent_commits': recent,
+        'workflow_runs': workflow_runs,
+        'pull_requests': pull_requests,
+        'open_issues': open_issues,
     }

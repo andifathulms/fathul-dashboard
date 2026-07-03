@@ -70,6 +70,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         # Override with SQLITE_PATH to put the DB on a mounted volume (Docker).
         'NAME': config('SQLITE_PATH', default=BASE_DIR / 'db.sqlite3'),
+        # Longer lock timeout: the web + monitor processes share this SQLite file.
+        'OPTIONS': {'timeout': 20},
     }
 }
 

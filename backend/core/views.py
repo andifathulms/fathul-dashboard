@@ -119,11 +119,62 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 UptimeCheck.objects.filter(id__in=list(old_ids)).delete()
             return Response(UptimeCheckSerializer(check).data)
 
-        checks = project.uptime_checks.all()[:100]
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        now = timezone.now()
+
+        def sla(delta):
+            qs = project.uptime_checks.filter(checked_at__gte=now - delta)
+            total = qs.count()
+            up = qs.filter(is_up=True).count()
+            return {'up': up, 'total': total, 'pct': round(up / total * 100, 1) if total else None}
+
+        recent = list(project.uptime_checks.all()[:60])
+
+        # Downtime incidents over the last 30 days (consecutive down checks).
+        month = list(
+            project.uptime_checks.filter(checked_at__gte=now - timedelta(days=30)).order_by('checked_at')
+        )
+        incidents = []
+        cur = None
+        for c in month:
+            if not c.is_up and cur is None:
+                cur = {'start': c.checked_at, 'status_code': c.status_code, 'error': c.error}
+            elif c.is_up and cur is not None:
+                cur['end'] = c.checked_at
+                incidents.append(cur)
+                cur = None
+        if cur is not None:
+            cur['end'] = None
+            incidents.append(cur)
+
+        def incident_dict(inc):
+            end = inc['end']
+            end_ref = end or now
+            return {
+                'start': inc['start'].isoformat(),
+                'end': end.isoformat() if end else None,
+                'duration_min': round((end_ref - inc['start']).total_seconds() / 60),
+                'status_code': inc.get('status_code'),
+                'error': inc.get('error', ''),
+                'ongoing': end is None,
+            }
+
+        incidents = [incident_dict(i) for i in reversed(incidents)][:10]
+
         return Response({
             'has_url': bool(project.live_url),
             'url': project.live_url,
-            'checks': UptimeCheckSerializer(checks, many=True).data,
+            'latest': UptimeCheckSerializer(recent[0]).data if recent else None,
+            'checks': UptimeCheckSerializer(recent, many=True).data,
+            'sla': {
+                'h24': sla(timedelta(hours=24)),
+                'd7': sla(timedelta(days=7)),
+                'd30': sla(timedelta(days=30)),
+            },
+            'incidents': incidents,
         })
 
 

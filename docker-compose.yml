@@ -18,6 +18,22 @@ services:
       - backend-data:/data
     restart: unless-stopped
 
+  # Background uptime monitor — checks every project's live_url on an interval.
+  # Override the image entrypoint (migrate+runserver) to run the monitor loop.
+  monitor:
+    build: ./backend
+    container_name: fathul-monitor
+    entrypoint: ["python", "manage.py", "monitor"]
+    environment:
+      - DEBUG=True
+      - SQLITE_PATH=/data/db.sqlite3
+      - MONITOR_INTERVAL=${MONITOR_INTERVAL:-300}
+    volumes:
+      - backend-data:/data
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
