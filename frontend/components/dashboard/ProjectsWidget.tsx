@@ -5,6 +5,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 
 import PriorityToggle from '@/components/projects/PriorityToggle'
+import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import WidgetCard from '@/components/ui/Card'
 import { CategoryBadge } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
@@ -49,6 +50,7 @@ export default function ProjectsWidget() {
         >
           <span className={cn('absolute inset-y-0 left-0 w-[3px]', PRIORITY_STYLES[p.priority].dot)} />
           <PriorityToggle project={p} onChanged={mutate} compact />
+          <ProjectAvatar project={p} size={30} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{p.name}</p>
             <p className="mt-0.5 text-[11px] text-muted">

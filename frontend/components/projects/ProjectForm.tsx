@@ -3,6 +3,7 @@
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
+import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import Modal from '@/components/ui/Modal'
 import api from '@/lib/api'
 import type { Project, ProjectCategory, ProjectPriority, ProjectStatus, Repo } from '@/lib/types'
@@ -79,8 +80,25 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
       }
     >
       <div className="space-y-3">
-        <Field label="Nama">
-          <input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} />
+        <div className="flex items-end gap-3">
+          <ProjectAvatar
+            project={{ name: form.name || '?', icon_url: form.icon_url, category: form.category }}
+            size={44}
+            className="mb-[1px]"
+          />
+          <div className="flex-1">
+            <Field label="Nama">
+              <input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} />
+            </Field>
+          </div>
+        </div>
+        <Field label="URL icon/logo (opsional — mis. /logo.png atau URL gambar)">
+          <input
+            className="input font-mono text-[13px]"
+            placeholder="https://… atau /logo.png"
+            value={form.icon_url}
+            onChange={(e) => set('icon_url', e.target.value)}
+          />
         </Field>
         <Field label="Deskripsi">
           <textarea
@@ -211,6 +229,7 @@ function seed(p?: Project | null) {
   return {
     name: p?.name ?? '',
     description: p?.description ?? '',
+    icon_url: p?.icon_url ?? '',
     status: p?.status ?? 'active',
     category: p?.category ?? 'personal',
     priority: p?.priority ?? 'medium',

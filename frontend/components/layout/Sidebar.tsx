@@ -137,8 +137,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
       </nav>
 
       <div className={cn('border-t border-border px-5 py-4 text-[11px] text-muted', collapsed && 'lg:hidden')}>
-        <p className="font-mono">localhost only</p>
-        <p className="mt-0.5">Balikpapan · IKN</p>
+        <p>© {new Date().getFullYear()} Andi Fathul Mukminin</p>
       </div>
     </aside>
   )

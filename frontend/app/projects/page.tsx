@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 
 import PageHeader from '@/components/layout/PageHeader'
+import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
 import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
@@ -204,7 +205,10 @@ export default function ProjectsPage() {
             >
               <span className={cn('absolute inset-y-0 left-0 w-1', PRIORITY_STYLES[p.priority].dot)} />
               <div className="flex items-start justify-between gap-2">
-                <h3 className="truncate font-semibold leading-tight">{p.name}</h3>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <ProjectAvatar project={p} size={34} />
+                  <h3 className="truncate font-semibold leading-tight">{p.name}</h3>
+                </div>
                 <ArrowUpRight size={16} className="shrink-0 text-muted transition-colors group-hover:text-accent1" />
               </div>
               {p.description && <p className="mt-1 line-clamp-2 text-[13px] text-muted">{p.description}</p>}
@@ -246,6 +250,7 @@ export default function ProjectsPage() {
               className="group relative flex items-center gap-3 py-2.5 pl-4 pr-3 transition-colors hover:bg-surface2/40"
             >
               <span className={cn('absolute inset-y-0 left-0 w-1', PRIORITY_STYLES[p.priority].dot)} />
+              <ProjectAvatar project={p} size={30} />
               <div className="min-w-0 flex-1">
                 <span className="truncate text-sm font-medium">{p.name}</span>
                 <div className="mt-0.5 flex items-center gap-2.5 text-[11px] text-muted">

@@ -22,6 +22,8 @@ class Project(models.Model):
 
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    # Optional logo/icon URL (absolute, or app-relative like /logo.png).
+    icon_url = models.CharField(max_length=500, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='personal')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')

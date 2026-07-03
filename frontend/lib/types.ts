@@ -13,6 +13,7 @@ export interface Project {
   id: number
   name: string
   description: string
+  icon_url: string
   status: ProjectStatus
   category: ProjectCategory
   priority: ProjectPriority

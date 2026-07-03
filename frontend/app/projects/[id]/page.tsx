@@ -19,6 +19,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 
 import GithubActivity from '@/components/projects/GithubActivity'
+import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import UptimeWidget from '@/components/projects/UptimeWidget'
 import VmAccess from '@/components/servers/VmAccess'
 import ProjectForm from '@/components/projects/ProjectForm'
@@ -120,16 +121,19 @@ export default function ProjectDetailPage() {
       </Link>
 
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-          {project.description && <p className="mt-1.5 max-w-2xl text-muted">{project.description}</p>}
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <PriorityBadge priority={project.priority} />
-            <CategoryBadge category={project.category} />
-            <StatusBadge status={project.status} />
-            {project.tech_stack?.map((t) => (
-              <TechTag key={t}>{t}</TechTag>
-            ))}
+        <div className="flex min-w-0 items-start gap-3.5">
+          <ProjectAvatar project={project} size={48} className="mt-0.5 rounded-xl" />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
+            {project.description && <p className="mt-1.5 max-w-2xl text-muted">{project.description}</p>}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <PriorityBadge priority={project.priority} />
+              <CategoryBadge category={project.category} />
+              <StatusBadge status={project.status} />
+              {project.tech_stack?.map((t) => (
+                <TechTag key={t}>{t}</TechTag>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
