@@ -89,6 +89,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Uploaded media (project icons). MEDIA_ROOT defaults onto the data volume in
+# Docker so uploads survive rebuilds.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = config('MEDIA_ROOT', default=BASE_DIR / 'media')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Where the curated ayat JSON lives.

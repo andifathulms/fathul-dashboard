@@ -15,5 +15,6 @@ router.register('ibadah', views.IbadahLogViewSet)
 
 urlpatterns = [
     path('ayat/today/', views.AyatTodayView.as_view(), name='ayat-today'),
+    path('upload/', views.UploadView.as_view(), name='upload'),
     path('', include(router.urls)),
 ]

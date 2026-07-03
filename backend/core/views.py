@@ -343,6 +343,33 @@ class IbadahLogViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
+class UploadView(APIView):
+    """Save an uploaded file to MEDIA and return its absolute URL."""
+
+    from rest_framework.parsers import FormParser, MultiPartParser
+
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        import os
+        import uuid
+
+        f = request.FILES.get('file')
+        if not f:
+            return Response({'detail': 'no file'}, status=400)
+        ext = os.path.splitext(f.name)[1].lower() or '.png'
+        if len(ext) > 8:
+            ext = '.png'
+        fname = f'{uuid.uuid4().hex}{ext}'
+        subdir = os.path.join(settings.MEDIA_ROOT, 'uploads')
+        os.makedirs(subdir, exist_ok=True)
+        with open(os.path.join(subdir, fname), 'wb') as out:
+            for chunk in f.chunks():
+                out.write(chunk)
+        url = request.build_absolute_uri(f'{settings.MEDIA_URL}uploads/{fname}')
+        return Response({'url': url})
+
+
 class AyatTodayView(APIView):
     """Return today's ayat, rotating by day-of-month over the curated JSON."""
 

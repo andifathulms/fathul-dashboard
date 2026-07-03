@@ -1,7 +1,7 @@
 'use client'
 
-import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
 
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import Modal from '@/components/ui/Modal'
@@ -23,6 +23,8 @@ interface ProjectFormProps {
 export default function ProjectForm({ open, onClose, onSaved, initial }: ProjectFormProps) {
   const [form, setForm] = useState(() => seed(initial))
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   // Re-seed when the target project changes.
   const [seedId, setSeedId] = useState(initial?.id ?? 0)
@@ -33,6 +35,21 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
 
   const set = (k: keyof ReturnType<typeof seed>, v: string) =>
     setForm((f) => ({ ...f, [k]: v }))
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const { data } = await api.post('/upload/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      set('icon_url', data.url)
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   // --- repos (dynamic list) ---
   const addRepo = () => setForm((f) => ({ ...f, repos: [...f.repos, { label: '', url: '' }] }))
@@ -81,24 +98,54 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
     >
       <div className="space-y-3">
         <div className="flex items-end gap-3">
-          <ProjectAvatar
-            project={{ name: form.name || '?', icon_url: form.icon_url, category: form.category }}
-            size={44}
-            className="mb-[1px]"
-          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Pilih file icon"
+            className="group relative mb-[1px] shrink-0"
+          >
+            <ProjectAvatar
+              project={{ name: form.name || '?', icon_url: form.icon_url, category: form.category }}
+              size={46}
+              className="rounded-xl"
+            />
+            <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+              {uploading ? (
+                <Loader2 size={16} className="animate-spin text-white" />
+              ) : (
+                <ImagePlus size={15} className="text-white" />
+              )}
+            </span>
+            {uploading && (
+              <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/45">
+                <Loader2 size={16} className="animate-spin text-white" />
+              </span>
+            )}
+          </button>
           <div className="flex-1">
             <Field label="Nama">
               <input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} />
             </Field>
           </div>
         </div>
-        <Field label="URL icon/logo (opsional — mis. /logo.png atau URL gambar)">
-          <input
-            className="input font-mono text-[13px]"
-            placeholder="https://… atau /logo.png"
-            value={form.icon_url}
-            onChange={(e) => set('icon_url', e.target.value)}
-          />
+        <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+        <Field label="Icon: klik avatar untuk pilih file, atau tempel URL/path">
+          <div className="flex gap-2">
+            <input
+              className="input font-mono text-[13px]"
+              placeholder="https://… atau /logo.png"
+              value={form.icon_url}
+              onChange={(e) => set('icon_url', e.target.value)}
+            />
+            <button type="button" onClick={() => fileRef.current?.click()} className="btn btn-sm shrink-0">
+              <ImagePlus size={13} /> File
+            </button>
+            {form.icon_url && (
+              <button type="button" onClick={() => set('icon_url', '')} className="btn btn-sm shrink-0" title="Hapus icon">
+                <Trash2 size={13} />
+              </button>
+            )}
+          </div>
         </Field>
         <Field label="Deskripsi">
           <textarea
