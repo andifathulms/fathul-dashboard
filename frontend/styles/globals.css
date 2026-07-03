@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,9 @@
 :root {
   --bg: #0d1117;
   --surface: #161b22;
+  --surface-2: #1b222c;
   --border: #21262d;
+  --border-strong: #2b333d;
   --accent1: #0ea5e9;
   --accent2: #d97706;
   --highlight: #10b981;
@@ -24,11 +26,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Ambient depth — a soft, fixed color glow behind everything. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 12% -5%, rgba(14, 165, 233, 0.07), transparent 60%),
+    radial-gradient(55% 45% at 105% 0%, rgba(217, 119, 6, 0.05), transparent 55%),
+    radial-gradient(60% 50% at 50% 120%, rgba(16, 185, 129, 0.04), transparent 60%);
+}
+
 * {
   border-color: var(--border);
 }
 
-/* Keyboard-only focus rings for accessibility (mouse clicks stay clean). */
 :focus-visible {
   outline: 2px solid var(--accent1);
   outline-offset: 2px;
@@ -40,14 +54,13 @@ body {
   color: #fff;
 }
 
-/* Headings: tighten tracking for a crisper display feel. */
 h1,
 h2,
 h3 {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
-/* Thin custom scrollbars to match the dark surface */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -67,26 +80,43 @@ h3 {
 }
 
 @layer components {
+  /* Cards get a subtle top-light highlight + layered shadow for real depth. */
   .card {
-    @apply rounded-xl border border-border bg-surface shadow-card;
+    @apply rounded-xl border border-border bg-surface;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+      0 1px 2px rgba(0, 0, 0, 0.28),
+      0 8px 24px -14px rgba(0, 0, 0, 0.6);
   }
-  /* Interactive/clickable card — lifts on hover. */
   .card-hover {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-accent1/40 hover:shadow-card-hover;
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-accent1/40;
+  }
+  .card-hover:hover {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+      0 10px 30px -12px rgba(0, 0, 0, 0.7),
+      0 0 0 1px rgba(14, 165, 233, 0.12);
   }
   .card-pad {
     @apply p-4;
   }
   .widget-title {
-    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted;
   }
 
-  /* Buttons — shared base with press feedback + focus ring. */
+  /* Buttons */
   .btn {
     @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text transition-all duration-150 hover:border-accent1/50 hover:bg-border/40 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-accent {
-    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg bg-accent1 px-3 py-1.5 text-sm font-semibold text-bg shadow-sm transition-all duration-150 hover:bg-accent1/90 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-bg transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    background-image: linear-gradient(180deg, #22b0f2 0%, var(--accent1) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 4px 14px -4px rgba(14, 165, 233, 0.5);
+  }
+  .btn-accent:hover {
+    background-image: linear-gradient(180deg, #38b9f5 0%, #10a8ec 100%);
   }
   .btn-ghost {
     @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-border/50 hover:text-text active:scale-[0.97];
@@ -99,7 +129,7 @@ h3 {
   }
 
   .input {
-    @apply w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text transition-colors placeholder:text-muted focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/30;
+    @apply w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text transition-all placeholder:text-muted focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/25;
   }
   .icon-btn {
     @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-all duration-150 hover:bg-border/60 hover:text-text active:scale-90;
@@ -108,7 +138,7 @@ h3 {
     @apply inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium;
   }
 
-  /* Loading skeleton with a moving sheen. */
+  /* Loading skeleton */
   .skeleton {
     @apply relative overflow-hidden rounded-md bg-border/50;
   }

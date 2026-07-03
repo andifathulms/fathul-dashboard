@@ -6,7 +6,9 @@ module.exports = {
       colors: {
         bg: '#0D1117',
         surface: '#161B22',
+        surface2: '#1B222C',
         border: '#21262D',
+        borderStrong: '#2B333D',
         accent1: '#0EA5E9',
         accent2: '#D97706',
         highlight: '#10B981',
