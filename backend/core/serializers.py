@@ -75,16 +75,24 @@ class CommandSerializer(serializers.ModelSerializer):
 
 class ServerSerializer(serializers.ModelSerializer):
     project_names = serializers.SerializerMethodField()
+    credential_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = Server
         fields = [
-            'id', 'name', 'ip_address', 'ssh_user', 'ssh_port', 'description',
-            'projects', 'project_names', 'created_at',
+            'id', 'name', 'provider', 'ssh_alias', 'ip_address', 'ssh_user', 'ssh_port',
+            'requires_vpn', 'gcp_project', 'gcp_zone', 'gcp_instance', 'credential',
+            'credential_detail', 'description', 'projects', 'project_names', 'created_at',
         ]
 
     def get_project_names(self, obj):
         return [{'id': p.id, 'name': p.name} for p in obj.projects.all()]
+
+    def get_credential_detail(self, obj):
+        c = obj.credential
+        if not c:
+            return None
+        return {'id': c.id, 'label': c.label, 'username': c.username, 'password': c.password}
 
 
 class DailyLogSerializer(serializers.ModelSerializer):

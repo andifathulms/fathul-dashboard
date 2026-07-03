@@ -8,6 +8,7 @@ import {
   KeyRound,
   Pencil,
   Plus,
+  Server as ServerIcon,
   Terminal,
   TerminalSquare,
   Trash2,
@@ -19,6 +20,7 @@ import useSWR from 'swr'
 
 import GithubActivity from '@/components/projects/GithubActivity'
 import UptimeWidget from '@/components/projects/UptimeWidget'
+import VmAccess from '@/components/servers/VmAccess'
 import ProjectForm from '@/components/projects/ProjectForm'
 import CommandForm from '@/components/commands/CommandForm'
 import CredentialForm from '@/components/vault/CredentialForm'
@@ -34,7 +36,7 @@ import Skeleton from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import { sshUrl } from '@/lib/ssh'
-import type { Command, Credential, EnvVar, Project, Task } from '@/lib/types'
+import type { Command, Credential, EnvVar, Project, Server, Task } from '@/lib/types'
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -53,6 +55,7 @@ export default function ProjectDetailPage() {
   const { data: creds, mutate: mutateCreds } = useSWR<Credential[]>(`/credentials/?project=${id}`)
   const { data: envs, mutate: mutateEnvs } = useSWR<EnvVar[]>(`/envvars/?project=${id}`)
   const { data: commands, mutate: mutateCommands } = useSWR<Command[]>(`/commands/?project=${id}`)
+  const { data: vms } = useSWR<Server[]>(`/servers/?project=${id}`)
 
   const remove = async () => {
     if (
@@ -155,6 +158,27 @@ export default function ProjectDetailPage() {
               <Code2 size={14} /> Buka di VS Code
             </a>
           )}
+        </div>
+      )}
+
+      {/* VM / Host access — SSH + password from the linked VM(s) */}
+      {vms && vms.length > 0 && (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {vms.map((vm) => (
+            <WidgetCard
+              key={vm.id}
+              title={`VM · ${vm.name}`}
+              icon={<ServerIcon size={15} />}
+              action={
+                <span className="text-[11px] uppercase tracking-wide text-muted">
+                  {vm.provider}
+                  {vm.requires_vpn ? ' · VPN' : ''}
+                </span>
+              }
+            >
+              <VmAccess server={vm} />
+            </WidgetCard>
+          ))}
         </div>
       )}
 

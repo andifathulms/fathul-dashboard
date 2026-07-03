@@ -78,12 +78,22 @@ export interface Command {
   created_at: string
 }
 
+export type ServerProvider = 'gcp' | 'pdns' | 'other'
+
 export interface Server {
   id: number
   name: string
-  ip_address: string
+  provider: ServerProvider
+  ssh_alias: string
+  ip_address: string | null
   ssh_user: string
   ssh_port: number
+  requires_vpn: boolean
+  gcp_project: string
+  gcp_zone: string
+  gcp_instance: string
+  credential: number | null
+  credential_detail: { id: number; label: string; username: string; password: string } | null
   description: string
   projects: number[]
   project_names: { id: number; name: string }[]

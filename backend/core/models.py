@@ -116,10 +116,33 @@ class Command(models.Model):
 
 
 class Server(models.Model):
+    """A VM / host. Runs one or more projects; accessed via SSH alias or user@ip.
+
+    GCP hosts can carry project/zone/instance to deep-link the console SSH; a
+    login/sudo password is linked from Credentials rather than duplicated.
+    """
+    PROVIDER_CHOICES = [
+        ('gcp', 'GCP'),
+        ('pdns', 'PDNS'),
+        ('other', 'Lainnya'),
+    ]
+
     name = models.CharField(max_length=200)
-    ip_address = models.GenericIPAddressField()
-    ssh_user = models.CharField(max_length=100, default='ubuntu')
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default='other')
+    # Access: an SSH config alias (e.g. "vm-ekiosk") OR user@ip:port.
+    ssh_alias = models.CharField(max_length=200, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    ssh_user = models.CharField(max_length=100, blank=True)
     ssh_port = models.IntegerField(default=22)
+    requires_vpn = models.BooleanField(default=False)
+    # GCP console browser-SSH deep link parts.
+    gcp_project = models.CharField(max_length=200, blank=True)
+    gcp_zone = models.CharField(max_length=100, blank=True)
+    gcp_instance = models.CharField(max_length=200, blank=True)
+    # Login / sudo password, linked from the vault (single source of truth).
+    credential = models.ForeignKey(
+        Credential, null=True, blank=True, on_delete=models.SET_NULL, related_name='servers'
+    )
     description = models.TextField(blank=True)
     projects = models.ManyToManyField(Project, blank=True, related_name='servers')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -128,7 +151,7 @@ class Server(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f'{self.name} ({self.ip_address})'
+        return self.name
 
 
 class DailyLog(models.Model):

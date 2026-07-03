@@ -1,3 +1,38 @@
+import type { Server } from './types'
+
+// The SSH command line for a VM — alias form if set, else user@ip[:port].
+export function serverSshCommand(s: Server): string {
+  if (s.ssh_alias) return `ssh ${s.ssh_alias}`
+  if (s.ip_address) {
+    const user = s.ssh_user ? `${s.ssh_user}@` : ''
+    const port = s.ssh_port && s.ssh_port !== 22 ? ` -p ${s.ssh_port}` : ''
+    return `ssh ${user}${s.ip_address}${port}`
+  }
+  return ''
+}
+
+// ssh:// URL macOS Terminal can open (alias or user@ip:port).
+export function serverSshUrl(s: Server): string | null {
+  if (s.ssh_alias) return `ssh://${s.ssh_alias}`
+  if (s.ip_address) {
+    const user = s.ssh_user ? `${s.ssh_user}@` : ''
+    const port = s.ssh_port && s.ssh_port !== 22 ? `:${s.ssh_port}` : ''
+    return `ssh://${user}${s.ip_address}${port}`
+  }
+  return null
+}
+
+// Deep link to GCP console browser-SSH for a GCP VM (needs project/zone/instance).
+export function gcpSshUrl(s: Server): string | null {
+  if (s.provider !== 'gcp' || !s.gcp_project || !s.gcp_zone || !s.gcp_instance) return null
+  return `https://ssh.cloud.google.com/v2/ssh/projects/${s.gcp_project}/zones/${s.gcp_zone}/instances/${s.gcp_instance}`
+}
+
+// Whether a VM can actually be reached by the socket ping (has IP, no VPN wall).
+export function serverPingable(s: Server): boolean {
+  return !!s.ip_address && !s.requires_vpn
+}
+
 // Parse an ssh command into an ssh:// URL that macOS Terminal can open.
 // Handles `ssh user@host`, `ssh host`, `~/.ssh/config` aliases (`ssh vm-jdih`),
 // `-p port`, and `-l user`. Returns null if it isn't an ssh invocation.

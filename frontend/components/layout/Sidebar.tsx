@@ -26,7 +26,7 @@ const NAV = [
   { href: '/ibadah', label: 'Ibadah', icon: Moon },
   { href: '/vault', label: 'Vault', icon: KeyRound },
   { href: '/commands', label: 'Commands', icon: TerminalSquare },
-  { href: '/servers', label: 'Servers', icon: Server },
+  { href: '/servers', label: 'VMs', icon: Server },
   { href: '/log', label: 'Daily Log', icon: NotebookPen },
 ]
 

@@ -266,9 +266,18 @@ class ServerViewSet(viewsets.ModelViewSet):
     queryset = Server.objects.all()
     serializer_class = ServerSerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        project = self.request.query_params.get('project')
+        if project:
+            qs = qs.filter(projects=project)
+        return qs
+
     @action(detail=True, methods=['get'])
     def ping(self, request, pk=None):
         server = self.get_object()
+        if not server.ip_address:
+            return Response({'status': 'unknown', 'latency_ms': None})
         try:
             start = time.time()
             sock = socket.create_connection((server.ip_address, server.ssh_port), timeout=3)

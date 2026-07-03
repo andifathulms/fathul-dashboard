@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import useSWR from 'swr'
 
 import api, { fetcher } from '@/lib/api'
+import { serverPingable } from '@/lib/ssh'
 import type { PingResult, Server } from '@/lib/types'
 
 type PingState = Record<number, PingResult & { checkedAt: string | null; checking: boolean }>
@@ -32,7 +33,7 @@ export function useServers() {
   }, [])
 
   const pingAll = useCallback(() => {
-    servers?.forEach((s) => pingServer(s.id))
+    servers?.filter(serverPingable).forEach((s) => pingServer(s.id))
   }, [servers, pingServer])
 
   // Auto-ping on load and every 60s.
