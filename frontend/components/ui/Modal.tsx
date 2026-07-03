@@ -29,7 +29,7 @@ export default function Modal({ open, onClose, title, children, footer }: ModalP
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-lg animate-fade-in shadow-glow"
+        className="card w-full max-w-lg animate-scale-in shadow-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5">

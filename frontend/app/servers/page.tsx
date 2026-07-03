@@ -7,8 +7,12 @@ import useSWR from 'swr'
 import PageHeader from '@/components/layout/PageHeader'
 import ServerForm from '@/components/servers/ServerForm'
 import WidgetCard from '@/components/ui/Card'
+import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
+import EmptyState from '@/components/ui/EmptyState'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import StatusDot from '@/components/ui/StatusDot'
+import { useToast } from '@/components/ui/Toast'
 import { useServers } from '@/hooks/useServers'
 import api from '@/lib/api'
 import type { Project, Server } from '@/lib/types'
@@ -18,10 +22,13 @@ export default function ServersPage() {
   const { data: projects } = useSWR<Project[]>('/projects/')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Server | null>(null)
+  const confirm = useConfirm()
+  const toast = useToast()
 
-  const remove = async (id: number) => {
-    if (!confirm('Hapus server ini?')) return
+  const remove = async (id: number, name: string) => {
+    if (!(await confirm({ title: 'Hapus server', message: `Hapus "${name}"?`, danger: true, confirmLabel: 'Hapus' }))) return
     await api.delete(`/servers/${id}/`)
+    toast.success(`Server "${name}" dihapus`)
     mutate()
   }
 
@@ -49,11 +56,16 @@ export default function ServersPage() {
         }
       />
 
-      {isLoading && <p className="text-sm text-muted">Memuat…</p>}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonRows key={i} rows={1} className="[&>div]:h-40" />
+          ))}
+        </div>
+      )}
       {servers?.length === 0 && (
-        <div className="card flex flex-col items-center gap-2 py-16 text-center">
-          <ServerIcon size={28} className="text-muted" />
-          <p className="text-sm text-muted">Belum ada server.</p>
+        <div className="card">
+          <EmptyState icon={<ServerIcon size={22} />} title="Belum ada server" hint="Tambahkan server untuk memantau koneksi SSH & statusnya." />
         </div>
       )}
 
@@ -91,7 +103,7 @@ export default function ServersPage() {
                     <Pencil size={13} />
                   </button>
                   <button
-                    onClick={() => remove(s.id)}
+                    onClick={() => remove(s.id, s.name)}
                     className="icon-btn h-7 w-7 hover:text-red-400"
                     aria-label="Hapus"
                   >

@@ -80,12 +80,15 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               href={href}
               title={collapsed ? label : undefined}
               className={cn(
-                'flex items-center rounded-lg text-sm font-medium transition-colors',
+                'group relative flex items-center rounded-lg text-sm font-medium transition-all duration-150',
                 collapsed ? 'h-10 w-10 justify-center' : 'gap-3 px-3 py-2',
                 active ? 'bg-accent1/10 text-accent1' : 'text-muted hover:bg-border/50 hover:text-text'
               )}
             >
-              <Icon size={17} className="shrink-0" />
+              {active && !collapsed && (
+                <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent1" />
+              )}
+              <Icon size={17} className={cn('shrink-0 transition-transform', !active && 'group-hover:scale-110')} />
               {!collapsed && label}
             </Link>
           )

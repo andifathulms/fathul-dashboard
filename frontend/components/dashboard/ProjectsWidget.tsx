@@ -6,6 +6,8 @@ import useSWR from 'swr'
 
 import WidgetCard from '@/components/ui/Card'
 import { CategoryBadge } from '@/components/ui/Badge'
+import EmptyState from '@/components/ui/EmptyState'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import type { Project } from '@/lib/types'
 
 export default function ProjectsWidget() {
@@ -22,9 +24,9 @@ export default function ProjectsWidget() {
       }
       bodyClassName="space-y-2"
     >
-      {isLoading && <p className="text-sm text-muted">Memuat…</p>}
+      {isLoading && <SkeletonRows rows={3} />}
       {projects?.length === 0 && (
-        <p className="text-sm text-muted">Belum ada project aktif.</p>
+        <EmptyState compact icon={<FolderKanban size={18} />} title="Belum ada project aktif" />
       )}
       {projects?.slice(0, 5).map((p) => (
         <Link

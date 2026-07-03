@@ -26,8 +26,12 @@ import EnvImportModal from '@/components/vault/EnvImportModal'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
 import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
+import EmptyState from '@/components/ui/EmptyState'
 import RevealToggle from '@/components/ui/RevealToggle'
+import Skeleton from '@/components/ui/Skeleton'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import { sshUrl } from '@/lib/ssh'
 import type { Command, Credential, EnvVar, Project, Task } from '@/lib/types'
@@ -36,6 +40,8 @@ export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
   const pid = Number(id)
   const router = useRouter()
+  const confirm = useConfirm()
+  const toast = useToast()
   const [editing, setEditing] = useState(false)
   const [showCred, setShowCred] = useState(false)
   const [showCmd, setShowCmd] = useState(false)
@@ -49,8 +55,17 @@ export default function ProjectDetailPage() {
   const { data: commands, mutate: mutateCommands } = useSWR<Command[]>(`/commands/?project=${id}`)
 
   const remove = async () => {
-    if (!confirm('Hapus project ini? Tindakan tidak bisa dibatalkan.')) return
+    if (
+      !(await confirm({
+        title: 'Hapus project',
+        message: 'Project ini beserta datanya akan dihapus. Tindakan tidak bisa dibatalkan.',
+        danger: true,
+        confirmLabel: 'Hapus',
+      }))
+    )
+      return
     await api.delete(`/projects/${id}/`)
+    toast.success('Project dihapus')
     router.push('/projects')
   }
 
@@ -62,17 +77,17 @@ export default function ProjectDetailPage() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      alert('Gagal menambah tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal menambah tugas')
     }
   }
 
   const deleteCred = async (cid: number) => {
-    if (!confirm('Hapus kredensial ini?')) return
+    if (!(await confirm({ title: 'Hapus kredensial', message: 'Hapus kredensial ini?', danger: true, confirmLabel: 'Hapus' }))) return
     await api.delete(`/credentials/${cid}/`)
     mutateCreds()
   }
   const deleteCommand = async (cid: number) => {
-    if (!confirm('Hapus command ini?')) return
+    if (!(await confirm({ title: 'Hapus command', message: 'Hapus command ini?', danger: true, confirmLabel: 'Hapus' }))) return
     await api.delete(`/commands/${cid}/`)
     mutateCommands()
   }
@@ -81,8 +96,8 @@ export default function ProjectDetailPage() {
     mutateEnvs()
   }
 
-  if (isLoading) return <p className="text-sm text-muted">Memuat…</p>
-  if (!project) return <p className="text-sm text-muted">Project tidak ditemukan.</p>
+  if (isLoading) return <ProjectDetailSkeleton />
+  if (!project) return <p className="py-10 text-center text-sm text-muted">Project tidak ditemukan.</p>
 
   // Prefer the repos list; fall back to the legacy single repo_url.
   const repos =
@@ -164,7 +179,7 @@ export default function ProjectDetailPage() {
             </button>
           </div>
           <div className="space-y-0.5">
-            {tasks?.length === 0 && <p className="px-2 py-2 text-sm text-muted">Belum ada tugas.</p>}
+            {tasks?.length === 0 && <EmptyState compact title="Belum ada tugas" />}
             {tasks?.map((t) => (
               <TaskItem key={t.id} task={t} onChange={mutateTasks} showDelete />
             ))}
@@ -177,7 +192,7 @@ export default function ProjectDetailPage() {
           action={<AddButton onClick={() => setShowCred(true)} />}
           bodyClassName="space-y-2"
         >
-          {creds?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada kredensial.</p>}
+          {creds?.length === 0 && <EmptyState compact title="Belum ada kredensial" />}
           {creds?.map((c) => (
             <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
@@ -207,7 +222,7 @@ export default function ProjectDetailPage() {
           action={<AddButton onClick={() => setShowCmd(true)} />}
           bodyClassName="space-y-1.5"
         >
-          {commands?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada command.</p>}
+          {commands?.length === 0 && <EmptyState compact title="Belum ada command" />}
           {commands?.map((c) => (
             <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
@@ -243,7 +258,7 @@ export default function ProjectDetailPage() {
           action={<AddButton onClick={() => setShowEnv(true)} />}
           bodyClassName="space-y-1.5"
         >
-          {envs?.length === 0 && <p className="px-1 py-3 text-sm text-muted">Belum ada env var.</p>}
+          {envs?.length === 0 && <EmptyState compact title="Belum ada env var" />}
           {envs?.map((e) => (
             <div
               key={e.id}
@@ -297,8 +312,30 @@ export default function ProjectDetailPage() {
 
 function AddButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="btn text-xs" aria-label="Tambah">
+    <button onClick={onClick} className="btn btn-sm" aria-label="Tambah">
       <Plus size={13} /> Tambah
     </button>
+  )
+}
+
+function ProjectDetailSkeleton() {
+  return (
+    <div className="space-y-5">
+      <Skeleton className="h-4 w-24" />
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-20" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-52 w-full rounded-xl" />
+        ))}
+      </div>
+    </div>
   )
 }

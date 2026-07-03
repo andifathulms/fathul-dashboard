@@ -6,6 +6,7 @@ import useSWR from 'swr'
 
 import WidgetCard from '@/components/ui/Card'
 import TaskItem from '@/components/tasks/TaskItem'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { DailyLog, Project, Task } from '@/lib/types'
 import { formatDateID, todayISO } from '@/lib/utils'
@@ -14,6 +15,7 @@ export default function DailyLogWidget() {
   const today = todayISO()
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?date=${today}`)
   const { data: projects } = useSWR<Project[]>('/projects/')
+  const toast = useToast()
 
   const [newTask, setNewTask] = useState('')
   const [journal, setJournal] = useState('')
@@ -49,7 +51,7 @@ export default function DailyLogWidget() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      alert('Gagal menambah tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal menambah tugas')
     }
   }
 

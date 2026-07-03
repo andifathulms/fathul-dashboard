@@ -7,6 +7,7 @@ import useSWR from 'swr'
 import PageHeader from '@/components/layout/PageHeader'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { DailyLog, Project, Task } from '@/lib/types'
 import { formatDateID, todayISO, toISODate } from '@/lib/utils'
@@ -32,6 +33,7 @@ export default function LogPage() {
   const { data: tasks, mutate: mutateTasks } = useSWR<Task[]>(`/tasks/?date=${date}`)
   const { data: projects } = useSWR<Project[]>('/projects/')
   const [newTask, setNewTask] = useState('')
+  const toast = useToast()
 
   // Load the log for the selected date (auto-create only for today).
   useEffect(() => {
@@ -87,7 +89,7 @@ export default function LogPage() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      alert('Gagal menambah tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal menambah tugas')
     }
   }
 

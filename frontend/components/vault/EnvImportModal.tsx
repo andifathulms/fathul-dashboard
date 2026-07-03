@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import Modal from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project } from '@/lib/types'
 
@@ -25,6 +26,7 @@ export default function EnvImportModal({
   const [content, setContent] = useState('')
   const [project, setProject] = useState('')
   const [saving, setSaving] = useState(false)
+  const toast = useToast()
 
   const submit = async () => {
     if (!content.trim()) return
@@ -38,7 +40,9 @@ export default function EnvImportModal({
       onSaved()
       onClose()
       setContent('')
-      alert(`${data.created} variable berhasil diimpor.`)
+      toast.success(`${data.created} variable berhasil diimpor.`, 'Import .env')
+    } catch (e) {
+      toast.error((e as Error).message, 'Gagal impor')
     } finally {
       setSaving(false)
     }

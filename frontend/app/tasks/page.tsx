@@ -7,6 +7,8 @@ import useSWR from 'swr'
 import PageHeader from '@/components/layout/PageHeader'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
+import EmptyState from '@/components/ui/EmptyState'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
 import { cn, todayISO } from '@/lib/utils'
@@ -26,6 +28,7 @@ export default function TasksPage() {
 
   const { data: tasks, mutate } = useSWR<Task[]>('/tasks/')
   const { data: projects } = useSWR<Project[]>('/projects/')
+  const toast = useToast()
 
   const add = async () => {
     if (!title.trim()) return
@@ -40,7 +43,7 @@ export default function TasksPage() {
       setDue('')
       mutate()
     } catch (e) {
-      alert('Gagal menambah tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal menambah tugas')
     }
   }
 
@@ -123,9 +126,12 @@ export default function TasksPage() {
         )}
 
         {visible?.length === 0 && (
-          <div className="card flex flex-col items-center gap-2 py-16 text-center">
-            <CheckSquare size={28} className="text-muted" />
-            <p className="text-sm text-muted">Tidak ada tugas di filter ini.</p>
+          <div className="card">
+            <EmptyState
+              icon={<CheckSquare size={22} />}
+              title="Tidak ada tugas"
+              hint={filter === 'all' ? 'Tambahkan tugas di atas untuk memulai.' : 'Tidak ada tugas di filter ini.'}
+            />
           </div>
         )}
       </div>

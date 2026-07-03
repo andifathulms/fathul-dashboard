@@ -2,6 +2,7 @@
 
 import { Trash2 } from 'lucide-react'
 
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
 import { CATEGORY_STYLES, cn } from '@/lib/utils'
@@ -15,13 +16,14 @@ interface TaskItemProps {
 
 export default function TaskItem({ task, projects, onChange, showDelete = false }: TaskItemProps) {
   const project = projects?.find((p) => p.id === task.project)
+  const toast = useToast()
 
   const toggle = async () => {
     try {
       await api.patch(`/tasks/${task.id}/`, { is_done: !task.is_done })
       onChange()
     } catch (e) {
-      alert('Gagal memperbarui tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal memperbarui tugas')
     }
   }
 
@@ -30,7 +32,7 @@ export default function TaskItem({ task, projects, onChange, showDelete = false 
       await api.delete(`/tasks/${task.id}/`)
       onChange()
     } catch (e) {
-      alert('Gagal menghapus tugas: ' + (e as Error).message)
+      toast.error((e as Error).message, 'Gagal menghapus tugas')
     }
   }
 

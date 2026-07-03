@@ -7,7 +7,10 @@ import useSWR from 'swr'
 import PageHeader from '@/components/layout/PageHeader'
 import CommandForm, { CATEGORIES } from '@/components/commands/CommandForm'
 import WidgetCard from '@/components/ui/Card'
+import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
+import EmptyState from '@/components/ui/EmptyState'
+import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import { sshUrl } from '@/lib/ssh'
 import type { Command, CommandCategory, Project } from '@/lib/types'
@@ -37,10 +40,13 @@ export default function CommandsPage() {
 
   const { data: commands, mutate } = useSWR<Command[]>(key)
   const { data: projects } = useSWR<Project[]>('/projects/')
+  const confirm = useConfirm()
+  const toast = useToast()
 
-  const remove = async (id: number) => {
-    if (!confirm('Hapus command ini?')) return
+  const remove = async (id: number, title: string) => {
+    if (!(await confirm({ title: 'Hapus command', message: `Hapus "${title}"?`, danger: true, confirmLabel: 'Hapus' }))) return
     await api.delete(`/commands/${id}/`)
+    toast.success('Command dihapus')
     mutate()
   }
 
@@ -86,9 +92,12 @@ export default function CommandsPage() {
       </div>
 
       {commands?.length === 0 && (
-        <div className="card flex flex-col items-center gap-2 py-16 text-center">
-          <TerminalSquare size={28} className="text-muted" />
-          <p className="text-sm text-muted">Belum ada command.</p>
+        <div className="card">
+          <EmptyState
+            icon={<TerminalSquare size={22} />}
+            title="Belum ada command"
+            hint={q || category !== 'all' ? 'Tidak ada yang cocok dengan filter ini.' : 'Simpan snippet & perintah yang sering kamu pakai.'}
+          />
         </div>
       )}
 
@@ -123,7 +132,7 @@ export default function CommandsPage() {
                   <Pencil size={13} />
                 </button>
                 <button
-                  onClick={() => remove(c.id)}
+                  onClick={() => remove(c.id, c.title)}
                   className="icon-btn h-7 w-7 hover:text-red-400"
                   aria-label="Hapus"
                 >

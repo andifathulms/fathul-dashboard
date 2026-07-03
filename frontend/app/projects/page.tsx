@@ -8,6 +8,8 @@ import useSWR from 'swr'
 import PageHeader from '@/components/layout/PageHeader'
 import ProjectForm from '@/components/projects/ProjectForm'
 import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import EmptyState from '@/components/ui/EmptyState'
+import Skeleton from '@/components/ui/Skeleton'
 import type { Project, ProjectStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -69,11 +71,25 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {isLoading && <p className="text-sm text-muted">Memuat…</p>}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-36 w-full rounded-xl" />
+          ))}
+        </div>
+      )}
       {filtered?.length === 0 && (
-        <div className="card flex flex-col items-center gap-2 py-16 text-center">
-          <FolderKanban size={28} className="text-muted" />
-          <p className="text-sm text-muted">Belum ada project di sini.</p>
+        <div className="card">
+          <EmptyState
+            icon={<FolderKanban size={22} />}
+            title="Belum ada project di sini"
+            hint={q || status !== 'all' ? 'Coba ubah filter atau kata kunci.' : 'Buat project pertamamu untuk mulai.'}
+            action={
+              <button onClick={() => setShowForm(true)} className="btn-accent">
+                <Plus size={16} /> Project Baru
+              </button>
+            }
+          />
         </div>
       )}
 
@@ -82,7 +98,7 @@ export default function ProjectsPage() {
           <Link
             key={p.id}
             href={`/projects/${p.id}`}
-            className="group card p-4 transition-colors hover:border-accent1/40"
+            className="group card card-hover p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold leading-tight">{p.name}</h3>

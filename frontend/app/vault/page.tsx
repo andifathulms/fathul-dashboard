@@ -8,8 +8,11 @@ import PageHeader from '@/components/layout/PageHeader'
 import CredentialForm from '@/components/vault/CredentialForm'
 import EnvImportModal from '@/components/vault/EnvImportModal'
 import WidgetCard from '@/components/ui/Card'
+import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
+import EmptyState from '@/components/ui/EmptyState'
 import RevealToggle from '@/components/ui/RevealToggle'
+import { useToast } from '@/components/ui/Toast'
 import { CategoryBadge } from '@/components/ui/Badge'
 import api from '@/lib/api'
 import type { Credential, EnvVar, Project } from '@/lib/types'
@@ -27,6 +30,8 @@ export default function VaultPage() {
   const { data: creds, mutate: mutateCreds } = useSWR<Credential[]>('/credentials/')
   const { data: envs, mutate: mutateEnvs } = useSWR<EnvVar[]>('/envvars/')
   const { data: projects } = useSWR<Project[]>('/projects/')
+  const confirm = useConfirm()
+  const toast = useToast()
 
   const filteredCreds = creds?.filter(
     (c) =>
@@ -35,9 +40,10 @@ export default function VaultPage() {
   )
   const filteredEnvs = envs?.filter((e) => e.key.toLowerCase().includes(q.toLowerCase()))
 
-  const deleteCred = async (id: number) => {
-    if (!confirm('Hapus kredensial ini?')) return
+  const deleteCred = async (id: number, label: string) => {
+    if (!(await confirm({ title: 'Hapus kredensial', message: `Hapus "${label}"?`, danger: true, confirmLabel: 'Hapus' }))) return
     await api.delete(`/credentials/${id}/`)
+    toast.success('Kredensial dihapus')
     mutateCreds()
   }
   const deleteEnv = async (id: number) => {
@@ -120,7 +126,7 @@ export default function VaultPage() {
                       <Pencil size={13} />
                     </button>
                     <button
-                      onClick={() => deleteCred(c.id)}
+                      onClick={() => deleteCred(c.id, c.label)}
                       className="icon-btn h-7 w-7 hover:text-red-400"
                       aria-label="Hapus"
                     >
@@ -210,9 +216,8 @@ export default function VaultPage() {
 
 function Empty({ label }: { label: string }) {
   return (
-    <div className="card col-span-full flex flex-col items-center gap-2 py-16 text-center">
-      <KeyRound size={28} className="text-muted" />
-      <p className="text-sm text-muted">{label}</p>
+    <div className="card col-span-full">
+      <EmptyState icon={<KeyRound size={22} />} title={label} />
     </div>
   )
 }

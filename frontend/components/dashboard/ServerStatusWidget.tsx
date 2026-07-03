@@ -5,6 +5,8 @@ import Link from 'next/link'
 
 import WidgetCard from '@/components/ui/Card'
 import CopyButton from '@/components/ui/CopyButton'
+import EmptyState from '@/components/ui/EmptyState'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import StatusDot from '@/components/ui/StatusDot'
 import { useServers } from '@/hooks/useServers'
 
@@ -22,8 +24,10 @@ export default function ServerStatusWidget() {
       }
       bodyClassName="space-y-2"
     >
-      {isLoading && <p className="text-sm text-muted">Memuat…</p>}
-      {servers?.length === 0 && <p className="text-sm text-muted">Belum ada server.</p>}
+      {isLoading && <SkeletonRows rows={3} />}
+      {servers?.length === 0 && (
+        <EmptyState compact icon={<ServerIcon size={18} />} title="Belum ada server" />
+      )}
       {servers?.map((s) => {
         const ping = pings[s.id]
         const status = ping?.checking ? 'checking' : ping?.status ?? 'checking'

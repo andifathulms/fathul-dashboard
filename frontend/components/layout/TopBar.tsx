@@ -3,6 +3,7 @@
 import { LocateFixed, MapPin } from 'lucide-react'
 import { useState } from 'react'
 
+import { useToast } from '@/components/ui/Toast'
 import { usePrayer } from '@/hooks/usePrayer'
 import { useWeather } from '@/hooks/useWeather'
 import { detectLocation } from '@/lib/location'
@@ -16,13 +17,15 @@ export default function TopBar() {
   const w = weather ? describeWeather(weather.weathercode) : null
 
   const [locating, setLocating] = useState(false)
+  const toast = useToast()
 
   const detect = async () => {
     setLocating(true)
     try {
-      await detectLocation()
+      const loc = await detectLocation()
+      toast.success(`Lokasi diperbarui ke ${loc.label}`, 'Lokasi')
     } catch (e) {
-      alert((e as Error).message)
+      toast.error((e as Error).message, 'Gagal mendapatkan lokasi')
     } finally {
       setLocating(false)
     }
