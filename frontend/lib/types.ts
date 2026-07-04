@@ -14,6 +14,8 @@ export interface Project {
   name: string
   description: string
   icon_url: string
+  lockup_horizontal_url: string
+  lockup_vertical_url: string
   status: ProjectStatus
   category: ProjectCategory
   priority: ProjectPriority

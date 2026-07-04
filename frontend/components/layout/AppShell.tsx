@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import CommandPalette from './CommandPalette'
 import PageTransition from './PageTransition'
 import Sidebar from './Sidebar'
+import Splash from './Splash'
 import TopBar from './TopBar'
 import { cn } from '@/lib/utils'
 
@@ -61,6 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <CommandPalette />
+      <Splash />
     </>
   )
 }

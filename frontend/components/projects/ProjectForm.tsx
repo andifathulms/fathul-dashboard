@@ -3,6 +3,7 @@
 import { ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 
+import AssetPicker from '@/components/projects/AssetPicker'
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import Modal from '@/components/ui/Modal'
 import api from '@/lib/api'
@@ -147,6 +148,25 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
             )}
           </div>
         </Field>
+
+        {/* Optional brand lockups */}
+        <details className="rounded-lg border border-border bg-bg/40 px-3 py-2 [&_summary]:cursor-pointer">
+          <summary className="text-xs font-medium text-muted">Brand lockup (opsional)</summary>
+          <div className="mt-3 space-y-3">
+            <AssetPicker
+              label="Lockup horizontal"
+              shape="wide"
+              value={form.lockup_horizontal_url}
+              onChange={(v) => set('lockup_horizontal_url', v)}
+            />
+            <AssetPicker
+              label="Lockup vertikal"
+              shape="tall"
+              value={form.lockup_vertical_url}
+              onChange={(v) => set('lockup_vertical_url', v)}
+            />
+          </div>
+        </details>
         <Field label="Deskripsi">
           <textarea
             className="input resize-none"
@@ -277,6 +297,8 @@ function seed(p?: Project | null) {
     name: p?.name ?? '',
     description: p?.description ?? '',
     icon_url: p?.icon_url ?? '',
+    lockup_horizontal_url: p?.lockup_horizontal_url ?? '',
+    lockup_vertical_url: p?.lockup_vertical_url ?? '',
     status: p?.status ?? 'active',
     category: p?.category ?? 'personal',
     priority: p?.priority ?? 'medium',

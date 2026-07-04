@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Github,
   KeyRound,
+  Palette,
   Pencil,
   Plus,
   Server as ServerIcon,
@@ -164,6 +165,36 @@ export default function ProjectDetailPage() {
             </a>
           )}
         </div>
+      )}
+
+      {/* Brand lockups */}
+      {(project.lockup_horizontal_url || project.lockup_vertical_url) && (
+        <WidgetCard title="Brand" icon={<Palette size={15} />}>
+          <div className="flex flex-wrap items-end gap-5">
+            {project.lockup_horizontal_url && (
+              <a href={project.lockup_horizontal_url} target="_blank" rel="noreferrer" className="group">
+                <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">Horizontal</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.lockup_horizontal_url}
+                  alt=""
+                  className="h-14 w-auto rounded-lg ring-1 ring-border transition-transform group-hover:scale-[1.02]"
+                />
+              </a>
+            )}
+            {project.lockup_vertical_url && (
+              <a href={project.lockup_vertical_url} target="_blank" rel="noreferrer" className="group">
+                <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">Vertikal</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.lockup_vertical_url}
+                  alt=""
+                  className="h-28 w-auto rounded-lg ring-1 ring-border transition-transform group-hover:scale-[1.02]"
+                />
+              </a>
+            )}
+          </div>
+        </WidgetCard>
       )}
 
       {/* VM / Host access — SSH + password from the linked VM(s) */}
