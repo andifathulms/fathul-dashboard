@@ -22,12 +22,12 @@ export function useServers() {
       const { data } = await api.get<PingResult>(`/servers/${id}/ping/`)
       setPings((prev) => ({
         ...prev,
-        [id]: { ...data, checkedAt: new Date().toLocaleTimeString('id-ID'), checking: false },
+        [id]: { ...data, checkedAt: new Date().toLocaleTimeString('en-US'), checking: false },
       }))
     } catch {
       setPings((prev) => ({
         ...prev,
-        [id]: { status: 'down', latency_ms: null, checkedAt: new Date().toLocaleTimeString('id-ID'), checking: false },
+        [id]: { status: 'down', latency_ms: null, checkedAt: new Date().toLocaleTimeString('en-US'), checking: false },
       }))
     }
   }, [])

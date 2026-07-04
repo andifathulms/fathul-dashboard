@@ -39,8 +39,8 @@ export default function PriorityToggle({ project, onChanged, compact }: Priority
       <button
         onClick={cycle}
         disabled={busy}
-        title={`Prioritas: ${s.label} — klik untuk ganti`}
-        aria-label={`Prioritas ${s.label}`}
+        title={`Priority: ${s.label} — click to change`}
+        aria-label={`Priority ${s.label}`}
         className={cn('inline-flex h-4 w-4 items-center justify-center rounded-full transition-transform hover:scale-125', busy && 'opacity-50')}
       >
         <span className={cn('h-2.5 w-2.5 rounded-full', s.dot)} />
@@ -52,7 +52,7 @@ export default function PriorityToggle({ project, onChanged, compact }: Priority
     <button
       onClick={cycle}
       disabled={busy}
-      title="Klik untuk ganti prioritas"
+      title="Click to change priority"
       className={cn('chip inline-flex items-center gap-1 transition-opacity hover:opacity-80', s.chip, busy && 'opacity-50')}
     >
       <span className={cn('h-1.5 w-1.5 rounded-full', s.dot)} />

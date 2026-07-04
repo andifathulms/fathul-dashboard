@@ -12,7 +12,7 @@ export default function AyatWidget() {
     <section className="card relative overflow-hidden bg-gradient-to-br from-surface to-accent1/5 p-5">
       <div className="mb-3 flex items-center gap-2 text-muted">
         <BookOpen size={15} />
-        <h3 className="widget-title">Ayat Hari Ini</h3>
+        <h3 className="widget-title">Verse of the Day</h3>
       </div>
       {ayat ? (
         <div className="space-y-3">
@@ -25,7 +25,7 @@ export default function AyatWidget() {
           </p>
         </div>
       ) : (
-        <p className="text-sm text-muted">Memuat ayat…</p>
+        <p className="text-sm text-muted">Loading verse…</p>
       )}
     </section>
   )

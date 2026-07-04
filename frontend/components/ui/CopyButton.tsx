@@ -35,7 +35,7 @@ export default function CopyButton({ value, label, className, withText }: CopyBu
         className={cn('btn text-xs', copied && 'border-highlight/50 text-highlight', className)}
       >
         {copied ? <Check size={13} /> : <Copy size={13} />}
-        {copied ? 'Tersalin' : withText}
+        {copied ? 'Copied' : withText}
       </button>
     )
   }

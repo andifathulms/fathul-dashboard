@@ -29,18 +29,18 @@ export default function ProjectsWidget() {
 
   return (
     <WidgetCard
-      title="Projects Aktif"
+      title="Active Projects"
       icon={<FolderKanban size={15} />}
       action={
         <Link href="/projects" className="text-xs text-accent1 hover:underline">
-          Semua
+          All
         </Link>
       }
       bodyClassName="space-y-2"
     >
       {isLoading && <SkeletonRows rows={3} />}
       {projects?.length === 0 && (
-        <EmptyState compact icon={<FolderKanban size={18} />} title="Belum ada project aktif" />
+        <EmptyState compact icon={<FolderKanban size={18} />} title="No active projects yet" />
       )}
       {sorted?.map((p) => (
         <Link
@@ -54,7 +54,7 @@ export default function ProjectsWidget() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{p.name}</p>
             <p className="mt-0.5 text-[11px] text-muted">
-              {p.tasks_count} tugas · {p.credentials_count} kredensial
+              {p.tasks_count} tasks · {p.credentials_count} credentials
             </p>
           </div>
           <CategoryBadge category={p.category} />

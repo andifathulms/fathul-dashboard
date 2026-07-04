@@ -44,9 +44,9 @@ export default function CommandsPage() {
   const toast = useToast()
 
   const remove = async (id: number, title: string) => {
-    if (!(await confirm({ title: 'Hapus command', message: `Hapus "${title}"?`, danger: true, confirmLabel: 'Hapus' }))) return
+    if (!(await confirm({ title: 'Delete command', message: `Delete "${title}"?`, danger: true, confirmLabel: 'Delete' }))) return
     await api.delete(`/commands/${id}/`)
-    toast.success('Command dihapus')
+    toast.success('Command deleted')
     mutate()
   }
 
@@ -54,7 +54,7 @@ export default function CommandsPage() {
     <div>
       <PageHeader
         title="Commands"
-        subtitle="Snippet & perintah yang sering dipakai — sekali klik untuk salin"
+        subtitle="Frequently used snippets & commands — one click to copy"
         icon={<TerminalSquare size={20} />}
         action={
           <button
@@ -64,7 +64,7 @@ export default function CommandsPage() {
             }}
             className="btn-accent"
           >
-            <Plus size={16} /> Command Baru
+            <Plus size={16} /> New Command
           </button>
         }
       />
@@ -72,7 +72,7 @@ export default function CommandsPage() {
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-1 rounded-lg bg-surface p-1">
           <Chip active={category === 'all'} onClick={() => setCategory('all')}>
-            semua
+            all
           </Chip>
           {CATEGORIES.map((c) => (
             <Chip key={c} active={category === c} onClick={() => setCategory(c)}>
@@ -85,7 +85,7 @@ export default function CommandsPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari command…"
+            placeholder="Search commands…"
             className="input pl-9"
           />
         </div>
@@ -95,8 +95,8 @@ export default function CommandsPage() {
         <div className="card">
           <EmptyState
             icon={<TerminalSquare size={22} />}
-            title="Belum ada command"
-            hint={q || category !== 'all' ? 'Tidak ada yang cocok dengan filter ini.' : 'Simpan snippet & perintah yang sering kamu pakai.'}
+            title="No commands yet"
+            hint={q || category !== 'all' ? 'Nothing matches this filter.' : 'Save snippets & commands you use often.'}
           />
         </div>
       )}
@@ -113,7 +113,7 @@ export default function CommandsPage() {
                 {sshUrl(c.command) && (
                   <a
                     href={sshUrl(c.command)!}
-                    title="Buka di Terminal (SSH)"
+                    title="Open in Terminal (SSH)"
                     className="icon-btn h-7 w-7"
                     aria-label="Open in Terminal"
                   >
@@ -134,7 +134,7 @@ export default function CommandsPage() {
                 <button
                   onClick={() => remove(c.id, c.title)}
                   className="icon-btn h-7 w-7 hover:text-red-400"
-                  aria-label="Hapus"
+                  aria-label="Delete"
                 >
                   <Trash2 size={13} />
                 </button>

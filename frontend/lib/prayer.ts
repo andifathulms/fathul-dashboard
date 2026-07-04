@@ -14,14 +14,14 @@ export interface PrayerTimings {
   [key: string]: string
 }
 
-// Order + Indonesian labels for the six rows we display.
+// Order + display labels for the six rows we display.
 export const PRAYER_SEQUENCE: { key: keyof PrayerTimings; label: string }[] = [
-  { key: 'Fajr', label: 'Subuh' },
-  { key: 'Sunrise', label: 'Syuruq' },
-  { key: 'Dhuhr', label: 'Dzuhur' },
-  { key: 'Asr', label: 'Ashar' },
+  { key: 'Fajr', label: 'Fajr' },
+  { key: 'Sunrise', label: 'Sunrise' },
+  { key: 'Dhuhr', label: 'Dhuhr' },
+  { key: 'Asr', label: 'Asr' },
   { key: 'Maghrib', label: 'Maghrib' },
-  { key: 'Isha', label: 'Isya' },
+  { key: 'Isha', label: 'Isha' },
 ]
 
 // Computed locally (Kemenag method) — no network. `date` is DD-MM-YYYY.
@@ -57,14 +57,14 @@ export function getNextPrayer(timings: PrayerTimings, now: Date) {
       }
     }
   }
-  // All of today's prayers passed → next is tomorrow's Subuh.
-  return { label: 'Subuh', key: 'Fajr' as const, time: timings.Fajr, minutesUntil: null }
+  // All of today's prayers passed → next is tomorrow's Fajr.
+  return { label: 'Fajr', key: 'Fajr' as const, time: timings.Fajr, minutesUntil: null }
 }
 
 export function formatCountdown(minutes: number | null): string {
-  if (minutes === null) return 'besok'
+  if (minutes === null) return 'tomorrow'
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  if (h > 0) return `${h}j ${m}m`
+  if (h > 0) return `${h}h ${m}m`
   return `${m}m`
 }

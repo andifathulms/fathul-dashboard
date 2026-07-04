@@ -54,15 +54,15 @@ export default function CredentialForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? 'Edit Kredensial' : 'Kredensial Baru'}
+      title={initial ? 'Edit Credential' : 'New Credential'}
       footer={
         <>
           <button onClick={onClose} className="btn">
-            Batal
+            Cancel
           </button>
           <button onClick={submit} disabled={saving} className="btn-accent">
             {saving && <Loader2 size={14} className="animate-spin" />}
-            {saving ? 'Menyimpan…' : 'Simpan'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </>
       }
@@ -87,10 +87,10 @@ export default function CredentialForm({
           <input className="input" value={form.url} onChange={(e) => set('url', e.target.value)} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Kategori">
+          <Field label="Category">
             <input
               className="input"
-              placeholder="mis. database, email"
+              placeholder="e.g. database, email"
               value={form.category}
               onChange={(e) => set('category', e.target.value)}
             />
@@ -98,7 +98,7 @@ export default function CredentialForm({
           {lockedProjectId == null && (
             <Field label="Project">
               <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
-                <option value="">Tanpa project</option>
+                <option value="">No project</option>
                 {projects?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -108,7 +108,7 @@ export default function CredentialForm({
             </Field>
           )}
         </div>
-        <Field label="Catatan">
+        <Field label="Notes">
           <textarea
             className="input resize-none"
             rows={2}

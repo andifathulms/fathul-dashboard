@@ -89,7 +89,7 @@ export default function LogPage() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal menambah tugas')
+      toast.error((e as Error).message, 'Failed to add task')
     }
   }
 
@@ -97,24 +97,24 @@ export default function LogPage() {
     <div>
       <PageHeader
         title="Daily Log"
-        subtitle="Jurnal harian & tugas — satu catatan tiap hari"
+        subtitle="Daily journal & tasks — one note per day"
         icon={<NotebookPen size={20} />}
       />
 
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Hari sebelumnya">
+          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Previous day">
             <ChevronLeft size={18} />
           </button>
           <div className="min-w-[230px] text-center">
             <p className="text-sm font-semibold">{formatDateID(`${date}T00:00:00`)}</p>
-            {isToday && <p className="text-[11px] text-highlight">Hari ini</p>}
+            {isToday && <p className="text-[11px] text-highlight">Today</p>}
           </div>
           <button
             onClick={() => setDate(shiftDate(date, 1))}
             disabled={isToday}
             className="icon-btn disabled:opacity-30"
-            aria-label="Hari berikutnya"
+            aria-label="Next day"
           >
             <ChevronRight size={18} />
           </button>
@@ -129,22 +129,22 @@ export default function LogPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <WidgetCard title="Tugas" bodyClassName="space-y-3">
+        <WidgetCard title="Tasks" bodyClassName="space-y-3">
           <div className="flex gap-2">
             <input
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTask()}
-              placeholder="Tambah tugas…"
+              placeholder="Add a task…"
               className="input"
             />
-            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Tambah">
+            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add">
               <Plus size={16} />
             </button>
           </div>
           <div className="space-y-0.5">
             {tasks?.length === 0 && (
-              <p className="px-2 py-3 text-sm text-muted">Tidak ada tugas untuk tanggal ini.</p>
+              <p className="px-2 py-3 text-sm text-muted">No tasks for this date.</p>
             )}
             {tasks?.map((t) => (
               <TaskItem key={t.id} task={t} projects={projects} onChange={mutateTasks} showDelete />
@@ -153,12 +153,12 @@ export default function LogPage() {
         </WidgetCard>
 
         <WidgetCard
-          title="Catatan"
+          title="Notes"
           icon={<NotebookPen size={15} />}
           action={
             <div className="flex items-center gap-2">
-              {saved === 'saving' && <span className="text-[11px] text-muted">menyimpan…</span>}
-              {saved === 'done' && <span className="text-[11px] text-highlight">tersimpan ✓</span>}
+              {saved === 'saving' && <span className="text-[11px] text-muted">saving…</span>}
+              {saved === 'done' && <span className="text-[11px] text-highlight">saved ✓</span>}
               {isPast && locked && (
                 <button onClick={() => setLocked(false)} className="btn text-xs">
                   <Pencil size={12} /> Edit
@@ -172,10 +172,10 @@ export default function LogPage() {
               {journal ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-text/90">{journal}</p>
               ) : (
-                <p className="text-sm text-muted">Tidak ada catatan untuk hari ini.</p>
+                <p className="text-sm text-muted">No notes for this day.</p>
               )}
               <p className="flex items-center gap-1.5 pt-2 text-[11px] text-muted">
-                <Lock size={11} /> Catatan lama terkunci — klik Edit untuk mengubah.
+                <Lock size={11} /> Past notes are locked — click Edit to change.
               </p>
             </div>
           ) : (
@@ -184,7 +184,7 @@ export default function LogPage() {
               onChange={(e) => setJournal(e.target.value)}
               onBlur={saveJournal}
               rows={12}
-              placeholder="Apa yang kamu kerjakan hari ini?"
+              placeholder="What did you work on today?"
               className="input resize-none leading-relaxed"
             />
           )}

@@ -24,7 +24,7 @@ export default function VmAccess({ server }: { server: Server }) {
           </code>
           <div className="flex shrink-0 items-center gap-1">
             {sshUrl && (
-              <a href={sshUrl} title="Buka di Terminal (SSH)" className="icon-btn" aria-label="Open in Terminal">
+              <a href={sshUrl} title="Open in Terminal (SSH)" className="icon-btn" aria-label="Open in Terminal">
                 <Terminal size={15} />
               </a>
             )}
@@ -35,7 +35,7 @@ export default function VmAccess({ server }: { server: Server }) {
 
       {gcp && (
         <a href={gcp} target="_blank" rel="noreferrer" className="btn btn-sm w-full justify-center">
-          <Cloud size={13} /> Buka GCP Console SSH
+          <Cloud size={13} /> Open GCP Console SSH
         </a>
       )}
 

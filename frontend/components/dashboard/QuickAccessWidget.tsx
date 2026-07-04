@@ -49,7 +49,7 @@ export default function QuickAccessWidget() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={`Cari ${tab}…`}
+            placeholder={`Search ${tab}…`}
             className="input pl-9"
           />
         </div>
@@ -66,7 +66,7 @@ export default function QuickAccessWidget() {
 
 function CommandsTab({ q }: { q: string }) {
   const { data } = useSWR<Command[]>(`/commands/${q ? `?search=${encodeURIComponent(q)}` : ''}`)
-  if (data?.length === 0) return <Empty text="Tidak ada command." />
+  if (data?.length === 0) return <Empty text="No commands." />
   return (
     <>
       {data?.map((c) => (
@@ -85,7 +85,7 @@ function CommandsTab({ q }: { q: string }) {
 function CredentialsTab({ q }: { q: string }) {
   const { data } = useSWR<Credential[]>('/credentials/')
   const filtered = data?.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))
-  if (filtered?.length === 0) return <Empty text="Tidak ada kredensial." />
+  if (filtered?.length === 0) return <Empty text="No credentials." />
   return (
     <>
       {filtered?.map((c) => (
@@ -112,7 +112,7 @@ function projectRepos(p: Project) {
 function LinksTab() {
   const { data } = useSWR<Project[]>('/projects/')
   const withLinks = data?.filter((p) => projectRepos(p).length > 0 || p.live_url)
-  if (withLinks?.length === 0) return <Empty text="Belum ada link project." />
+  if (withLinks?.length === 0) return <Empty text="No project links yet." />
   return (
     <>
       {withLinks?.map((p) => (

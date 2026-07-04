@@ -21,7 +21,7 @@ export default function PrayerBar() {
             <Moon size={20} />
           </span>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">Sholat berikutnya</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">Next prayer</p>
             <p className="text-lg font-semibold">
               {next.label}{' '}
               <span className="font-mono text-sm font-normal text-muted">· {next.time}</span>
@@ -32,7 +32,7 @@ export default function PrayerBar() {
           <p className="bg-gradient-to-br from-accent1 to-accent2 bg-clip-text text-3xl font-extrabold tabular-nums text-transparent">
             {formatCountdown(next.minutesUntil)}
           </p>
-          <p className="text-[11px] text-muted">lagi</p>
+          <p className="text-[11px] text-muted">remaining</p>
         </div>
       </div>
     </div>

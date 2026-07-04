@@ -71,7 +71,7 @@ export const STATUS_RANK: Record<ProjectStatus, number> = {
 
 export function formatDateID(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('id-ID', {
+  return d.toLocaleDateString('en-US', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',

@@ -78,20 +78,20 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 <AlertTriangle size={18} />
               </span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold">{pending.opts.title ?? 'Konfirmasi'}</h2>
+                <h2 className="text-sm font-semibold">{pending.opts.title ?? 'Confirm'}</h2>
                 <p className="mt-1 text-sm text-muted">{pending.opts.message}</p>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => settle(false)} className="btn">
-                {pending.opts.cancelLabel ?? 'Batal'}
+                {pending.opts.cancelLabel ?? 'Cancel'}
               </button>
               <button
                 onClick={() => settle(true)}
                 className={cn(pending.opts.danger ? 'btn-accent bg-red-500 hover:bg-red-500/90' : 'btn-accent')}
                 autoFocus
               >
-                {pending.opts.confirmLabel ?? 'Ya, lanjut'}
+                {pending.opts.confirmLabel ?? 'Yes, continue'}
               </button>
             </div>
           </div>

@@ -33,7 +33,7 @@ export function saveLocation(c: Coords) {
 export function detectLocation(): Promise<Coords> {
   return new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      reject(new Error('Geolocation tidak didukung browser ini.'))
+      reject(new Error('Geolocation is not supported by this browser.'))
       return
     }
     navigator.geolocation.getCurrentPosition(
@@ -53,7 +53,7 @@ export function detectLocation(): Promise<Coords> {
         saveLocation(coords)
         resolve(coords)
       },
-      (err) => reject(new Error(err.message || 'Gagal mendapatkan lokasi.')),
+      (err) => reject(new Error(err.message || 'Failed to get location.')),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     )
   })

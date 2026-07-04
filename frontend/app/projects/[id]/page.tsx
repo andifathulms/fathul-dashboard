@@ -61,15 +61,15 @@ export default function ProjectDetailPage() {
   const remove = async () => {
     if (
       !(await confirm({
-        title: 'Hapus project',
-        message: 'Project ini beserta datanya akan dihapus. Tindakan tidak bisa dibatalkan.',
+        title: 'Delete project',
+        message: 'This project and all its data will be deleted. This action cannot be undone.',
         danger: true,
-        confirmLabel: 'Hapus',
+        confirmLabel: 'Delete',
       }))
     )
       return
     await api.delete(`/projects/${id}/`)
-    toast.success('Project dihapus')
+    toast.success('Project deleted')
     router.push('/projects')
   }
 
@@ -81,17 +81,17 @@ export default function ProjectDetailPage() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal menambah tugas')
+      toast.error((e as Error).message, 'Failed to add task')
     }
   }
 
   const deleteCred = async (cid: number) => {
-    if (!(await confirm({ title: 'Hapus kredensial', message: 'Hapus kredensial ini?', danger: true, confirmLabel: 'Hapus' }))) return
+    if (!(await confirm({ title: 'Delete credential', message: 'Delete this credential?', danger: true, confirmLabel: 'Delete' }))) return
     await api.delete(`/credentials/${cid}/`)
     mutateCreds()
   }
   const deleteCommand = async (cid: number) => {
-    if (!(await confirm({ title: 'Hapus command', message: 'Hapus command ini?', danger: true, confirmLabel: 'Hapus' }))) return
+    if (!(await confirm({ title: 'Delete command', message: 'Delete this command?', danger: true, confirmLabel: 'Delete' }))) return
     await api.delete(`/commands/${cid}/`)
     mutateCommands()
   }
@@ -101,7 +101,7 @@ export default function ProjectDetailPage() {
   }
 
   if (isLoading) return <ProjectDetailSkeleton />
-  if (!project) return <p className="py-10 text-center text-sm text-muted">Project tidak ditemukan.</p>
+  if (!project) return <p className="py-10 text-center text-sm text-muted">Project not found.</p>
 
   // Prefer the repos list; fall back to the legacy single repo_url.
   const repos =
@@ -140,7 +140,7 @@ export default function ProjectDetailPage() {
           <button onClick={() => setEditing(true)} className="btn">
             <Pencil size={14} /> <span className="hidden sm:inline">Edit</span>
           </button>
-          <button onClick={remove} className="btn-danger" aria-label="Hapus project">
+          <button onClick={remove} className="btn-danger" aria-label="Delete project">
             <Trash2 size={14} />
           </button>
         </div>
@@ -160,7 +160,7 @@ export default function ProjectDetailPage() {
           )}
           {project.local_path && (
             <a href={`vscode://file/${project.local_path}`} className="btn text-xs">
-              <Code2 size={14} /> Buka di VS Code
+              <Code2 size={14} /> Open in VS Code
             </a>
           )}
         </div>
@@ -194,21 +194,21 @@ export default function ProjectDetailPage() {
         {/* GitHub analytics — one card per linked repo, half-width in the grid */}
         <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
 
-        <WidgetCard title="Tugas" bodyClassName="space-y-2">
+        <WidgetCard title="Tasks" bodyClassName="space-y-2">
           <div className="flex gap-2">
             <input
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTask()}
-              placeholder="Tambah tugas untuk project ini…"
+              placeholder="Add a task for this project…"
               className="input"
             />
-            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Tambah tugas">
+            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add task">
               <Plus size={16} />
             </button>
           </div>
           <div className="space-y-0.5">
-            {tasks?.length === 0 && <EmptyState compact title="Belum ada tugas" />}
+            {tasks?.length === 0 && <EmptyState compact title="No tasks yet" />}
             {tasks?.map((t) => (
               <TaskItem key={t.id} task={t} onChange={mutateTasks} showDelete />
             ))}
@@ -216,12 +216,12 @@ export default function ProjectDetailPage() {
         </WidgetCard>
 
         <WidgetCard
-          title="Kredensial"
+          title="Credentials"
           icon={<KeyRound size={15} />}
           action={<AddButton onClick={() => setShowCred(true)} />}
           bodyClassName="space-y-2"
         >
-          {creds?.length === 0 && <EmptyState compact title="Belum ada kredensial" />}
+          {creds?.length === 0 && <EmptyState compact title="No credentials yet" />}
           {creds?.map((c) => (
             <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
@@ -231,7 +231,7 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => deleteCred(c.id)}
                     className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                    aria-label="Hapus kredensial"
+                    aria-label="Delete credential"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -251,7 +251,7 @@ export default function ProjectDetailPage() {
           action={<AddButton onClick={() => setShowCmd(true)} />}
           bodyClassName="space-y-1.5"
         >
-          {commands?.length === 0 && <EmptyState compact title="Belum ada command" />}
+          {commands?.length === 0 && <EmptyState compact title="No commands yet" />}
           {commands?.map((c) => (
             <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
               <div className="flex items-center justify-between gap-2">
@@ -260,7 +260,7 @@ export default function ProjectDetailPage() {
                   {sshUrl(c.command) && (
                     <a
                       href={sshUrl(c.command)!}
-                      title="Buka di Terminal (SSH)"
+                      title="Open in Terminal (SSH)"
                       className="icon-btn h-7 w-7"
                       aria-label="Open in Terminal"
                     >
@@ -271,7 +271,7 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => deleteCommand(c.id)}
                     className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                    aria-label="Hapus command"
+                    aria-label="Delete command"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -287,7 +287,7 @@ export default function ProjectDetailPage() {
           action={<AddButton onClick={() => setShowEnv(true)} />}
           bodyClassName="space-y-1.5"
         >
-          {envs?.length === 0 && <EmptyState compact title="Belum ada env var" />}
+          {envs?.length === 0 && <EmptyState compact title="No env vars yet" />}
           {envs?.map((e) => (
             <div
               key={e.id}
@@ -300,7 +300,7 @@ export default function ProjectDetailPage() {
                 <button
                   onClick={() => deleteEnv(e.id)}
                   className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                  aria-label="Hapus env var"
+                  aria-label="Delete env var"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -311,7 +311,7 @@ export default function ProjectDetailPage() {
       </div>
 
       {project.notes && (
-        <WidgetCard title="Catatan">
+        <WidgetCard title="Notes">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-text/90">{project.notes}</p>
         </WidgetCard>
       )}
@@ -341,8 +341,8 @@ export default function ProjectDetailPage() {
 
 function AddButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="btn btn-sm" aria-label="Tambah">
-      <Plus size={13} /> Tambah
+    <button onClick={onClick} className="btn btn-sm" aria-label="Add">
+      <Plus size={13} /> Add
     </button>
   )
 }

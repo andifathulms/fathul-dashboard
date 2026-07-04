@@ -15,9 +15,9 @@ import { cn, todayISO } from '@/lib/utils'
 
 type Filter = 'all' | 'open' | 'done'
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'open', label: 'Belum selesai' },
-  { key: 'done', label: 'Selesai' },
+  { key: 'all', label: 'All' },
+  { key: 'open', label: 'Open' },
+  { key: 'done', label: 'Done' },
 ]
 
 export default function TasksPage() {
@@ -43,7 +43,7 @@ export default function TasksPage() {
       setDue('')
       mutate()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal menambah tugas')
+      toast.error((e as Error).message, 'Failed to add task')
     }
   }
 
@@ -58,7 +58,7 @@ export default function TasksPage() {
     <div>
       <PageHeader
         title="Tasks"
-        subtitle={`${(tasks?.length ?? 0) - doneCount} terbuka · ${doneCount} selesai`}
+        subtitle={`${(tasks?.length ?? 0) - doneCount} open · ${doneCount} done`}
         icon={<CheckSquare size={20} />}
       />
 
@@ -68,11 +68,11 @@ export default function TasksPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
-            placeholder="Tugas baru… (mis. ingat bayar utang nasi goreng)"
+            placeholder="New task… (e.g. remember to pay back the nasi goreng debt)"
             className="input flex-1"
           />
           <select className="input sm:w-44" value={project} onChange={(e) => setProject(e.target.value)}>
-            <option value="">Tanpa project</option>
+            <option value="">No project</option>
             {projects?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -88,7 +88,7 @@ export default function TasksPage() {
             placeholder={todayISO()}
           />
           <button onClick={add} className="btn-accent shrink-0">
-            <Plus size={16} /> Tambah
+            <Plus size={16} /> Add
           </button>
         </div>
       </WidgetCard>
@@ -110,7 +110,7 @@ export default function TasksPage() {
 
       <div className="space-y-5">
         {open.length > 0 && (
-          <WidgetCard title={`Belum selesai (${open.length})`} bodyClassName="space-y-0.5">
+          <WidgetCard title={`Open (${open.length})`} bodyClassName="space-y-0.5">
             {open.map((t) => (
               <TaskItem key={t.id} task={t} projects={projects} onChange={mutate} showDelete />
             ))}
@@ -118,7 +118,7 @@ export default function TasksPage() {
         )}
 
         {done.length > 0 && (
-          <WidgetCard title={`Selesai (${done.length})`} bodyClassName="space-y-0.5">
+          <WidgetCard title={`Done (${done.length})`} bodyClassName="space-y-0.5">
             {done.map((t) => (
               <TaskItem key={t.id} task={t} projects={projects} onChange={mutate} showDelete />
             ))}
@@ -129,8 +129,8 @@ export default function TasksPage() {
           <div className="card">
             <EmptyState
               icon={<CheckSquare size={22} />}
-              title="Tidak ada tugas"
-              hint={filter === 'all' ? 'Tambahkan tugas di atas untuk memulai.' : 'Tidak ada tugas di filter ini.'}
+              title="No tasks"
+              hint={filter === 'all' ? 'Add a task above to get started.' : 'No tasks in this filter.'}
             />
           </div>
         )}

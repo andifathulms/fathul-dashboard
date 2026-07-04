@@ -28,28 +28,28 @@ function ago(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
   if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m`
   const h = Math.floor(s / 3600)
-  if (h < 24) return `${h}j`
+  if (h < 24) return `${h}h`
   const d = Math.floor(h / 24)
-  if (d < 30) return `${d}h`
-  return `${Math.floor(d / 30)}bln`
+  if (d < 30) return `${d}d`
+  return `${Math.floor(d / 30)}mo`
 }
 
 const FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'active', label: 'Aktif' },
-  { key: 'paused', label: 'Jeda' },
-  { key: 'done', label: 'Selesai' },
-  { key: 'archived', label: 'Arsip' },
+  { key: 'all', label: 'All' },
+  { key: 'active', label: 'Active' },
+  { key: 'paused', label: 'Paused' },
+  { key: 'done', label: 'Done' },
+  { key: 'archived', label: 'Archived' },
 ]
 
 const CATEGORIES: ProjectCategory[] = ['oikn', 'freelance', 'personal', 'side']
 
 type Sort = 'priority' | 'status' | 'recent' | 'name'
 const SORTS: { key: Sort; label: string }[] = [
-  { key: 'priority', label: 'Prioritas' },
+  { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
-  { key: 'recent', label: 'Terbaru' },
-  { key: 'name', label: 'Nama' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'name', label: 'Name' },
 ]
 
 export default function ProjectsPage() {
@@ -92,11 +92,11 @@ export default function ProjectsPage() {
     <div>
       <PageHeader
         title="Projects"
-        subtitle="Semua proyek yang sedang & pernah kamu kerjakan"
+        subtitle="Every project you're working on or have worked on"
         icon={<FolderKanban size={20} />}
         action={
           <button onClick={() => setShowForm(true)} className="btn-accent">
-            <Plus size={16} /> Project Baru
+            <Plus size={16} /> New Project
           </button>
         }
       />
@@ -121,9 +121,9 @@ export default function ProjectsPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value as ProjectCategory | 'all')}
             className="input w-auto text-xs"
-            aria-label="Filter kategori"
+            aria-label="Filter by category"
           >
-            <option value="all">Semua kategori</option>
+            <option value="all">All categories</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {CATEGORY_LABELS[c]}
@@ -134,11 +134,11 @@ export default function ProjectsPage() {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             className="input w-auto text-xs"
-            aria-label="Urutkan"
+            aria-label="Sort"
           >
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>
-                Urut: {s.label}
+                Sort: {s.label}
               </option>
             ))}
           </select>
@@ -146,7 +146,7 @@ export default function ProjectsPage() {
             <button
               onClick={() => changeView('grid')}
               className={cn('flex h-7 w-7 items-center justify-center rounded-md transition-colors', view === 'grid' ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text')}
-              aria-label="Tampilan grid"
+              aria-label="Grid view"
               title="Grid"
             >
               <LayoutGrid size={15} />
@@ -154,7 +154,7 @@ export default function ProjectsPage() {
             <button
               onClick={() => changeView('list')}
               className={cn('flex h-7 w-7 items-center justify-center rounded-md transition-colors', view === 'list' ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text')}
-              aria-label="Tampilan list"
+              aria-label="List view"
               title="List"
             >
               <List size={15} />
@@ -165,7 +165,7 @@ export default function ProjectsPage() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Cari…"
+              placeholder="Search…"
               className="input pl-9"
             />
           </div>
@@ -183,11 +183,11 @@ export default function ProjectsPage() {
         <div className="card">
           <EmptyState
             icon={<FolderKanban size={22} />}
-            title="Belum ada project di sini"
-            hint={q || status !== 'all' || category !== 'all' ? 'Coba ubah filter atau kata kunci.' : 'Buat project pertamamu untuk mulai.'}
+            title="No projects here yet"
+            hint={q || status !== 'all' || category !== 'all' ? 'Try changing the filters or search terms.' : 'Create your first project to get started.'}
             action={
               <button onClick={() => setShowForm(true)} className="btn-accent">
-                <Plus size={16} /> Project Baru
+                <Plus size={16} /> New Project
               </button>
             }
           />
@@ -252,7 +252,7 @@ export default function ProjectsPage() {
                 <span className="inline-flex items-center gap-1">
                   <KeyRound size={12} /> {p.credentials_count}
                 </span>
-                <span className="ml-auto" title={`Diperbarui ${p.updated_at.slice(0, 10)}`}>
+                <span className="ml-auto" title={`Updated ${p.updated_at.slice(0, 10)}`}>
                   {ago(p.updated_at)}
                 </span>
               </div>

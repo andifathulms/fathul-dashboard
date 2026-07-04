@@ -21,14 +21,14 @@ export default function ServerStatusWidget() {
       icon={<ServerIcon size={15} />}
       action={
         <Link href="/servers" className="text-xs text-accent1 hover:underline">
-          Semua
+          All
         </Link>
       }
       bodyClassName="space-y-2"
     >
       {isLoading && <SkeletonRows rows={3} />}
       {servers?.length === 0 && (
-        <EmptyState compact icon={<ServerIcon size={18} />} title="Belum ada VM" />
+        <EmptyState compact icon={<ServerIcon size={18} />} title="No VMs yet" />
       )}
       {servers?.map((s) => {
         const pingable = serverPingable(s)
@@ -51,7 +51,7 @@ export default function ServerStatusWidget() {
                     'h-2 w-2 shrink-0 rounded-full',
                     s.requires_vpn ? 'bg-warning' : 'bg-muted'
                   )}
-                  title={s.requires_vpn ? 'Butuh VPN' : s.provider.toUpperCase()}
+                  title={s.requires_vpn ? 'Requires VPN' : s.provider.toUpperCase()}
                 />
               )}
               <div className="min-w-0">
@@ -64,7 +64,7 @@ export default function ServerStatusWidget() {
                 <span className="font-mono text-[11px] text-highlight">{ping.latency_ms}ms</span>
               )}
               {url && (
-                <a href={url} title="Buka di Terminal (SSH)" className="icon-btn" aria-label="Open in Terminal">
+                <a href={url} title="Open in Terminal (SSH)" className="icon-btn" aria-label="Open in Terminal">
                   <Terminal size={15} />
                 </a>
               )}

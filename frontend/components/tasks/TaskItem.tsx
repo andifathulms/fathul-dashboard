@@ -23,7 +23,7 @@ export default function TaskItem({ task, projects, onChange, showDelete = false 
       await api.patch(`/tasks/${task.id}/`, { is_done: !task.is_done })
       onChange()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal memperbarui tugas')
+      toast.error((e as Error).message, 'Failed to update task')
     }
   }
 
@@ -32,7 +32,7 @@ export default function TaskItem({ task, projects, onChange, showDelete = false 
       await api.delete(`/tasks/${task.id}/`)
       onChange()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal menghapus tugas')
+      toast.error((e as Error).message, 'Failed to delete task')
     }
   }
 

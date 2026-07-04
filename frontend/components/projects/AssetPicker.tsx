@@ -44,7 +44,7 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
         <button
           type="button"
           onClick={() => ref.current?.click()}
-          title="Pilih file"
+          title="Choose file"
           className={cn(
             'group relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-bg',
             box
@@ -67,12 +67,12 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
         </button>
         <input
           className="input font-mono text-[13px]"
-          placeholder="https://… atau /path.png"
+          placeholder="https://… or /path.png"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
         {value && (
-          <button type="button" onClick={() => onChange('')} className="btn btn-sm shrink-0" title="Hapus">
+          <button type="button" onClick={() => onChange('')} className="btn btn-sm shrink-0" title="Delete">
             <Trash2 size={13} />
           </button>
         )}

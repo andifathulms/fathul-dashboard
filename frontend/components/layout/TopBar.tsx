@@ -23,9 +23,9 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
     setLocating(true)
     try {
       const loc = await detectLocation()
-      toast.success(`Lokasi diperbarui ke ${loc.label}`, 'Lokasi')
+      toast.success(`Location updated to ${loc.label}`, 'Location')
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal mendapatkan lokasi')
+      toast.error((e as Error).message, 'Failed to get location')
     } finally {
       setLocating(false)
     }
@@ -36,7 +36,7 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
       <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
         {/* Left: hamburger (mobile) + prayer times */}
         <div className="flex min-w-0 items-center gap-2">
-          <button onClick={onMenu} className="icon-btn shrink-0 lg:hidden" aria-label="Buka menu">
+          <button onClick={onMenu} className="icon-btn shrink-0 lg:hidden" aria-label="Open menu">
             <Menu size={18} />
           </button>
 
@@ -63,7 +63,7 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
                 )
               })
             ) : (
-              <span className="text-xs text-muted">Memuat jadwal sholat…</span>
+              <span className="text-xs text-muted">Loading prayer times…</span>
             )}
           </div>
 
@@ -81,7 +81,7 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
         <div className="flex shrink-0 items-center gap-3 sm:gap-4">
           {next && (
             <div className="hidden text-right lg:block">
-              <p className="text-[11px] text-muted">Berikutnya</p>
+              <p className="text-[11px] text-muted">Next</p>
               <p className="text-sm font-semibold text-accent1">
                 {next.label} · {formatCountdown(next.minutesUntil)}
               </p>
@@ -95,12 +95,12 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
                 <p className="text-sm font-semibold">{Math.round(weather.temperature)}°C</p>
                 <button
                   onClick={detect}
-                  title="Perbarui lokasi (GPS)"
+                  title="Update location (GPS)"
                   className="flex items-center gap-1 text-[10px] text-muted transition-colors hover:text-accent1"
                 >
                   {locating ? <LocateFixed size={9} className="animate-spin" /> : <MapPin size={9} />}
                   <span className="max-w-[80px] truncate sm:max-w-[110px]">
-                    {locating ? 'Mencari…' : location.label}
+                    {locating ? 'Searching…' : location.label}
                   </span>
                 </button>
               </div>
@@ -118,9 +118,9 @@ function Clock({ now }: { now: Date | null }) {
   if (!now) return <div className="hidden w-[110px] sm:block" />
   return (
     <div className="hidden text-right sm:block">
-      <p className="font-mono text-sm font-semibold tabular-nums">{now.toLocaleTimeString('id-ID')}</p>
+      <p className="font-mono text-sm font-semibold tabular-nums">{now.toLocaleTimeString('en-US')}</p>
       <p className="text-[10px] text-muted">
-        {now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}
+        {now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })}
       </p>
     </div>
   )

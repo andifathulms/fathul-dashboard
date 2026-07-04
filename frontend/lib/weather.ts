@@ -22,14 +22,14 @@ export async function fetchWeather(
 
 // Map WMO weather codes to a label + emoji icon.
 export function describeWeather(code: number): { label: string; icon: string } {
-  if (code === 0) return { label: 'Cerah', icon: '☀️' }
-  if (code <= 2) return { label: 'Cerah Berawan', icon: '🌤️' }
-  if (code === 3) return { label: 'Berawan', icon: '☁️' }
-  if (code <= 48) return { label: 'Berkabut', icon: '🌫️' }
-  if (code <= 57) return { label: 'Gerimis', icon: '🌦️' }
-  if (code <= 67) return { label: 'Hujan', icon: '🌧️' }
-  if (code <= 77) return { label: 'Salju', icon: '🌨️' }
-  if (code <= 82) return { label: 'Hujan Deras', icon: '⛈️' }
-  if (code <= 99) return { label: 'Badai Petir', icon: '⛈️' }
-  return { label: 'Tidak diketahui', icon: '🌡️' }
+  if (code === 0) return { label: 'Clear', icon: '☀️' }
+  if (code <= 2) return { label: 'Partly Cloudy', icon: '🌤️' }
+  if (code === 3) return { label: 'Cloudy', icon: '☁️' }
+  if (code <= 48) return { label: 'Foggy', icon: '🌫️' }
+  if (code <= 57) return { label: 'Drizzle', icon: '🌦️' }
+  if (code <= 67) return { label: 'Rain', icon: '🌧️' }
+  if (code <= 77) return { label: 'Snow', icon: '🌨️' }
+  if (code <= 82) return { label: 'Heavy Rain', icon: '⛈️' }
+  if (code <= 99) return { label: 'Thunderstorm', icon: '⛈️' }
+  return { label: 'Unknown', icon: '🌡️' }
 }

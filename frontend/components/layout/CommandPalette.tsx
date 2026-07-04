@@ -84,8 +84,8 @@ export default function CommandPalette() {
     const nav: Item[] = NAV.map((n) => ({
       id: `nav:${n.href}`,
       label: n.label,
-      hint: 'Halaman',
-      group: 'Navigasi',
+      hint: 'Page',
+      group: 'Navigation',
       icon: n.icon,
       run: () => router.push(n.href),
     }))
@@ -101,12 +101,12 @@ export default function CommandPalette() {
       id: `cmd:${c.id}`,
       label: c.title,
       hint: c.command,
-      group: 'Commands (salin)',
+      group: 'Commands (copy)',
       icon: TerminalSquare,
       run: async () => {
         try {
           await navigator.clipboard.writeText(c.command)
-          toast.success(c.command, 'Command disalin')
+          toast.success(c.command, 'Command copied')
         } catch {
           /* clipboard unavailable */
         }
@@ -170,7 +170,7 @@ export default function CommandPalette() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Cari halaman, project, command…"
+            placeholder="Search pages, projects, commands…"
             className="w-full bg-transparent py-3.5 text-sm text-text outline-none placeholder:text-muted"
           />
           <kbd className="hidden shrink-0 rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-muted sm:block">
@@ -180,7 +180,7 @@ export default function CommandPalette() {
 
         <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
           {filtered.length === 0 && (
-            <p className="px-3 py-8 text-center text-sm text-muted">Tidak ada hasil.</p>
+            <p className="px-3 py-8 text-center text-sm text-muted">No results.</p>
           )}
           {filtered.map((it, idx) => {
             const header = it.group !== lastGroup ? it.group : null
@@ -226,14 +226,14 @@ export default function CommandPalette() {
         <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-[11px] text-muted">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd> pindah
+            <Kbd>↓</Kbd> navigate
           </span>
           <span className="flex items-center gap-1">
-            <Kbd>↵</Kbd> pilih
+            <Kbd>↵</Kbd> select
           </span>
           <span className="ml-auto flex items-center gap-1">
             <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd> buka
+            <Kbd>K</Kbd> open
           </span>
         </div>
       </div>

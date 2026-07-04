@@ -16,7 +16,17 @@ import type { IbadahLog } from '@/lib/types'
 import { todayISO } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
-const DAY_ABBR = ['M', 'S', 'S', 'R', 'K', 'J', 'S']
+const DAY_ABBR = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+// English display names for the internal prayer keys.
+const PRAYER_EN: Record<string, string> = {
+  Subuh: 'Fajr',
+  Dzuhur: 'Dhuhr',
+  Ashar: 'Asr',
+  Maghrib: 'Maghrib',
+  Isya: 'Isha',
+}
+const enName = (k: string) => PRAYER_EN[k] ?? k
 
 export default function IbadahWidget() {
   const today = todayISO()
@@ -51,19 +61,19 @@ export default function IbadahWidget() {
           <Flame size={20} className={cn(streak > 0 ? 'text-accent2' : 'text-muted')} />
           <div className="leading-tight">
             <p className="font-mono text-lg font-semibold">{streak}</p>
-            <p className="text-[10px] text-muted">hari beruntun</p>
+            <p className="text-[10px] text-muted">day streak</p>
           </div>
         </div>
         <div className="flex-1">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-muted">Fardhu hari ini</span>
+            <span className="text-xs text-muted">Fardh today</span>
             <span className="font-mono text-sm font-semibold text-highlight">{todayFardhu}/5</span>
           </div>
           <div className="mt-1.5 flex gap-1">
             {PRAYERS.map((p) => (
               <div
                 key={p.key}
-                title={p.key}
+                title={enName(p.key)}
                 className={cn(
                   'h-1.5 flex-1 rounded-full',
                   byDate[today]?.[p.key]?.jamaah
@@ -75,7 +85,7 @@ export default function IbadahWidget() {
               />
             ))}
           </div>
-          <p className="mt-1 text-[10px] text-muted">{jamaahWeek} berjamaah minggu ini</p>
+          <p className="mt-1 text-[10px] text-muted">{jamaahWeek} in congregation this week</p>
         </div>
       </div>
 

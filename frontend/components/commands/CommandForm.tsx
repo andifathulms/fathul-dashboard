@@ -65,22 +65,22 @@ export default function CommandForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? 'Edit Command' : 'Command Baru'}
+      title={initial ? 'Edit Command' : 'New Command'}
       footer={
         <>
           <button onClick={onClose} className="btn">
-            Batal
+            Cancel
           </button>
           <button onClick={submit} disabled={saving} className="btn-accent">
             {saving && <Loader2 size={14} className="animate-spin" />}
-            {saving ? 'Menyimpan…' : 'Simpan'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </>
       }
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Judul</span>
+          <span className="mb-1 block text-xs font-medium text-muted">Title</span>
           <input className="input" value={form.title} onChange={(e) => set('title', e.target.value)} />
         </label>
         <label className="block">
@@ -94,7 +94,7 @@ export default function CommandForm({
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Kategori</span>
+            <span className="mb-1 block text-xs font-medium text-muted">Category</span>
             <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -107,7 +107,7 @@ export default function CommandForm({
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">Project</span>
               <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
-                <option value="">Tanpa project</option>
+                <option value="">No project</option>
                 {projects?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

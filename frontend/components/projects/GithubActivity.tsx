@@ -37,31 +37,31 @@ function bucket(count: number): number {
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return '—'
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'baru saja'
+  if (s < 60) return 'just now'
   const m = Math.floor(s / 60)
-  if (m < 60) return `${m} menit lalu`
+  if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h} jam lalu`
+  if (h < 24) return `${h}h ago`
   const d = Math.floor(h / 24)
-  if (d === 1) return 'kemarin'
-  if (d < 30) return `${d} hari lalu`
+  if (d === 1) return 'yesterday'
+  if (d < 30) return `${d}d ago`
   const mo = Math.floor(d / 30)
-  if (mo < 12) return `${mo} bulan lalu`
-  return `${Math.floor(mo / 12)} tahun lalu`
+  if (mo < 12) return `${mo}mo ago`
+  return `${Math.floor(mo / 12)}y ago`
 }
 
 function cellDate(weekTs: number, dayIdx: number): string {
   const d = new Date((weekTs + dayIdx * 86400) * 1000)
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const ERR: Record<string, string> = {
-  no_github_repo: 'Repo bukan GitHub.',
-  not_a_github_repo: 'Repo bukan GitHub.',
-  not_found: 'Repo privat/tidak ada — set GITHUB_TOKEN untuk repo privat.',
-  rate_limited: 'Rate limit GitHub tercapai — set GITHUB_TOKEN.',
-  unavailable: 'Data GitHub tidak tersedia saat ini.',
+  no_github_repo: 'Not a GitHub repo.',
+  not_a_github_repo: 'Not a GitHub repo.',
+  not_found: 'Private/missing repo — set GITHUB_TOKEN for private repos.',
+  rate_limited: 'GitHub rate limit reached — set GITHUB_TOKEN.',
+  unavailable: 'GitHub data unavailable right now.',
 }
 
 interface GithubActivityProps {
@@ -94,7 +94,7 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
   if (isLoading) {
     return (
       <WidgetCard title="GitHub Activity" icon={<Github size={15} />}>
-        <p className="text-sm text-muted">Memuat data GitHub…</p>
+        <p className="text-sm text-muted">Loading GitHub data…</p>
       </WidgetCard>
     )
   }
@@ -102,7 +102,7 @@ export default function GithubActivity({ projectId, hasRepo }: GithubActivityPro
   if (!data?.ok || !data.repos?.length) {
     return (
       <WidgetCard title="GitHub Activity" icon={<Github size={15} />}>
-        <p className="text-sm text-muted">{ERR[data?.error ?? 'unavailable'] ?? 'Data GitHub tidak tersedia.'}</p>
+        <p className="text-sm text-muted">{ERR[data?.error ?? 'unavailable'] ?? 'GitHub data unavailable.'}</p>
       </WidgetCard>
     )
   }
@@ -127,12 +127,12 @@ function MetaControl({ meta }: { meta?: RepoCardMeta }) {
   return (
     <span className="flex items-center gap-1.5 text-[11px] text-muted">
       {meta.fetchedAt && (
-        <span title={new Date(meta.fetchedAt).toLocaleString('id-ID')}>diperbarui {timeAgo(meta.fetchedAt)}</span>
+        <span title={new Date(meta.fetchedAt).toLocaleString('en-US')}>updated {timeAgo(meta.fetchedAt)}</span>
       )}
       <button
         onClick={meta.onRefresh}
         disabled={meta.refreshing}
-        title="Ambil data terbaru dari GitHub"
+        title="Fetch latest data from GitHub"
         className="icon-btn h-6 w-6"
         aria-label="Refresh"
       >
@@ -203,13 +203,13 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
           label="Status"
           value={
             <span className={cn('inline-flex items-center gap-1', active ? 'text-highlight' : 'text-muted')}>
-              <CircleDot size={12} /> {active ? 'Aktif' : 'Idle'}
+              <CircleDot size={12} /> {active ? 'Active' : 'Idle'}
             </span>
           }
         />
-        <Stat label="Terakhir" value={timeAgo(lastPush)} />
-        <Stat label="Commit/thn" value={computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
-        <Stat label="Repo" value={`${repos.length}`} />
+        <Stat label="Last" value={timeAgo(lastPush)} />
+        <Stat label="Commits/yr" value={computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
+        <Stat label="Repos" value={`${repos.length}`} />
         {stars > 0 && <Stat label="Stars" value={`${stars}`} icon={<Star size={12} />} />}
         {forks > 0 && <Stat label="Forks" value={`${forks}`} icon={<GitFork size={12} />} />}
         {issues > 0 && <Stat label="Issues" value={`${issues}`} />}
@@ -221,17 +221,17 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
 
       {computing && weeks.length === 0 ? (
         <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
-          <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
+          <RefreshCw size={14} className="animate-spin" /> GitHub is computing statistics…
         </div>
       ) : weeks.length > 0 ? (
         <Heatmap weeks={weeks} />
       ) : (
-        <p className="text-sm text-muted">Belum ada commit setahun terakhir.</p>
+        <p className="text-sm text-muted">No commits in the last year.</p>
       )}
 
       {commits.length > 0 && (
         <div>
-          <p className="widget-title mb-1.5">Commit Terbaru (gabungan)</p>
+          <p className="widget-title mb-1.5">Recent Commits (combined)</p>
           <div className="space-y-0.5">
             {commits.map((c) => (
               <a
@@ -288,7 +288,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
         title={`GitHub · ${repo.label}`}
         icon={<Github size={15} />}
       >
-        <p className="text-sm text-muted">{ERR[repo.error ?? 'unavailable'] ?? 'Data GitHub tidak tersedia.'}</p>
+        <p className="text-sm text-muted">{ERR[repo.error ?? 'unavailable'] ?? 'GitHub data unavailable.'}</p>
       </WidgetCard>
     )
   }
@@ -326,12 +326,12 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
           label="Status"
           value={
             <span className={cn('inline-flex items-center gap-1', active ? 'text-highlight' : 'text-muted')}>
-              <CircleDot size={12} /> {active ? 'Aktif' : 'Idle'}
+              <CircleDot size={12} /> {active ? 'Active' : 'Idle'}
             </span>
           }
         />
-        <Stat label="Terakhir" value={timeAgo(info?.pushed_at)} />
-        <Stat label="Commit/thn" value={repo.computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
+        <Stat label="Last" value={timeAgo(info?.pushed_at)} />
+        <Stat label="Commits/yr" value={repo.computing ? '—' : `${yearTotal}`} icon={<GitCommitHorizontal size={12} />} />
         <Stat label="Branch" value={info?.default_branch ?? '—'} />
         {(info?.stargazers_count ?? 0) > 0 && (
           <Stat label="Stars" value={`${info?.stargazers_count}`} icon={<Star size={12} />} />
@@ -350,17 +350,17 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
 
       {repo.computing ? (
         <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
-          <RefreshCw size={14} className="animate-spin" /> GitHub sedang menghitung statistik…
+          <RefreshCw size={14} className="animate-spin" /> GitHub is computing statistics…
         </div>
       ) : weeks.length > 0 ? (
         <Heatmap weeks={weeks} />
       ) : (
-        <p className="text-sm text-muted">Belum ada commit setahun terakhir.</p>
+        <p className="text-sm text-muted">No commits in the last year.</p>
       )}
 
       {repo.recent_commits && repo.recent_commits.length > 0 && (
         <div>
-          <p className="widget-title mb-1.5">Commit Terbaru</p>
+          <p className="widget-title mb-1.5">Recent Commits</p>
           <div className="space-y-0.5">
             {repo.recent_commits.slice(0, 5).map((c) => (
               <a
@@ -483,11 +483,11 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
           ))}
         </div>
         <div className="flex items-center justify-end gap-1 pt-0.5 text-[9px] text-muted">
-          <span>Sedikit</span>
+          <span>Less</span>
           {LEVELS.map((c, i) => (
             <div key={i} className="h-[9px] w-[9px] rounded-[2px]" style={{ backgroundColor: c }} />
           ))}
-          <span>Banyak</span>
+          <span>More</span>
         </div>
       </div>
     </div>
@@ -496,7 +496,7 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
 
 function ciTone(run?: GithubWorkflowRun) {
   if (!run) return { cls: 'text-muted', dot: 'bg-muted', label: '—' }
-  if (run.status !== 'completed') return { cls: 'text-warning', dot: 'bg-warning animate-pulse-dot', label: 'Berjalan' }
+  if (run.status !== 'completed') return { cls: 'text-warning', dot: 'bg-warning animate-pulse-dot', label: 'Running' }
   if (run.conclusion === 'success') return { cls: 'text-highlight', dot: 'bg-highlight', label: 'Passing' }
   if (run.conclusion === 'failure') return { cls: 'text-danger', dot: 'bg-danger', label: 'Failing' }
   return { cls: 'text-muted', dot: 'bg-muted', label: run.conclusion ?? '—' }

@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => remove(t.id)}
                 className="icon-btn h-6 w-6 shrink-0"
-                aria-label="Tutup notifikasi"
+                aria-label="Close notification"
               >
                 <X size={14} />
               </button>

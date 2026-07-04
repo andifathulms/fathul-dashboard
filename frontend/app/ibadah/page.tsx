@@ -24,6 +24,17 @@ const minutes = (hhmm: string) => {
   return h * 60 + m
 }
 
+// English display names for the internal prayer keys (kept as stored data keys).
+const PRAYER_EN: Record<string, string> = {
+  Subuh: 'Fajr',
+  Syuruq: 'Sunrise',
+  Dzuhur: 'Dhuhr',
+  Ashar: 'Asr',
+  Maghrib: 'Maghrib',
+  Isya: 'Isha',
+}
+const enName = (k: string) => PRAYER_EN[k] ?? k
+
 export default function IbadahPage() {
   const location = useLocation()
   const today = todayISO()
@@ -120,25 +131,25 @@ export default function IbadahPage() {
     <div className="space-y-5">
       <PageHeader
         title="Ibadah"
-        subtitle="Jadwal & tracking sholat harian — fardhu, berjamaah, dan rawatib"
+        subtitle="Daily prayer schedule & tracking — fardh, congregation, and rawatib"
         icon={<Moon size={20} />}
       />
 
       {/* Date navigation */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Hari sebelumnya">
+          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Previous day">
             <ChevronLeft size={18} />
           </button>
           <div className="min-w-[230px] text-center">
             <p className="text-sm font-semibold">{formatDateID(`${date}T00:00:00`)}</p>
-            {isToday && <p className="text-[11px] text-highlight">Hari ini · {location.label}</p>}
+            {isToday && <p className="text-[11px] text-highlight">Today · {location.label}</p>}
           </div>
           <button
             onClick={() => setDate(shiftDate(date, 1))}
             disabled={isToday}
             className="icon-btn disabled:opacity-30"
-            aria-label="Hari berikutnya"
+            aria-label="Next day"
           >
             <ChevronRight size={18} />
           </button>
@@ -152,25 +163,25 @@ export default function IbadahPage() {
         />
       </div>
 
-      <WidgetCard title="Garis Waktu Sholat" icon={<Moon size={15} />}>
+      <WidgetCard title="Prayer Timeline" icon={<Moon size={15} />}>
         {timings ? (
           <PrayerTimeline timings={timings} now={isToday ? now : null} />
         ) : (
-          <p className="text-sm text-muted">Memuat jadwal…</p>
+          <p className="text-sm text-muted">Loading schedule…</p>
         )}
       </WidgetCard>
 
       <div className="grid grid-cols-3 gap-4">
-        <ProgressStat label="Fardhu" done={fardhuDone} total={5} color="text-highlight" />
-        <ProgressStat label="Berjamaah" done={jamaahDone} total={5} color="text-accent1" />
+        <ProgressStat label="Fardh" done={fardhuDone} total={5} color="text-highlight" />
+        <ProgressStat label="Congregation" done={jamaahDone} total={5} color="text-accent1" />
         <ProgressStat label="Rawatib" done={rawatibDone} total={rawatibTotal} color="text-accent2" />
       </div>
 
       <WidgetCard
-        title="Checklist Sholat"
+        title="Prayer Checklist"
         action={
           <span className="text-[11px] text-muted">
-            {saved === 'saving' ? 'menyimpan…' : saved === 'done' ? 'tersimpan ✓' : ''}
+            {saved === 'saving' ? 'saving…' : saved === 'done' ? 'saved ✓' : ''}
           </span>
         }
         bodyClassName="overflow-x-auto"
@@ -178,11 +189,11 @@ export default function IbadahPage() {
         <table className="w-full min-w-[600px] text-sm">
           <thead>
             <tr className="text-[11px] uppercase tracking-wide text-muted">
-              <th className="pb-2 text-left font-medium">Sholat</th>
+              <th className="pb-2 text-left font-medium">Prayer</th>
               <th className="pb-2 text-center font-medium">Qabliyah</th>
-              <th className="pb-2 text-center font-medium">Fardhu</th>
-              <th className="pb-2 text-center font-medium">Tepat Waktu</th>
-              <th className="pb-2 text-center font-medium">Berjamaah</th>
+              <th className="pb-2 text-center font-medium">Fardh</th>
+              <th className="pb-2 text-center font-medium">On Time</th>
+              <th className="pb-2 text-center font-medium">Congregation</th>
               <th className="pb-2 text-center font-medium">Ba&apos;diyah</th>
             </tr>
           </thead>
@@ -195,7 +206,7 @@ export default function IbadahPage() {
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ backgroundColor: SEG_COLORS[p.key] }}
                     />
-                    {p.key}
+                    {enName(p.key)}
                     {timings && (
                       <span className="font-mono text-[11px] text-muted">{timings[keyOf(p.key)]}</span>
                     )}
@@ -240,13 +251,13 @@ export default function IbadahPage() {
           </tbody>
         </table>
         <p className="mt-3 text-[11px] text-muted">
-          Bisa dicentang kapan saja (termasuk di awal waktu). <b className="text-text/80">Tepat Waktu</b> = sholat di
-          awal waktu; kosongkan jika di akhir waktu. Centang Fardhu dulu untuk mengaktifkan Tepat Waktu &amp; Berjamaah.
+          Can be checked anytime (including early in the window). <b className="text-text/80">On Time</b> = prayed
+          early in the window; leave empty if prayed late. Check Fardh first to enable On Time &amp; Congregation.
         </p>
 
         {/* Sunnah (non-rawatib) prayers — single check each */}
         <div className="mt-4 border-t border-border pt-3">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Sholat Sunnah</p>
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Sunnah Prayers</p>
           <div className="flex flex-wrap gap-2">
             {SUNNAH.map((name) => {
               const on = !!data[name]?.done
@@ -290,7 +301,7 @@ export default function IbadahPage() {
 
 // ---- Weekly summary + streaks ----
 
-const DAY_ABBR = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; today: string }) {
   // Last 7 days (oldest → newest).
@@ -323,12 +334,12 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
   }
 
   return (
-    <WidgetCard title="Ringkasan 7 Hari" bodyClassName="space-y-4">
+    <WidgetCard title="7-Day Summary" bodyClassName="space-y-4">
       <div className="grid grid-cols-4 gap-3 text-center">
-        <SummaryStat value={`${streak}`} label="Hari beruntun" sub="fardhu lengkap" color="text-accent2" />
-        <SummaryStat value={`${fardhuWeek}/35`} label="Fardhu" color="text-highlight" />
-        <SummaryStat value={`${jamaahWeek}/35`} label="Berjamaah" color="text-accent1" />
-        <SummaryStat value={`${ontimeWeek}/35`} label="Tepat waktu" color="text-highlight" />
+        <SummaryStat value={`${streak}`} label="Day streak" sub="all fardh complete" color="text-accent2" />
+        <SummaryStat value={`${fardhuWeek}/35`} label="Fardh" color="text-highlight" />
+        <SummaryStat value={`${jamaahWeek}/35`} label="Congregation" color="text-accent1" />
+        <SummaryStat value={`${ontimeWeek}/35`} label="On time" color="text-highlight" />
       </div>
 
       {/* 5 prayers × 7 days grid */}
@@ -352,12 +363,12 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
           <tbody>
             {PRAYERS.map((p) => (
               <tr key={p.key}>
-                <td className="pr-1 text-right text-[11px] text-muted">{p.key}</td>
+                <td className="pr-1 text-right text-[11px] text-muted">{enName(p.key)}</td>
                 {week.map((d) => (
                   <td key={d} className="text-center">
                     <span
                       className={cn('inline-block h-5 w-5 rounded-[5px]', tone(d, p.key))}
-                      title={`${p.key} · ${d}`}
+                      title={`${enName(p.key)} · ${d}`}
                     />
                   </td>
                 ))}
@@ -369,10 +380,10 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
-        <Legend cls="bg-bg border border-border" label="Belum" />
-        <Legend cls="bg-highlight/40" label="Fardhu" />
-        <Legend cls="bg-highlight" label="Tepat waktu" />
-        <Legend cls="bg-accent1" label="Berjamaah" />
+        <Legend cls="bg-bg border border-border" label="Not yet" />
+        <Legend cls="bg-highlight/40" label="Fardh" />
+        <Legend cls="bg-highlight" label="On time" />
+        <Legend cls="bg-accent1" label="Congregation" />
       </div>
     </WidgetCard>
   )
@@ -510,9 +521,9 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
 
   // Forbidden windows: sunrise (~15m), zenith/istiwa (~6m before Dzuhur), sunset (~10m before Maghrib).
   const forbidden = [
-    { label: 'Terbit', start: sunrise, end: sunrise + 15 },
-    { label: 'Istiwa', start: dhuhr - 6, end: dhuhr },
-    { label: 'Terbenam', start: maghrib - 10, end: maghrib },
+    { label: 'Sunrise', start: sunrise, end: sunrise + 15 },
+    { label: 'Zenith', start: dhuhr - 6, end: dhuhr },
+    { label: 'Sunset', start: maghrib - 10, end: maghrib },
   ]
 
   const ticks = [
@@ -542,7 +553,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
                 backgroundColor: s.color,
                 opacity: isCurrent ? 0.9 : s.faded ? 0.22 : 0.5,
               }}
-              title={isCurrent ? `${s.label} (sekarang)` : s.label}
+              title={isCurrent ? `${enName(s.label)} (now)` : enName(s.label)}
             />
           )
         })}
@@ -552,7 +563,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
             key={`f${i}`}
             className="absolute top-0 h-full"
             style={{ left: pct(f.start), width: pct(Math.max(f.end - f.start, 3)), backgroundImage: HATCH }}
-            title={`Waktu terlarang: ${f.label}`}
+            title={`Forbidden time: ${f.label}`}
           />
         ))}
         {/* now marker */}
@@ -574,7 +585,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
         {ticks.map((t) => (
           <div key={t.label} className="absolute -translate-x-1/2 text-center" style={{ left: pct(t.min) }}>
             <div className="mx-auto h-2 w-[2px]" style={{ backgroundColor: SEG_COLORS[t.label] ?? '#8B949E' }} />
-            <p className="mt-0.5 text-[10px] font-medium text-muted">{t.label}</p>
+            <p className="mt-0.5 text-[10px] font-medium text-muted">{enName(t.label)}</p>
             <p className="font-mono text-[11px] text-text">{timings[tickKey(t.label)]}</p>
           </div>
         ))}
@@ -583,10 +594,10 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[10px] text-muted">
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundImage: HATCH }} /> Waktu terlarang sholat
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundImage: HATCH }} /> Forbidden prayer times
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-sm ring-1 ring-text/70" /> Waktu sekarang
+          <span className="h-2.5 w-2.5 rounded-sm ring-1 ring-text/70" /> Current time
         </span>
       </div>
     </div>

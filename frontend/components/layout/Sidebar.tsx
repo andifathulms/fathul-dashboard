@@ -63,13 +63,13 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
         <button
           onClick={onToggle}
           className={cn('icon-btn ml-auto hidden lg:flex', collapsed && 'lg:hidden')}
-          title="Ciutkan sidebar"
-          aria-label="Ciutkan sidebar"
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
         >
           <ChevronsLeft size={16} />
         </button>
         {/* Mobile close */}
-        <button onClick={onCloseMobile} className="icon-btn ml-auto lg:hidden" aria-label="Tutup menu">
+        <button onClick={onCloseMobile} className="icon-btn ml-auto lg:hidden" aria-label="Close menu">
           <X size={18} />
         </button>
       </div>
@@ -79,8 +79,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
         <button
           onClick={onToggle}
           className="icon-btn mx-auto mb-2 hidden lg:flex"
-          title="Lebarkan sidebar"
-          aria-label="Lebarkan sidebar"
+          title="Expand sidebar"
+          aria-label="Expand sidebar"
         >
           <ChevronsRight size={16} />
         </button>
@@ -90,14 +90,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
       <div className={cn('px-3 pb-1', collapsed && 'lg:px-2')}>
         <button
           onClick={() => window.dispatchEvent(new Event('fd-open-cmdk'))}
-          title="Cari (⌘K)"
+          title="Search (⌘K)"
           className={cn(
             'flex w-full items-center gap-2 rounded-lg border border-border bg-bg text-sm text-muted transition-colors hover:border-accent1/40 hover:text-text',
             collapsed ? 'lg:h-10 lg:w-10 lg:justify-center lg:px-0 px-3 py-2' : 'px-3 py-2'
           )}
         >
           <Search size={16} className="shrink-0" />
-          <span className={cn('flex-1 text-left', collapsed && 'lg:hidden')}>Cari…</span>
+          <span className={cn('flex-1 text-left', collapsed && 'lg:hidden')}>Search…</span>
           <kbd className={cn('rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px]', collapsed && 'lg:hidden')}>
             ⌘K
           </kbd>

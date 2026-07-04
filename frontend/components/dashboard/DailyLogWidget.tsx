@@ -51,7 +51,7 @@ export default function DailyLogWidget() {
       setNewTask('')
       mutateTasks()
     } catch (e) {
-      toast.error((e as Error).message, 'Gagal menambah tugas')
+      toast.error((e as Error).message, 'Failed to add task')
     }
   }
 
@@ -80,7 +80,7 @@ export default function DailyLogWidget() {
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addTask()}
-          placeholder="Tambah tugas hari ini…"
+          placeholder="Add a task for today…"
           className="input"
         />
         <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add task">
@@ -91,7 +91,7 @@ export default function DailyLogWidget() {
       {/* Tasks checklist */}
       <div className="space-y-0.5">
         {tasks?.length === 0 && (
-          <p className="px-2 py-3 text-sm text-muted">Tidak ada tugas untuk hari ini. ✨</p>
+          <p className="px-2 py-3 text-sm text-muted">No tasks for today. ✨</p>
         )}
         {tasks?.map((t) => (
           <TaskItem key={t.id} task={t} projects={projects} onChange={mutateTasks} showDelete />
@@ -101,16 +101,16 @@ export default function DailyLogWidget() {
       {/* Journal */}
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label className="widget-title">Catatan Hari Ini</label>
-          {saved === 'saving' && <span className="text-[11px] text-muted">menyimpan…</span>}
-          {saved === 'done' && <span className="text-[11px] text-highlight">tersimpan ✓</span>}
+          <label className="widget-title">Today&apos;s Notes</label>
+          {saved === 'saving' && <span className="text-[11px] text-muted">saving…</span>}
+          {saved === 'done' && <span className="text-[11px] text-highlight">saved ✓</span>}
         </div>
         <textarea
           value={journal}
           onChange={(e) => setJournal(e.target.value)}
           onBlur={saveJournal}
           rows={6}
-          placeholder="Apa yang kamu kerjakan hari ini?"
+          placeholder="What did you work on today?"
           className="input resize-none leading-relaxed"
         />
       </div>

@@ -10,7 +10,7 @@ import type { Credential, Project, Server, ServerProvider } from '@/lib/types'
 const PROVIDERS: { value: ServerProvider; label: string }[] = [
   { value: 'gcp', label: 'GCP' },
   { value: 'pdns', label: 'PDNS' },
-  { value: 'other', label: 'Lainnya' },
+  { value: 'other', label: 'Other' },
 ]
 
 interface ServerFormProps {
@@ -70,15 +70,15 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? 'Edit VM' : 'VM Baru'}
+      title={initial ? 'Edit VM' : 'New VM'}
       footer={
         <>
           <button onClick={onClose} className="btn">
-            Batal
+            Cancel
           </button>
           <button onClick={submit} disabled={saving} className="btn-accent">
             {saving && <Loader2 size={14} className="animate-spin" />}
-            {saving ? 'Menyimpan…' : 'Simpan'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </>
       }
@@ -86,7 +86,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
-            <Field label="Nama VM">
+            <Field label="VM name">
               <input className="input" placeholder="vm-ekiosk" value={form.name} onChange={(e) => set('name', e.target.value)} />
             </Field>
           </div>
@@ -102,7 +102,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
         </div>
 
         <div className="rounded-lg border border-border bg-bg/40 p-3">
-          <p className="mb-2 text-xs font-medium text-muted">Akses SSH — isi alias, atau user@ip</p>
+          <p className="mb-2 text-xs font-medium text-muted">SSH access — enter an alias, or user@ip</p>
           <Field label="SSH alias (~/.ssh/config)">
             <input
               className="input font-mono"
@@ -133,7 +133,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
               onChange={(e) => set('requires_vpn', e.target.checked)}
               className="h-4 w-4 accent-accent1"
             />
-            <span className="text-muted">Butuh VPN untuk diakses (lewati ping)</span>
+            <span className="text-muted">Requires VPN to access (skip ping)</span>
           </label>
         </div>
 
@@ -151,9 +151,9 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
           </div>
         )}
 
-        <Field label="Password login/sudo (dari Vault)">
+        <Field label="Login/sudo password (from Vault)">
           <select className="input" value={form.credential} onChange={(e) => set('credential', e.target.value)}>
-            <option value="">Tanpa password</option>
+            <option value="">No password</option>
             {credentials?.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
@@ -162,13 +162,13 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
           </select>
         </Field>
 
-        <Field label="Deskripsi">
+        <Field label="Description">
           <textarea className="input resize-none" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
         </Field>
 
         {projects && projects.length > 0 && (
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-muted">Apps di VM ini</span>
+            <span className="mb-1.5 block text-xs font-medium text-muted">Apps on this VM</span>
             <div className="flex flex-wrap gap-1.5">
               {projects.map((p) => (
                 <button

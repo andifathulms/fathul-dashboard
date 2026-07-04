@@ -12,13 +12,13 @@ import { cn } from '@/lib/utils'
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return '—'
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'baru saja'
+  if (s < 60) return 'just now'
   const m = Math.floor(s / 60)
-  if (m < 60) return `${m} menit lalu`
+  if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h} jam lalu`
+  if (h < 24) return `${h}h ago`
   const d = Math.floor(h / 24)
-  return `${d} hari lalu`
+  return `${d}d ago`
 }
 
 const STALE_MS = 5 * 60 * 1000
@@ -65,17 +65,17 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
 
   return (
     <WidgetCard
-      title="Status Web"
+      title="Web Status"
       icon={<Activity size={15} />}
       action={
         <div className="flex items-center gap-2.5">
-          {latest && <span className="text-[11px] text-muted">cek {timeAgo(latest.checked_at)}</span>}
+          {latest && <span className="text-[11px] text-muted">checked {timeAgo(latest.checked_at)}</span>}
           <button
             onClick={runCheck}
             disabled={checking}
-            title="Cek sekarang"
+            title="Check now"
             className="icon-btn h-6 w-6"
-            aria-label="Cek sekarang"
+            aria-label="Check now"
           >
             <RefreshCw size={13} className={cn(checking && 'animate-spin')} />
           </button>
@@ -84,7 +84,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
       bodyClassName="space-y-3"
     >
       {isLoading && !latest ? (
-        <p className="text-sm text-muted">Memuat…</p>
+        <p className="text-sm text-muted">Loading…</p>
       ) : (
         <>
           {/* Current status */}
@@ -100,7 +100,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
               )}
             >
               <span className={cn('h-2 w-2 rounded-full', latest?.is_up ? 'bg-highlight' : latest ? 'bg-red-500' : 'bg-muted')} />
-              {checking ? 'Mengecek…' : !latest ? 'Belum dicek' : latest.is_up ? 'Online' : 'Offline'}
+              {checking ? 'Checking…' : !latest ? 'Not checked' : latest.is_up ? 'Online' : 'Offline'}
             </span>
             {latest?.status_code != null && (
               <span className="font-mono text-sm text-text/90">HTTP {latest.status_code}</span>
@@ -114,9 +114,9 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
 
           {/* Stat row */}
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            {avgMs != null && <Stat label="Rata-rata" value={`${avgMs}ms`} />}
+            {avgMs != null && <Stat label="Average" value={`${avgMs}ms`} />}
             {latest?.server && <Stat label="Server" value={latest.server} />}
-            {latest?.content_type && <Stat label="Tipe" value={latest.content_type.split(';')[0]} />}
+            {latest?.content_type && <Stat label="Type" value={latest.content_type.split(';')[0]} />}
             {latest?.ssl_days_left != null && (
               <Stat
                 label="SSL"
@@ -128,7 +128,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
                     )}
                   >
                     {latest.ssl_days_left < 14 ? <ShieldAlert size={13} /> : <ShieldCheck size={13} />}
-                    {latest.ssl_days_left}h
+                    {latest.ssl_days_left}d
                   </span>
                 }
               />
@@ -138,9 +138,9 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
           {/* SLA windows */}
           {data?.sla && (
             <div className="grid grid-cols-3 gap-2">
-              <SlaTile label="24 jam" sla={data.sla.h24} />
-              <SlaTile label="7 hari" sla={data.sla.d7} />
-              <SlaTile label="30 hari" sla={data.sla.d30} />
+              <SlaTile label="24 hours" sla={data.sla.h24} />
+              <SlaTile label="7 days" sla={data.sla.d7} />
+              <SlaTile label="30 days" sla={data.sla.d30} />
             </div>
           )}
 
@@ -150,14 +150,14 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
           {/* Downtime incidents */}
           {data?.incidents && data.incidents.length > 0 && (
             <div>
-              <p className="widget-title mb-1.5">Insiden Downtime</p>
+              <p className="widget-title mb-1.5">Downtime Incidents</p>
               <div className="space-y-1">
                 {data.incidents.map((inc, i) => (
                   <div key={i} className="flex items-center gap-2 rounded-lg bg-bg px-2.5 py-1.5 text-[12px]">
                     <span className={cn('h-2 w-2 shrink-0 rounded-full', inc.ongoing ? 'bg-red-500 animate-pulse-dot' : 'bg-muted')} />
-                    <span className="text-text/90">{new Date(inc.start).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-text/90">{new Date(inc.start).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                     <span className="text-muted">
-                      {inc.ongoing ? 'sedang down' : `${inc.duration_min}m`}
+                      {inc.ongoing ? 'down now' : `${inc.duration_min}m`}
                       {inc.status_code ? ` · HTTP ${inc.status_code}` : inc.error ? ` · ${inc.error}` : ''}
                     </span>
                   </div>
@@ -189,7 +189,7 @@ function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; tot
     <div className="rounded-lg border border-border/60 bg-bg px-2 py-2.5 text-center">
       <p className={cn('font-mono text-lg font-bold tabular-nums', color)}>{pct == null ? '—' : `${pct}%`}</p>
       <p className="mt-0.5 text-[10px] font-medium text-muted">{label}</p>
-      <p className="text-[9px] text-muted/60">{sla.total} cek</p>
+      <p className="text-[9px] text-muted/60">{sla.total} checks</p>
     </div>
   )
 }
@@ -217,14 +217,14 @@ function History({ checks }: { checks: UptimeCheck[] }) {
               key={c.id}
               className={cn('flex-1 rounded-sm', c.is_up ? 'bg-highlight/70' : 'bg-red-500/70')}
               style={{ height: `${h}%` }}
-              title={`${new Date(c.checked_at).toLocaleString('id-ID')} · ${
+              title={`${new Date(c.checked_at).toLocaleString('en-US')} · ${
                 c.is_up ? 'up' : 'down'
               }${c.status_code ? ` · HTTP ${c.status_code}` : ''}${c.response_ms != null ? ` · ${c.response_ms}ms` : ''}`}
             />
           )
         })}
       </div>
-      <p className="mt-1 text-[10px] text-muted">Riwayat {items.length} pengecekan terakhir</p>
+      <p className="mt-1 text-[10px] text-muted">Last {items.length} checks</p>
     </div>
   )
 }

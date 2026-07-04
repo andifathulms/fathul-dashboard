@@ -24,7 +24,7 @@ const PROVIDER_BADGE: Record<ServerProvider, string> = {
   pdns: 'bg-accent2/15 text-accent2 ring-1 ring-inset ring-accent2/25',
   other: 'bg-muted/20 text-muted ring-1 ring-inset ring-muted/25',
 }
-const PROVIDER_LABEL: Record<ServerProvider, string> = { gcp: 'GCP', pdns: 'PDNS', other: 'Lainnya' }
+const PROVIDER_LABEL: Record<ServerProvider, string> = { gcp: 'GCP', pdns: 'PDNS', other: 'Other' }
 
 export default function ServersPage() {
   const { servers, pings, isLoading, mutate, pingServer, pingAll } = useServers()
@@ -36,9 +36,9 @@ export default function ServersPage() {
   const toast = useToast()
 
   const remove = async (id: number, name: string) => {
-    if (!(await confirm({ title: 'Hapus VM', message: `Hapus "${name}"?`, danger: true, confirmLabel: 'Hapus' }))) return
+    if (!(await confirm({ title: 'Delete VM', message: `Delete "${name}"?`, danger: true, confirmLabel: 'Delete' }))) return
     await api.delete(`/servers/${id}/`)
-    toast.success(`VM "${name}" dihapus`)
+    toast.success(`VM "${name}" deleted`)
     mutate()
   }
 
@@ -46,7 +46,7 @@ export default function ServersPage() {
     <div>
       <PageHeader
         title="VMs"
-        subtitle="Host & VM kamu — akses SSH, password, dan apps yang jalan di sana"
+        subtitle="Your hosts & VMs — SSH access, passwords, and the apps running on them"
         icon={<ServerIcon size={20} />}
         action={
           <div className="flex gap-2">
@@ -60,7 +60,7 @@ export default function ServersPage() {
               }}
               className="btn-accent"
             >
-              <Plus size={16} /> VM Baru
+              <Plus size={16} /> New VM
             </button>
           </div>
         }
@@ -77,11 +77,11 @@ export default function ServersPage() {
         <div className="card">
           <EmptyState
             icon={<ServerIcon size={22} />}
-            title="Belum ada VM"
-            hint="Daftarkan VM/host kamu untuk akses SSH + password cepat dan lihat apps yang jalan di sana."
+            title="No VMs yet"
+            hint="Register your VMs/hosts for quick SSH + password access and to see the apps running on them."
             action={
               <button onClick={() => setShowForm(true)} className="btn-accent">
-                <Plus size={16} /> VM Baru
+                <Plus size={16} /> New VM
               </button>
             }
           />
@@ -129,7 +129,7 @@ export default function ServersPage() {
                   >
                     <Pencil size={13} />
                   </button>
-                  <button onClick={() => remove(s.id, s.name)} className="icon-btn h-7 w-7 hover:text-danger" aria-label="Hapus">
+                  <button onClick={() => remove(s.id, s.name)} className="icon-btn h-7 w-7 hover:text-danger" aria-label="Delete">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -141,7 +141,7 @@ export default function ServersPage() {
 
               {s.project_names?.length > 0 && (
                 <div className="border-t border-border pt-2.5">
-                  <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">Apps di VM ini</p>
+                  <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">Apps on this VM</p>
                   <div className="flex flex-wrap gap-1.5">
                     {s.project_names.map((p) => (
                       <span key={p.id} className="chip border border-border bg-bg text-muted">

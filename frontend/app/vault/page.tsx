@@ -41,9 +41,9 @@ export default function VaultPage() {
   const filteredEnvs = envs?.filter((e) => e.key.toLowerCase().includes(q.toLowerCase()))
 
   const deleteCred = async (id: number, label: string) => {
-    if (!(await confirm({ title: 'Hapus kredensial', message: `Hapus "${label}"?`, danger: true, confirmLabel: 'Hapus' }))) return
+    if (!(await confirm({ title: 'Delete credential', message: `Delete "${label}"?`, danger: true, confirmLabel: 'Delete' }))) return
     await api.delete(`/credentials/${id}/`)
-    toast.success('Kredensial dihapus')
+    toast.success('Credential deleted')
     mutateCreds()
   }
   const deleteEnv = async (id: number) => {
@@ -55,7 +55,7 @@ export default function VaultPage() {
     <div>
       <PageHeader
         title="Vault"
-        subtitle="Kredensial & environment variable — disimpan lokal, tanpa enkripsi"
+        subtitle="Credentials & environment variables — stored locally, unencrypted"
         icon={<KeyRound size={20} />}
         action={
           tab === 'credentials' ? (
@@ -66,7 +66,7 @@ export default function VaultPage() {
               }}
               className="btn-accent"
             >
-              <Plus size={16} /> Kredensial
+              <Plus size={16} /> Credential
             </button>
           ) : (
             <button onClick={() => setShowImport(true)} className="btn-accent">
@@ -96,7 +96,7 @@ export default function VaultPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={`Cari ${tab === 'credentials' ? 'kredensial' : 'env var'}…`}
+            placeholder={`Search ${tab === 'credentials' ? 'credentials' : 'env vars'}…`}
             className="input pl-9"
           />
         </div>
@@ -104,7 +104,7 @@ export default function VaultPage() {
 
       {tab === 'credentials' && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredCreds?.length === 0 && <Empty label="Belum ada kredensial." />}
+          {filteredCreds?.length === 0 && <Empty label="No credentials yet." />}
           {filteredCreds?.map((c) => {
             const project = projects?.find((p) => p.id === c.project)
             return (
@@ -139,7 +139,7 @@ export default function VaultPage() {
                     <button
                       onClick={() => deleteCred(c.id, c.label)}
                       className="icon-btn h-7 w-7 hover:text-red-400"
-                      aria-label="Hapus"
+                      aria-label="Delete"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -168,7 +168,7 @@ export default function VaultPage() {
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 text-[11px] text-accent1 hover:underline"
                     >
-                      <ExternalLink size={11} /> Buka
+                      <ExternalLink size={11} /> Open
                     </a>
                   )}
                 </div>
@@ -180,7 +180,7 @@ export default function VaultPage() {
 
       {tab === 'envvars' && (
         <WidgetCard bodyClassName="space-y-1.5">
-          {filteredEnvs?.length === 0 && <Empty label="Belum ada env var. Import dari .env." />}
+          {filteredEnvs?.length === 0 && <Empty label="No env vars yet. Import from .env." />}
           {filteredEnvs?.map((e) => {
             const project = projects?.find((p) => p.id === e.project)
             return (
@@ -198,7 +198,7 @@ export default function VaultPage() {
                 <button
                   onClick={() => deleteEnv(e.id)}
                   className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                  aria-label="Hapus"
+                  aria-label="Delete"
                 >
                   <Trash2 size={13} />
                 </button>
