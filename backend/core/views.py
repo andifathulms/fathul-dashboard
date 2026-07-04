@@ -203,11 +203,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         is_done = self.request.query_params.get('is_done')
         if date:
             qs = qs.filter(due_date=date)
-        # A day's agenda = tasks due that day OR undated tasks created that day
-        # (so a project task with no due date still shows on today's Daily Log).
+        # A day's agenda = everything actionable on that day:
+        #   - due that day
+        #   - overdue but still open (so nothing slips silently)
+        #   - undated: created that day, OR still open (carries over until done,
+        #     so a project task with no due date keeps showing as a reminder)
         if agenda:
             qs = qs.filter(
-                Q(due_date=agenda) | (Q(due_date__isnull=True) & Q(created_at__date=agenda))
+                Q(due_date=agenda)
+                | Q(due_date__lt=agenda, is_done=False)
+                | (Q(due_date__isnull=True) & (Q(created_at__date=agenda) | Q(is_done=False)))
             )
         if project:
             qs = qs.filter(project=project)
