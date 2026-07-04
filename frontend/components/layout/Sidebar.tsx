@@ -54,19 +54,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
       )}
     >
       {/* Brand + toggle */}
-      <div className={cn('flex items-center gap-2 px-4 py-5', collapsed && 'lg:justify-center lg:px-0')}>
-        {/* Icon-only when collapsed (desktop) */}
-        <Logo
-          size={32}
-          className={cn('rounded-lg shadow-[0_2px_12px_-3px_rgba(141,95,240,0.7)]', collapsed ? 'hidden lg:block' : 'hidden')}
-        />
-        {/* Full horizontal lockup when expanded (and always on mobile) */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-lockup-horizontal.png"
-          alt="fathul-dashboard"
-          className={cn('h-8 w-auto', collapsed && 'lg:hidden')}
-        />
+      <div className={cn('flex items-center gap-2.5 px-5 py-5', collapsed && 'lg:justify-center lg:px-0')}>
+        <Logo size={32} className="rounded-lg shadow-[0_2px_12px_-3px_rgba(141,95,240,0.7)]" />
+        <span className={cn('font-mono text-sm font-semibold tracking-tight', collapsed && 'lg:hidden')}>
+          fathul<span className="text-muted">-dashboard</span>
+        </span>
         {/* Desktop collapse (hidden when already collapsed) */}
         <button
           onClick={onToggle}
