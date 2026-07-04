@@ -18,7 +18,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
-import { CategoryBadge, StatusBadge, TechTag } from '@/components/ui/Badge'
+import { CategoryBadge, StatusBadge } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import Skeleton from '@/components/ui/Skeleton'
 import type { Project, ProjectCategory, ProjectStatus } from '@/lib/types'
@@ -196,34 +196,55 @@ export default function ProjectsPage() {
 
       {/* Grid view */}
       {view === 'grid' && (
-        <div className="stagger-in grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger-in grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered?.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
               className="group card card-hover relative flex flex-col overflow-hidden p-4 pl-5"
             >
-              <span className={cn('absolute inset-y-0 left-0 w-1', PRIORITY_STYLES[p.priority].dot)} />
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <ProjectAvatar project={p} size={34} />
-                  <h3 className="truncate font-semibold leading-tight">{p.name}</h3>
+              <span className={cn('absolute inset-y-0 left-0 z-10 w-1', PRIORITY_STYLES[p.priority].dot)} />
+              {p.lockup_horizontal_url ? (
+                <div className="relative -mx-4 -mt-4 mb-3 h-24 overflow-hidden border-b border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.lockup_horizontal_url}
+                    alt={p.name}
+                    className="h-full w-full object-cover"
+                  />
+                  <ArrowUpRight
+                    size={16}
+                    className="absolute right-3 top-3 text-text/70 drop-shadow transition-colors group-hover:text-accent1"
+                  />
                 </div>
-                <ArrowUpRight size={16} className="shrink-0 text-muted transition-colors group-hover:text-accent1" />
-              </div>
-              {p.description && <p className="mt-1 line-clamp-2 text-[13px] text-muted">{p.description}</p>}
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                <PriorityToggle project={p} onChanged={mutate} />
-                <CategoryBadge category={p.category} />
-                <StatusBadge status={p.status} />
-              </div>
-              {p.tech_stack?.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {p.tech_stack.slice(0, 4).map((t) => (
-                    <TechTag key={t}>{t}</TechTag>
-                  ))}
+              ) : (
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <ProjectAvatar project={p} size={34} />
+                    <h3 className="truncate font-semibold leading-tight">{p.name}</h3>
+                  </div>
+                  <ArrowUpRight size={16} className="shrink-0 text-muted transition-colors group-hover:text-accent1" />
                 </div>
               )}
+              {p.description && <p className="mt-1 line-clamp-2 text-[13px] text-muted">{p.description}</p>}
+              <div className="mt-auto pt-2.5" />
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  <PriorityToggle project={p} onChanged={mutate} />
+                  <CategoryBadge category={p.category} />
+                  <StatusBadge status={p.status} />
+                </div>
+                {p.tech_stack?.length > 0 && (
+                  <div className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-muted">
+                    {p.tech_stack.slice(0, 3).map((t, i) => (
+                      <span key={t} className="inline-flex items-center gap-1.5">
+                        {i > 0 && <span className="text-border">·</span>}
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-[11px] text-muted">
                 <span className="inline-flex items-center gap-1">
                   <CheckSquare size={12} /> {p.tasks_count}
