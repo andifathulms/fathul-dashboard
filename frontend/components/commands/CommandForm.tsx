@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import api from '@/lib/api'
 import type { Command, CommandCategory, Project } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 export const CATEGORIES: CommandCategory[] = [
   'docker',
@@ -24,7 +25,7 @@ interface CommandFormProps {
   onSaved: () => void
   projects?: Project[]
   initial?: Command | null
-  /** When set (creating from a project page), pin the project and hide the picker. */
+  /** When set (creating from a project page), pin that project and hide the picker. */
   lockedProjectId?: number
 }
 
@@ -45,12 +46,18 @@ export default function CommandForm({
     setForm(seed(initial, lockedProjectId))
   }
 
-  const set = (k: keyof ReturnType<typeof seed>, v: string) => setForm((f) => ({ ...f, [k]: v }))
+  const set = (k: 'title' | 'command' | 'category', v: string) => setForm((f) => ({ ...f, [k]: v }))
+
+  const toggleProject = (pid: number) =>
+    setForm((f) => ({
+      ...f,
+      projects: f.projects.includes(pid) ? f.projects.filter((id) => id !== pid) : [...f.projects, pid],
+    }))
 
   const submit = async () => {
     if (!form.title.trim() || !form.command.trim()) return
     setSaving(true)
-    const payload = { ...form, project: form.project ? Number(form.project) : null }
+    const payload = { title: form.title, command: form.command, category: form.category, projects: form.projects }
     try {
       if (initial) await api.patch(`/commands/${initial.id}/`, payload)
       else await api.post('/commands/', payload)
@@ -92,31 +99,45 @@ export default function CommandForm({
             onChange={(e) => set('command', e.target.value)}
           />
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Category</span>
-            <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
-          {lockedProjectId == null && (
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-muted">Project</span>
-              <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
-                <option value="">No project</option>
-                {projects?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-muted">Category</span>
+          <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        {lockedProjectId == null && (
+          <div>
+            <span className="mb-1 block text-xs font-medium text-muted">
+              Projects (optional — same command can belong to more than one)
+            </span>
+            {projects && projects.length > 0 ? (
+              <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-border bg-bg/40 p-2">
+                {projects.map((p) => {
+                  const active = form.projects.includes(p.id)
+                  return (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={() => toggleProject(p.id)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                        active ? 'bg-accent1/15 text-accent1 ring-1 ring-inset ring-accent1/25' : 'bg-surface text-muted hover:text-text'
+                      )}
+                    >
+                      {p.name}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted">No projects yet.</p>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   )
@@ -127,6 +148,6 @@ function seed(c?: Command | null, lockedProjectId?: number) {
     title: c?.title ?? '',
     command: c?.command ?? '',
     category: c?.category ?? 'general',
-    project: c?.project ? String(c.project) : lockedProjectId != null ? String(lockedProjectId) : '',
+    projects: c?.projects ?? (lockedProjectId != null ? [lockedProjectId] : []),
   }
 }

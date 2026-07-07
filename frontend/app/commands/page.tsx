@@ -143,7 +143,11 @@ export default function CommandsPage() {
             <pre className="overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-[12.5px] text-text/90">
               {c.command}
             </pre>
-            {c.project_name && <p className="text-[11px] text-muted">↳ {c.project_name}</p>}
+            {c.project_names.length > 0 && (
+              <p className="truncate text-[11px] text-muted">
+                ↳ {c.project_names.map((p) => p.name).join(', ')}
+              </p>
+            )}
           </WidgetCard>
         ))}
       </div>

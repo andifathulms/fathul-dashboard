@@ -78,8 +78,8 @@ export interface Command {
   title: string
   command: string
   category: CommandCategory
-  project: number | null
-  project_name: string | null
+  projects: number[]
+  project_names: { id: number; name: string }[]
   created_at: string
 }
 

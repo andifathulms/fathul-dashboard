@@ -64,14 +64,17 @@ class EnvVarSerializer(serializers.ModelSerializer):
 
 
 class CommandSerializer(serializers.ModelSerializer):
-    project_name = serializers.CharField(source='project.name', read_only=True, default=None)
+    project_names = serializers.SerializerMethodField()
 
     class Meta:
         model = Command
         fields = [
-            'id', 'title', 'command', 'category', 'project',
-            'project_name', 'created_at',
+            'id', 'title', 'command', 'category', 'projects',
+            'project_names', 'created_at',
         ]
+
+    def get_project_names(self, obj):
+        return [{'id': p.id, 'name': p.name} for p in obj.projects.all()]
 
 
 class ServerSerializer(serializers.ModelSerializer):

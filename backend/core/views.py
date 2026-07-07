@@ -280,11 +280,11 @@ class CommandViewSet(viewsets.ModelViewSet):
         if category:
             qs = qs.filter(category=category)
         if project:
-            qs = qs.filter(project=project)
+            qs = qs.filter(projects=project)
         if search:
             from django.db.models import Q
             qs = qs.filter(Q(title__icontains=search) | Q(command__icontains=search))
-        return qs
+        return qs.distinct()
 
 
 class ServerViewSet(viewsets.ModelViewSet):

@@ -113,9 +113,7 @@ class Command(models.Model):
     title = models.CharField(max_length=200)
     command = models.TextField()
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
-    project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.SET_NULL, related_name='commands'
-    )
+    projects = models.ManyToManyField(Project, blank=True, related_name='commands')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

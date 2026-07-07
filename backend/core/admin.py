@@ -43,8 +43,8 @@ class EnvVarAdmin(admin.ModelAdmin):
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'project')
-    list_filter = ('category', 'project')
+    list_display = ('title', 'category')
+    list_filter = ('category', 'projects')
     search_fields = ('title', 'command')
 
 
