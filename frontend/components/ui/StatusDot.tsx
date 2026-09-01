@@ -7,14 +7,17 @@ interface StatusDotProps {
   className?: string
 }
 
+// A dot alone never carries meaning — pair it with the label the caller renders.
 const COLORS: Record<Status, string> = {
-  up: 'bg-highlight shadow-[0_0_0_3px_rgba(52,211,153,0.18)]',
-  down: 'bg-danger shadow-[0_0_0_3px_rgba(248,113,113,0.18)]',
-  checking: 'bg-warning animate-pulse-dot shadow-[0_0_0_3px_rgba(251,191,36,0.18)]',
+  up: 'bg-highlight ring-highlight/20',
+  down: 'bg-danger ring-danger/20',
+  checking: 'bg-warning ring-warning/20 animate-pulse-dot',
 }
 
 export default function StatusDot({ status, className }: StatusDotProps) {
   return (
-    <span className={cn('inline-block h-2.5 w-2.5 rounded-full', COLORS[status], className)} />
+    <span
+      className={cn('inline-block h-2 w-2 shrink-0 rounded-full ring-4', COLORS[status], className)}
+    />
   )
 }

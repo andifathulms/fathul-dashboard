@@ -59,11 +59,11 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       {children}
       {pending && (
         <div
-          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-[16vh] backdrop-blur-sm"
+          className="scrim fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto p-4 pt-[16vh]"
           onClick={() => settle(false)}
         >
           <div
-            className="w-full max-w-sm animate-scale-in rounded-xl border border-border bg-surface p-5 shadow-pop"
+            className="w-full max-w-sm animate-scale-in rounded-2xl border border-border bg-surface p-5 shadow-pop"
             onClick={(e) => e.stopPropagation()}
             role="alertdialog"
             aria-modal="true"
@@ -72,14 +72,14 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               <span
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                  pending.opts.danger ? 'bg-red-500/15 text-red-400' : 'bg-accent1/15 text-accent1'
+                  pending.opts.danger ? 'bg-danger/10 text-danger' : 'bg-accent1/10 text-accent1'
                 )}
               >
                 <AlertTriangle size={18} />
               </span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold">{pending.opts.title ?? 'Confirm'}</h2>
-                <p className="mt-1 text-sm text-muted">{pending.opts.message}</p>
+                <h2 className="font-display text-md font-semibold">{pending.opts.title ?? 'Confirm'}</h2>
+                <p className="mt-1 text-base text-text2">{pending.opts.message}</p>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
@@ -88,10 +88,13 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               </button>
               <button
                 onClick={() => settle(true)}
-                className={cn(pending.opts.danger ? 'btn-accent bg-red-500 hover:bg-red-500/90' : 'btn-accent')}
+                className={cn(
+                  'btn-accent',
+                  pending.opts.danger && 'border-danger bg-danger hover:brightness-110'
+                )}
                 autoFocus
               >
-                {pending.opts.confirmLabel ?? 'Yes, continue'}
+                {pending.opts.confirmLabel ?? 'Continue'}
               </button>
             </div>
           </div>

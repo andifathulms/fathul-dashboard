@@ -32,7 +32,7 @@ export default function CopyButton({ value, label, className, withText }: CopyBu
         type="button"
         onClick={copy}
         aria-label={label ?? 'Copy'}
-        className={cn('btn text-xs', copied && 'border-highlight/50 text-highlight', className)}
+        className={cn('btn btn-sm', copied && 'border-highlight/40 text-highlight', className)}
       >
         {copied ? <Check size={13} /> : <Copy size={13} />}
         {copied ? 'Copied' : withText}
@@ -45,6 +45,7 @@ export default function CopyButton({ value, label, className, withText }: CopyBu
       type="button"
       onClick={copy}
       aria-label={label ?? 'Copy'}
+      title={copied ? 'Copied' : (label ?? 'Copy')}
       className={cn('icon-btn', copied && 'text-highlight', className)}
     >
       {copied ? <Check size={15} /> : <Copy size={15} />}

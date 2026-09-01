@@ -28,10 +28,10 @@ export function useToast(): ToastApi {
   return ctx
 }
 
-const STYLES: Record<ToastType, { icon: React.ReactNode; ring: string; iconCls: string }> = {
-  success: { icon: <CheckCircle2 size={18} />, ring: 'border-highlight/40', iconCls: 'text-highlight' },
-  error: { icon: <XCircle size={18} />, ring: 'border-red-500/40', iconCls: 'text-red-400' },
-  info: { icon: <Info size={18} />, ring: 'border-accent1/40', iconCls: 'text-accent1' },
+const STYLES: Record<ToastType, { icon: React.ReactNode; stripe: string; iconCls: string }> = {
+  success: { icon: <CheckCircle2 size={17} />, stripe: 'bg-highlight', iconCls: 'text-highlight' },
+  error: { icon: <XCircle size={17} />, stripe: 'bg-danger', iconCls: 'text-danger' },
+  info: { icon: <Info size={17} />, stripe: 'bg-accent1', iconCls: 'text-accent1' },
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -66,21 +66,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={t.id}
-              className={cn(
-                'pointer-events-auto flex animate-slide-in-right items-start gap-3 rounded-xl border bg-surface px-4 py-3 shadow-pop',
-                s.ring
-              )}
+              className="pointer-events-auto relative flex animate-slide-in-right items-start gap-3 overflow-hidden rounded-xl border border-border bg-surface py-3 pl-4 pr-3 shadow-pop"
               role="status"
             >
-              <span className={cn('mt-0.5 shrink-0', s.iconCls)}>{s.icon}</span>
+              {/* A severity stripe reads before the icon does. */}
+              <span className={cn('absolute inset-y-0 left-0 w-1', s.stripe)} />
+              <span className={cn('mt-px shrink-0', s.iconCls)}>{s.icon}</span>
               <div className="min-w-0 flex-1">
-                {t.title && <p className="text-sm font-semibold">{t.title}</p>}
-                <p className={cn('text-sm', t.title ? 'text-muted' : 'text-text/90')}>{t.message}</p>
+                {t.title && <p className="text-base font-semibold">{t.title}</p>}
+                <p className={cn('text-base', t.title ? 'text-text2' : 'text-text')}>{t.message}</p>
               </div>
               <button
                 onClick={() => remove(t.id)}
                 className="icon-btn h-6 w-6 shrink-0"
-                aria-label="Close notification"
+                aria-label="Dismiss"
+                title="Dismiss"
               >
                 <X size={14} />
               </button>

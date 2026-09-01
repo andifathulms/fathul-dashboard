@@ -189,6 +189,12 @@ h3 {
     }
   }
 
+  /* ── Overlays ────────────────────────────────────────────── */
+  .scrim {
+    background: rgb(var(--shadow) / 0.35);
+    backdrop-filter: blur(3px);
+  }
+
   /* ── Skeletons ───────────────────────────────────────────── */
   .skeleton {
     @apply relative overflow-hidden rounded-md bg-surface2;
