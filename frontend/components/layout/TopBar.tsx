@@ -3,16 +3,18 @@
 import { LocateFixed, MapPin, Menu } from 'lucide-react'
 import { useState } from 'react'
 
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useToast } from '@/components/ui/Toast'
 import { usePrayer } from '@/hooks/usePrayer'
 import { useWeather } from '@/hooks/useWeather'
 import { detectLocation } from '@/lib/location'
-import { PRAYER_SEQUENCE, formatCountdown } from '@/lib/prayer'
+import { formatCountdown } from '@/lib/prayer'
 import { describeWeather } from '@/lib/weather'
-import { cn } from '@/lib/utils'
 
+/** Orientation only — clock, next prayer, weather, theme. Page actions belong
+ *  to the page header, never here (DESIGN.md §9). */
 export default function TopBar({ onMenu }: { onMenu: () => void }) {
-  const { timings, now, next, location } = usePrayer()
+  const { now, next, location } = usePrayer()
   const { weather } = useWeather()
   const w = weather ? describeWeather(weather.weathercode) : null
 
@@ -25,103 +27,62 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
       const loc = await detectLocation()
       toast.success(`Location updated to ${loc.label}`, 'Location')
     } catch (e) {
-      toast.error((e as Error).message, 'Failed to get location')
+      toast.error((e as Error).message, "Couldn't get your location")
     } finally {
       setLocating(false)
     }
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-bg/80 backdrop-blur-md">
-      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        {/* Left: hamburger (mobile) + prayer times */}
+    <header className="sticky top-0 z-20 border-b border-border bg-bg/85 backdrop-blur-md">
+      <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
-          <button onClick={onMenu} className="icon-btn shrink-0 lg:hidden" aria-label="Open menu">
+          <button onClick={onMenu} className="icon-btn -ml-1 shrink-0 lg:hidden" aria-label="Open menu">
             <Menu size={18} />
           </button>
-
-          {/* Full prayer grid — md and up */}
-          <div className="hidden items-center gap-1.5 overflow-x-auto md:flex">
-            {timings ? (
-              PRAYER_SEQUENCE.map((p) => {
-                const isNext = next?.key === p.key
-                return (
-                  <div
-                    key={p.key}
-                    className={cn(
-                      'flex min-w-[62px] flex-col items-center rounded-lg px-2.5 py-1.5 transition-colors',
-                      isNext ? 'bg-accent1/15 ring-1 ring-accent1/40' : 'bg-surface'
-                    )}
-                  >
-                    <span className={cn('text-[10px] uppercase tracking-wide', isNext ? 'text-accent1' : 'text-muted')}>
-                      {p.label}
-                    </span>
-                    <span className={cn('font-mono text-sm', isNext ? 'text-accent1' : 'text-text')}>
-                      {timings[p.key]}
-                    </span>
-                  </div>
-                )
-              })
-            ) : (
-              <span className="text-xs text-muted">Loading prayer times…</span>
-            )}
-          </div>
-
-          {/* Compact next-prayer — below md */}
-          {next && (
-            <div className="flex items-center gap-2 rounded-lg bg-accent1/15 px-2.5 py-1 ring-1 ring-accent1/30 md:hidden">
-              <span className="text-[10px] uppercase tracking-wide text-accent1">{next.label}</span>
-              <span className="font-mono text-sm text-accent1">{next.time}</span>
-              <span className="text-[10px] text-muted">· {formatCountdown(next.minutesUntil)}</span>
+          {now && (
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-md font-medium tnum">
+                {now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <span className="hidden text-base text-muted sm:inline">
+                {now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Right cluster: countdown · weather · clock */}
-        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {next && (
-            <div className="hidden text-right lg:block">
-              <p className="text-[11px] text-muted">Next</p>
-              <p className="text-sm font-semibold text-accent1">
-                {next.label} · {formatCountdown(next.minutesUntil)}
-              </p>
+            <div className="flex items-center gap-2 rounded-lg bg-accent1/10 px-2.5 py-1 ring-1 ring-inset ring-accent1/20">
+              <span className="text-sm font-semibold text-accent1">{next.label}</span>
+              <span className="font-mono text-base text-accent1 tnum">{next.time}</span>
+              <span className="hidden text-sm text-accent1/80 sm:inline">
+                · in {formatCountdown(next.minutesUntil)}
+              </span>
             </div>
           )}
 
           {w && weather && (
-            <div className="flex items-center gap-2 rounded-lg bg-surface px-2.5 py-1.5 sm:px-3">
-              <span className="text-lg leading-none">{w.icon}</span>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold">{Math.round(weather.temperature)}°C</p>
-                <button
-                  onClick={detect}
-                  title="Update location (GPS)"
-                  className="flex items-center gap-1 text-[10px] text-muted transition-colors hover:text-accent1"
-                >
-                  {locating ? <LocateFixed size={9} className="animate-spin" /> : <MapPin size={9} />}
-                  <span className="max-w-[80px] truncate sm:max-w-[110px]">
-                    {locating ? 'Searching…' : location.label}
-                  </span>
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={detect}
+              title="Update location from GPS"
+              className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-surface2"
+            >
+              <span className="text-md leading-none">{w.icon}</span>
+              <span className="font-mono text-base font-medium tnum">
+                {Math.round(weather.temperature)}°
+              </span>
+              <span className="hidden max-w-[130px] items-center gap-1 text-sm text-muted md:flex">
+                {locating ? <LocateFixed size={11} className="animate-spin" /> : <MapPin size={11} />}
+                <span className="truncate">{locating ? 'Searching…' : location.label}</span>
+              </span>
+            </button>
           )}
 
-          <Clock now={now} />
+          <ThemeToggle />
         </div>
       </div>
     </header>
-  )
-}
-
-function Clock({ now }: { now: Date | null }) {
-  if (!now) return <div className="hidden w-[110px] sm:block" />
-  return (
-    <div className="hidden text-right sm:block">
-      <p className="font-mono text-sm font-semibold tabular-nums">{now.toLocaleTimeString('en-US')}</p>
-      <p className="text-[10px] text-muted">
-        {now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })}
-      </p>
-    </div>
   )
 }

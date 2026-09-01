@@ -156,11 +156,11 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-[12vh] backdrop-blur-sm"
+      className="scrim fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto p-4 pt-[12vh]"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-xl animate-scale-in overflow-hidden rounded-xl border border-border bg-surface shadow-pop"
+        className="w-full max-w-xl animate-scale-in overflow-hidden rounded-2xl border border-border bg-surface shadow-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2.5 border-b border-border px-4">
@@ -171,16 +171,18 @@ export default function CommandPalette() {
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search pages, projects, commands…"
-            className="w-full bg-transparent py-3.5 text-sm text-text outline-none placeholder:text-muted"
+            className="w-full bg-transparent py-3.5 text-md text-text outline-none placeholder:text-muted"
           />
-          <kbd className="hidden shrink-0 rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-muted sm:block">
+          <kbd className="hidden shrink-0 rounded border border-border bg-surface2 px-1.5 py-0.5 font-mono text-xs text-muted sm:block">
             esc
           </kbd>
         </div>
 
         <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
           {filtered.length === 0 && (
-            <p className="px-3 py-8 text-center text-sm text-muted">No results.</p>
+            <p className="px-3 py-10 text-center text-base text-muted">
+              Nothing matches “{q}”.
+            </p>
           )}
           {filtered.map((it, idx) => {
             const header = it.group !== lastGroup ? it.group : null
@@ -189,7 +191,7 @@ export default function CommandPalette() {
             return (
               <div key={it.id}>
                 {header && (
-                  <p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted first:pt-1">
+                  <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted first:pt-1">
                     {header}
                   </p>
                 )}
@@ -199,21 +201,21 @@ export default function CommandPalette() {
                   onClick={() => run(it)}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors',
-                    idx === active ? 'bg-accent1/12 text-text' : 'text-muted hover:bg-border/40'
+                    idx === active ? 'bg-accent1/10' : 'hover:bg-surface2'
                   )}
                 >
                   <span
                     className={cn(
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-                      idx === active ? 'bg-accent1/15 text-accent1' : 'bg-bg text-muted'
+                      idx === active ? 'bg-accent1/15 text-accent1' : 'bg-surface2 text-muted'
                     )}
                   >
                     <Icon size={15} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-text">{it.label}</span>
+                    <span className="block truncate text-base font-medium text-text">{it.label}</span>
                     {it.hint && (
-                      <span className="block truncate font-mono text-[11px] text-muted">{it.hint}</span>
+                      <span className="block truncate font-mono text-xs text-muted">{it.hint}</span>
                     )}
                   </span>
                   {idx === active && <CornerDownLeft size={14} className="shrink-0 text-muted" />}
@@ -223,7 +225,7 @@ export default function CommandPalette() {
           })}
         </div>
 
-        <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-[11px] text-muted">
+        <div className="flex items-center gap-3 border-t border-border bg-surface2/50 px-4 py-2 text-xs text-muted">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> navigate
@@ -243,7 +245,7 @@ export default function CommandPalette() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-muted">
+    <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-xs text-muted">
       {children}
     </kbd>
   )

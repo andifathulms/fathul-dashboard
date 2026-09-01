@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="scrim fixed inset-0 z-30 lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden
         />
@@ -52,12 +52,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           'flex min-h-screen flex-col transition-[margin] duration-200',
-          collapsed ? 'lg:ml-[64px]' : 'lg:ml-[220px]'
+          collapsed ? 'lg:ml-[64px]' : 'lg:ml-[232px]'
         )}
       >
         <TopBar onMenu={() => setMobileOpen(true)} />
-        <main className="flex-1 px-4 py-5 sm:px-6">
-          <PageTransition>{children}</PageTransition>
+        <main className="flex-1 px-4 py-6 sm:px-6">
+          <div className="mx-auto w-full max-w-[1400px]">
+            <PageTransition>{children}</PageTransition>
+          </div>
         </main>
       </div>
 

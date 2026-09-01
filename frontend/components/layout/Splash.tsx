@@ -32,10 +32,6 @@ export default function Splash() {
         state === 'fading' ? 'opacity-0' : 'opacity-100'
       )}
     >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(50% 40% at 50% 45%, rgba(56,189,248,0.10), transparent 70%)' }}
-      />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/logo-lockup-vertical.png" alt="fathul-dashboard" className="w-48 animate-scale-in sm:w-52" />
     </div>
