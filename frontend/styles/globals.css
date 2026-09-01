@@ -1,33 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Daylight — see DESIGN.md. Channels are space-separated RGB so
+   Tailwind's opacity modifiers work against every token.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  /* Nocturne — deep navy + cyan/violet. */
-  --bg: #0b0f17;
-  --surface: #141a24;
-  --surface-2: #1c2431;
-  --border: #232b37;
-  --border-strong: #2e3a4d;
-  --accent1: #38bdf8;
-  --accent2: #a78bfa;
-  --highlight: #34d399;
-  --text: #e6edf6;
-  --muted: #8a94a6;
+  /* Light — Cobalt Daylight */
+  --bg: 244 241 233;
+  --surface: 255 255 255;
+  --surface-2: 237 233 222;
+  --border: 226 220 205;
+  --border-strong: 207 199 180;
+  --text: 22 32 46;
+  --text-2: 64 73 90;
+  --muted: 111 106 97;
+  --accent1: 31 79 216;
+  --accent2: 180 105 14;
+  --highlight: 23 114 76;
+  --warning: 154 98 8;
+  --danger: 178 53 32;
+  --on-accent: 255 255 255;
+  --shadow: 22 32 46;
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark — the same system, swapped. */
+  --bg: 18 21 27;
+  --surface: 25 29 37;
+  --surface-2: 35 40 51;
+  --border: 42 48 59;
+  --border-strong: 58 66 79;
+  --text: 237 234 225;
+  --text-2: 194 198 206;
+  --muted: 139 143 152;
+  --accent1: 127 160 245;
+  --accent2: 217 165 68;
+  --highlight: 91 187 140;
+  --warning: 224 177 85;
+  --danger: 227 128 104;
+  --on-accent: 15 18 24;
+  --shadow: 0 0 0;
+  color-scheme: dark;
 }
 
 html,
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Ambient depth — a soft, fixed color glow behind everything. */
+/* A single, very quiet wash so the paper isn't perfectly even. */
 body::before {
   content: '';
   position: fixed;
@@ -35,155 +64,181 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(70% 55% at 12% -5%, rgba(56, 189, 248, 0.08), transparent 60%),
-    radial-gradient(55% 45% at 105% 0%, rgba(167, 139, 250, 0.06), transparent 55%),
-    radial-gradient(60% 50% at 50% 120%, rgba(52, 211, 153, 0.04), transparent 60%);
+    radial-gradient(60% 45% at 8% -8%, rgb(var(--accent1) / 0.05), transparent 62%),
+    radial-gradient(50% 40% at 100% 0%, rgb(var(--accent2) / 0.04), transparent 58%);
 }
 
 * {
-  border-color: var(--border);
+  border-color: rgb(var(--border));
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent1);
+  outline: 2px solid rgb(var(--accent1));
   outline-offset: 2px;
   border-radius: 6px;
 }
 
 ::selection {
-  background: rgba(56, 189, 248, 0.28);
-  color: #fff;
+  background: rgb(var(--accent1) / 0.18);
+  color: rgb(var(--text));
 }
 
 h1,
 h2,
 h3 {
-  letter-spacing: -0.015em;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
-/* Scrollbars */
+/* Scrollbars — present, not loud. */
 ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2d333b;
-  border-radius: 9px;
-  border: 2px solid transparent;
+  background: rgb(var(--border-strong));
+  border-radius: 10px;
+  border: 3px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b424c;
+  background: rgb(var(--muted));
   background-clip: padding-box;
 }
 
 @layer components {
-  /* Cards get a subtle top-light highlight + layered shadow for real depth. */
+  /* ── Elevation: three tiers (DESIGN.md §5) ───────────────── */
   .card {
-    @apply rounded-xl border border-border;
-    background-image: linear-gradient(180deg, #1b2230 0%, var(--surface) 58%);
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.32),
-      0 10px 28px -16px rgba(0, 0, 0, 0.7);
+    @apply rounded-xl border border-border bg-surface shadow-card;
+  }
+  .card-lift {
+    @apply rounded-xl border border-border bg-surface shadow-lift;
   }
   .card-hover {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-accent1/40;
-  }
-  .card-hover:hover {
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      0 10px 30px -12px rgba(0, 0, 0, 0.75),
-      0 0 0 1px rgba(56, 189, 248, 0.14);
+    @apply transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-px hover:border-borderStrong hover:shadow-lift;
   }
   .card-pad {
     @apply p-4;
   }
+
+  /* ── Labels ──────────────────────────────────────────────── */
   .widget-title {
-    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted;
+    @apply font-display text-sm font-semibold tracking-[-0.01em] text-text;
+  }
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted;
   }
 
-  /* Buttons */
+  /* ── Buttons ─────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text transition-all duration-150 hover:border-accent1/50 hover:bg-border/40 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-base font-medium text-text shadow-card transition-all duration-150 hover:border-borderStrong hover:bg-surface2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-accent {
-    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-bg transition-all duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
-    background-image: linear-gradient(180deg, #5cc7fb 0%, var(--accent1) 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      0 4px 14px -4px rgba(56, 189, 248, 0.5);
-  }
-  .btn-accent:hover {
-    background-image: linear-gradient(180deg, #6fcffc 0%, #22b3f2 100%);
+    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-accent1 bg-accent1 px-3 py-1.5 text-base font-semibold text-onAccent shadow-card transition-all duration-150 hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-border/50 hover:text-text active:scale-[0.97];
+    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-base font-medium text-muted transition-all duration-150 hover:bg-surface2 hover:text-text active:scale-[0.98];
   }
   .btn-danger {
-    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text transition-all duration-150 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-base font-medium text-text transition-all duration-150 hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-sm {
-    @apply px-2.5 py-1 text-xs;
+    @apply gap-1 px-2.5 py-1 text-sm;
   }
 
-  .input {
-    @apply w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text transition-all placeholder:text-muted focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/25;
+  /* ── Fields ──────────────────────────────────────────────── */
+  .input,
+  .select,
+  .textarea {
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-base text-text transition-colors placeholder:text-muted focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/20;
   }
+  .textarea {
+    @apply leading-relaxed;
+  }
+
   .icon-btn {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-all duration-150 hover:bg-border/60 hover:text-text active:scale-90;
-  }
-  .chip {
-    @apply inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium;
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-all duration-150 hover:bg-surface2 hover:text-text active:scale-90;
   }
 
-  /* Loading skeleton */
+  /* ── Chips & wells ───────────────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold;
+  }
+  .well {
+    @apply rounded-lg border border-border bg-surface2 px-3 py-2;
+  }
+
+  /* ── The shared list row (DESIGN.md §6) ──────────────────── */
+  .row {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-150 hover:bg-surface2;
+  }
+  .row-actions {
+    @apply flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100;
+  }
+  @media (hover: none) {
+    .row-actions {
+      @apply opacity-100;
+    }
+  }
+
+  /* ── Skeletons ───────────────────────────────────────────── */
   .skeleton {
-    @apply relative overflow-hidden rounded-md bg-border/50;
+    @apply relative overflow-hidden rounded-md bg-surface2;
   }
   .skeleton::after {
     content: '';
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
-    animation: shimmer 1.5s infinite;
+    background: linear-gradient(90deg, transparent, rgb(var(--shadow) / 0.05), transparent);
+    animation: shimmer 1.6s infinite;
   }
 }
 
 @layer utilities {
-  /* Fade + rise the direct children in sequence — a gentle entrance for grids. */
-  .stagger-in > * {
-    animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-  .stagger-in > *:nth-child(1) {
-    animation-delay: 40ms;
-  }
-  .stagger-in > *:nth-child(2) {
-    animation-delay: 90ms;
-  }
-  .stagger-in > *:nth-child(3) {
-    animation-delay: 140ms;
-  }
-  .stagger-in > *:nth-child(4) {
-    animation-delay: 190ms;
-  }
-  .stagger-in > *:nth-child(5) {
-    animation-delay: 240ms;
-  }
-  .stagger-in > *:nth-child(6) {
-    animation-delay: 290ms;
-  }
-  .stagger-in > *:nth-child(n + 7) {
-    animation-delay: 340ms;
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .stagger-in > * {
-      animation: none;
-    }
+  /* Fade + rise direct children in sequence — max six steps. */
+  .stagger-in > * {
+    animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .stagger-in > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger-in > *:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .stagger-in > *:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .stagger-in > *:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .stagger-in > *:nth-child(5) {
+    animation-delay: 160ms;
+  }
+  .stagger-in > *:nth-child(n + 6) {
+    animation-delay: 200ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
