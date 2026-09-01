@@ -159,7 +159,7 @@ export default function ProjectDetailPage() {
             </a>
           )}
           {project.local_path && (
-            <a href={`vscode://file/${project.local_path}`} className="btn text-xs">
+            <a href={`vscode://file/${project.local_path}?windowId=_blank`} className="btn text-xs">
               <Code2 size={14} /> Open in VS Code
             </a>
           )}

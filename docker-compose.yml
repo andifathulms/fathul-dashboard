@@ -15,6 +15,7 @@ services:
       - SQLITE_PATH=/data/db.sqlite3
       - MEDIA_ROOT=/data/media
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - FRONTEND_PORT=${FRONTEND_PORT:-3000}
     volumes:
       - backend-data:/data
     restart: unless-stopped

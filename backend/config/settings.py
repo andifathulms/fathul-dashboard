@@ -99,9 +99,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Where the curated ayat JSON lives.
 DATA_DIR = BASE_DIR / 'data'
 
+# Matches whatever host port the frontend container publishes (see .env
+# FRONTEND_PORT / docker-compose.yml) so a port change doesn't silently
+# break the browser's CORS check.
+FRONTEND_PORT = config('FRONTEND_PORT', default='3000')
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    f'http://localhost:{FRONTEND_PORT}',
+    f'http://127.0.0.1:{FRONTEND_PORT}',
 ]
 
 REST_FRAMEWORK = {
