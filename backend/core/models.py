@@ -49,6 +49,13 @@ class Project(models.Model):
 
 
 class Task(models.Model):
+    REPEAT_CHOICES = [
+        ('daily', 'Every day'),
+        ('weekdays', 'Every weekday'),
+        ('weekly', 'Every week'),
+        ('monthly', 'Every month'),
+    ]
+
     title = models.CharField(max_length=500)
     is_done = models.BooleanField(default=False)
     project = models.ForeignKey(
@@ -58,6 +65,22 @@ class Task(models.Model):
     # How many pomodoros this is expected to take. Null = not estimated, which
     # is the normal case — only tasks you plan to sit down with get a number.
     estimate_pomodoros = models.IntegerField(null=True, blank=True)
+    # Blocked on somebody else. Kept apart from is_done because "I am stuck"
+    # and "I am avoiding this" look identical otherwise, and only one of them
+    # is your problem to solve today.
+    is_waiting = models.BooleanField(default=False)
+    waiting_on = models.CharField(max_length=200, blank=True)
+    waiting_since = models.DateField(null=True, blank=True)
+    # Recurrence. An empty `repeat` is a one-off, which is most tasks.
+    repeat = models.CharField(max_length=20, choices=REPEAT_CHOICES, blank=True)
+    repeat_interval = models.IntegerField(default=1)
+    # The task this one was spawned from, so a series can be traced back.
+    repeat_parent = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='repeat_children'
+    )
+    # Stamped when is_done flips true — without it there is no way to ask what
+    # you finished last week. Null on tasks completed before this field existed.
+    completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -65,6 +88,67 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+    def next_due_date(self, from_date):
+        """When the next instance of a repeating task falls due."""
+        import calendar
+        from datetime import timedelta
+
+        step = max(1, self.repeat_interval or 1)
+        if self.repeat == 'daily':
+            return from_date + timedelta(days=step)
+        if self.repeat == 'weekdays':
+            # Step one working day at a time, so Friday rolls to Monday.
+            date = from_date
+            for _ in range(step):
+                date += timedelta(days=1)
+                while date.weekday() >= 5:
+                    date += timedelta(days=1)
+            return date
+        if self.repeat == 'weekly':
+            return from_date + timedelta(weeks=step)
+        if self.repeat == 'monthly':
+            month = from_date.month - 1 + step
+            year = from_date.year + month // 12
+            month = month % 12 + 1
+            # Clamp so the 31st does not fall off the end of a short month.
+            day = min(from_date.day, calendar.monthrange(year, month)[1])
+            return from_date.replace(year=year, month=month, day=day)
+        return None
+
+    def spawn_next(self):
+        """Create the next occurrence of a repeating task, or return None.
+
+        Called when the task is ticked off. Anchors on the due date when there
+        is one so a weekly task keeps its day, and on today when there is not.
+        """
+        from django.utils import timezone
+
+        if not self.repeat:
+            return None
+        anchor = self.due_date or timezone.localdate()
+        due = self.next_due_date(anchor)
+        if due is None:
+            return None
+
+        series = self.repeat_parent or self
+        # Ticking a task twice, or re-opening and re-closing it, must not stack
+        # up duplicates for the same day.
+        exists = Task.objects.filter(
+            due_date=due, is_done=False, title=self.title
+        ).filter(models.Q(repeat_parent=series) | models.Q(pk=series.pk)).exists()
+        if exists:
+            return None
+
+        return Task.objects.create(
+            title=self.title,
+            project=self.project,
+            due_date=due,
+            estimate_pomodoros=self.estimate_pomodoros,
+            repeat=self.repeat,
+            repeat_interval=self.repeat_interval,
+            repeat_parent=series,
+        )
 
 
 class Credential(models.Model):
@@ -298,3 +382,17 @@ class FocusSettings(models.Model):
 
     def __str__(self):
         return 'Focus settings'
+
+
+class WeeklyReview(models.Model):
+    """Your written reflection on a week. The numbers around it are computed
+    from tasks, focus sessions, and daily logs — only the prose is stored."""
+    week_start = models.DateField(unique=True)  # the Monday
+    reflection = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-week_start']
+
+    def __str__(self):
+        return f'Review week of {self.week_start}'

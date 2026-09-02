@@ -12,6 +12,7 @@ from .models import (
     Server,
     Task,
     UptimeCheck,
+    WeeklyReview,
 )
 
 
@@ -24,8 +25,8 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_done', 'project', 'due_date', 'created_at')
-    list_filter = ('is_done', 'project')
+    list_display = ('title', 'is_done', 'is_waiting', 'repeat', 'project', 'due_date', 'completed_at')
+    list_filter = ('is_done', 'is_waiting', 'repeat', 'project')
     search_fields = ('title',)
 
 
@@ -82,3 +83,8 @@ class FocusSessionAdmin(admin.ModelAdmin):
 @admin.register(FocusSettings)
 class FocusSettingsAdmin(admin.ModelAdmin):
     list_display = ('focus_min', 'short_break_min', 'long_break_min', 'daily_target_sessions')
+
+
+@admin.register(WeeklyReview)
+class WeeklyReviewAdmin(admin.ModelAdmin):
+    list_display = ('week_start', 'updated_at')

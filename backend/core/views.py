@@ -21,6 +21,7 @@ from .models import (
     Server,
     Task,
     UptimeCheck,
+    WeeklyReview,
 )
 from .serializers import (
     CommandSerializer,
@@ -34,6 +35,7 @@ from .serializers import (
     ServerSerializer,
     TaskSerializer,
     UptimeCheckSerializer,
+    WeeklyReviewSerializer,
 )
 
 
@@ -218,11 +220,54 @@ class TaskViewSet(viewsets.ModelViewSet):
                 | Q(due_date__lt=agenda, is_done=False)
                 | (Q(due_date__isnull=True) & (Q(created_at__date=agenda) | Q(is_done=False)))
             )
+            # A task blocked on somebody else is not today's work — it lives in
+            # the Waiting bucket instead of nagging from the agenda every day.
+            qs = qs.exclude(is_waiting=True, is_done=False)
         if project:
             qs = qs.filter(project=project)
         if is_done is not None:
             qs = qs.filter(is_done=is_done.lower() == 'true')
+        waiting = self.request.query_params.get('is_waiting')
+        if waiting is not None:
+            qs = qs.filter(is_waiting=waiting.lower() == 'true')
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(title__icontains=search)
         return qs
+
+    def perform_update(self, serializer):
+        """Stamp the lifecycle dates, and roll a repeating task forward.
+
+        Completion time is recorded here rather than in the model's save() so
+        that only a real transition counts — re-saving a task that was already
+        done must not move its completion date.
+        """
+        from django.utils import timezone
+
+        before = self.get_object()
+        was_done, was_waiting = before.is_done, before.is_waiting
+        task = serializer.save()
+
+        fields = []
+        if task.is_done and not was_done:
+            task.completed_at = timezone.now()
+            fields.append('completed_at')
+        elif was_done and not task.is_done:
+            task.completed_at = None
+            fields.append('completed_at')
+
+        if task.is_waiting and not was_waiting:
+            task.waiting_since = timezone.localdate()
+            fields.append('waiting_since')
+        elif was_waiting and not task.is_waiting:
+            task.waiting_since = None
+            fields.append('waiting_since')
+
+        if fields:
+            task.save(update_fields=fields)
+
+        if task.is_done and not was_done:
+            task.spawn_next()
 
 
 class CredentialViewSet(viewsets.ModelViewSet):
@@ -595,3 +640,139 @@ class FocusSessionViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(FocusSettingsSerializer(obj).data)
+
+
+class WeeklyReviewViewSet(viewsets.ModelViewSet):
+    """Your written reflection per week, plus the computed summary beside it."""
+    queryset = WeeklyReview.objects.all()
+    serializer_class = WeeklyReviewSerializer
+
+    @staticmethod
+    def _week_bounds(value):
+        """The Monday and Sunday of the week containing `value` (or today)."""
+        from datetime import date as date_cls
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        if value:
+            anchor = date_cls.fromisoformat(value)
+        else:
+            anchor = timezone.localdate()
+        start = anchor - timedelta(days=anchor.weekday())
+        return start, start + timedelta(days=6)
+
+    def list(self, request, *args, **kwargs):
+        """?week=YYYY-MM-DD → the review for that week, created on first read."""
+        week = request.query_params.get('week')
+        if week is not None:
+            start, _ = self._week_bounds(week)
+            review, _ = WeeklyReview.objects.get_or_create(week_start=start)
+            return Response(self.get_serializer(review).data)
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Everything the week produced, read back out of the existing data.
+
+        Nothing here is stored: it is tasks, focus sessions, and daily logs
+        asked a question they were never asked at week scale.
+        """
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from .models import DailyLog, FocusSession
+
+        start, end = self._week_bounds(request.query_params.get('week'))
+        today = timezone.localdate()
+
+        completed = list(
+            Task.objects.filter(
+                is_done=True, completed_at__date__gte=start, completed_at__date__lte=end
+            ).select_related('project').order_by('completed_at')
+        )
+        created = Task.objects.filter(
+            created_at__date__gte=start, created_at__date__lte=end
+        ).count()
+        # Still open and already due before the week ended — the ones that slid.
+        carried = list(
+            Task.objects.filter(is_done=False, is_waiting=False, due_date__lt=end)
+            .select_related('project').order_by('due_date')[:20]
+        )
+        waiting = list(
+            Task.objects.filter(is_done=False, is_waiting=True)
+            .select_related('project').order_by('waiting_since')
+        )
+        # Open, untouched for three weeks: the quiet backlog worth confronting.
+        stale = list(
+            Task.objects.filter(
+                is_done=False, is_waiting=False, created_at__date__lt=today - timedelta(days=21)
+            ).select_related('project').order_by('created_at')[:10]
+        )
+
+        sessions = FocusSession.objects.filter(
+            kind='focus', ended_at__isnull=False,
+            started_at__date__gte=start, started_at__date__lte=end,
+        ).select_related('project')
+
+        by_project, by_day = {}, {}
+        for i in range(7):
+            day = (start + timedelta(days=i)).isoformat()
+            by_day[day] = {'date': day, 'sec': 0, 'sessions': 0, 'tasks_done': 0}
+        total_sec = done_sessions = 0
+        for s in sessions:
+            local = timezone.localtime(s.started_at)
+            total_sec += s.actual_sec
+            if s.completed:
+                done_sessions += 1
+            bucket = by_day.get(local.date().isoformat())
+            if bucket:
+                bucket['sec'] += s.actual_sec
+                bucket['sessions'] += 1 if s.completed else 0
+            entry = by_project.setdefault(
+                s.project_id,
+                {
+                    'project': s.project_id,
+                    'name': s.project.name if s.project else 'No project',
+                    'category': s.project.category if s.project else None,
+                    'sec': 0,
+                    'sessions': 0,
+                    'tasks_done': 0,
+                },
+            )
+            entry['sec'] += s.actual_sec
+            entry['sessions'] += 1 if s.completed else 0
+
+        for t in completed:
+            if t.completed_at:
+                bucket = by_day.get(timezone.localtime(t.completed_at).date().isoformat())
+                if bucket:
+                    bucket['tasks_done'] += 1
+            if t.project_id in by_project:
+                by_project[t.project_id]['tasks_done'] += 1
+
+        logs = DailyLog.objects.filter(
+            date__gte=start, date__lte=end
+        ).exclude(journal='').order_by('date')
+
+        return Response({
+            'start': start.isoformat(),
+            'end': end.isoformat(),
+            'is_current_week': start <= today <= end,
+            'tasks': {
+                'completed': TaskSerializer(completed, many=True).data,
+                'completed_count': len(completed),
+                'created_count': created,
+                'carried_over': TaskSerializer(carried, many=True).data,
+                'waiting': TaskSerializer(waiting, many=True).data,
+                'stale': TaskSerializer(stale, many=True).data,
+            },
+            'focus': {
+                'total_sec': total_sec,
+                'sessions': done_sessions,
+                'by_project': sorted(by_project.values(), key=lambda x: -x['sec']),
+            },
+            'by_day': list(by_day.values()),
+            'logs': DailyLogSerializer(logs, many=True).data,
+        })

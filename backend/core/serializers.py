@@ -12,6 +12,7 @@ from .models import (
     Server,
     Task,
     UptimeCheck,
+    WeeklyReview,
 )
 
 
@@ -43,8 +44,12 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'is_done', 'project', 'project_name',
-            'due_date', 'estimate_pomodoros', 'pomodoros_done', 'created_at',
+            'due_date', 'estimate_pomodoros', 'pomodoros_done',
+            'is_waiting', 'waiting_on', 'waiting_since',
+            'repeat', 'repeat_interval', 'repeat_parent',
+            'completed_at', 'created_at',
         ]
+        read_only_fields = ['completed_at', 'waiting_since']
 
     def get_pomodoros_done(self, obj):
         return obj.focus_sessions.filter(kind='focus', completed=True).count()
@@ -147,3 +152,9 @@ class FocusSettingsSerializer(serializers.ModelSerializer):
             'auto_start_breaks', 'sound_enabled', 'daily_target_sessions',
             'pause_for_prayer', 'updated_at',
         ]
+
+
+class WeeklyReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeeklyReview
+        fields = ['id', 'week_start', 'reflection', 'updated_at']
