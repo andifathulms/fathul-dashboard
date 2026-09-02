@@ -65,7 +65,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
 
   return (
     <WidgetCard
-      title="Web Status"
+      title="Web status"
       icon={<Activity size={15} />}
       action={
         <div className="flex items-center gap-2.5">
@@ -150,7 +150,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
           {/* Downtime incidents */}
           {data?.incidents && data.incidents.length > 0 && (
             <div>
-              <p className="widget-title mb-1.5">Downtime Incidents</p>
+              <p className="widget-title mb-1.5">Downtime incidents</p>
               <div className="space-y-1">
                 {data.incidents.map((inc, i) => (
                   <div key={i} className="flex items-center gap-2 rounded-lg bg-surface2 px-2.5 py-1.5 text-base">

@@ -244,7 +244,7 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
 
       {commits.length > 0 && (
         <div>
-          <p className="widget-title mb-1.5">Recent Commits (combined)</p>
+          <p className="widget-title mb-1.5">Recent commits (combined)</p>
           <div className="space-y-0.5">
             {commits.map((c) => (
               <a
@@ -265,7 +265,7 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
       )}
 
       <ItemList
-        title="Pull Requests"
+        title="Pull requests"
         icon={<GitPullRequest size={13} />}
         items={repos.flatMap((r) =>
           (r.pull_requests ?? []).map((p) => ({
@@ -373,7 +373,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
 
       {repo.recent_commits && repo.recent_commits.length > 0 && (
         <div>
-          <p className="widget-title mb-1.5">Recent Commits</p>
+          <p className="widget-title mb-1.5">Recent commits</p>
           <div className="space-y-0.5">
             {repo.recent_commits.slice(0, 5).map((c) => (
               <a
@@ -393,7 +393,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
       )}
 
       <ItemList
-        title="Pull Requests"
+        title="Pull requests"
         icon={<GitPullRequest size={13} />}
         items={(repo.pull_requests ?? []).map((p) => ({
           number: p.number,
@@ -469,39 +469,44 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
   })
 
   return (
-    <div className="overflow-x-auto">
-      <div className="inline-flex flex-col gap-1">
-        <div className="flex gap-[2px] pl-0.5 text-xs text-muted">
-          {monthLabels.map((label, i) => (
-            <div key={i} className="w-[9px] shrink-0">
-              {label}
-            </div>
-          ))}
+    <div className="flex flex-col gap-1.5">
+      <div className="overflow-x-auto">
+        <div className="inline-flex flex-col gap-1">
+          <div className="flex gap-[2px] pl-0.5 text-xs text-muted">
+            {monthLabels.map((label, i) => (
+              <div key={i} className="w-[9px] shrink-0">
+                {label}
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-[2px] pl-0.5">
+            {weeks.map((w, wi) => (
+              <div key={wi} className="flex flex-col gap-[2px]">
+                {Array.from({ length: 7 }, (_, di) => {
+                  const count = w.days?.[di] ?? 0
+                  return (
+                    <div
+                      key={di}
+                      className="h-[9px] w-[9px] rounded-[2px]"
+                      style={{ backgroundColor: LEVELS[bucket(count)] }}
+                      title={`${count} ${count === 1 ? 'commit' : 'commits'} · ${cellDate(w.week, di)}`}
+                    />
+                  )
+                })}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-[2px] pl-0.5">
-          {weeks.map((w, wi) => (
-            <div key={wi} className="flex flex-col gap-[2px]">
-              {Array.from({ length: 7 }, (_, di) => {
-                const count = w.days?.[di] ?? 0
-                return (
-                  <div
-                    key={di}
-                    className="h-[9px] w-[9px] rounded-[2px]"
-                    style={{ backgroundColor: LEVELS[bucket(count)] }}
-                    title={`${count} commit · ${cellDate(w.week, di)}`}
-                  />
-                )
-              })}
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-end gap-1 pt-0.5 text-xs text-muted">
-          <span>Less</span>
-          {LEVELS.map((c, i) => (
-            <div key={i} className="h-[9px] w-[9px] rounded-[2px]" style={{ backgroundColor: c }} />
-          ))}
-          <span>More</span>
-        </div>
+      </div>
+
+      {/* Outside the scroller — the legend has to stay on screen even when a
+          full year of weeks is wider than the card. */}
+      <div className="flex items-center justify-end gap-1 text-xs text-muted">
+        <span>Less</span>
+        {LEVELS.map((c, i) => (
+          <div key={i} className="h-[9px] w-[9px] rounded-[2px]" style={{ backgroundColor: c }} />
+        ))}
+        <span>More</span>
       </div>
     </div>
   )

@@ -58,7 +58,8 @@ export default function ProjectsWidget() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-medium">{p.name}</p>
             <p className="text-sm text-muted tnum">
-              {p.tasks_count} tasks · {p.credentials_count} credentials
+              {p.tasks_count} {p.tasks_count === 1 ? 'task' : 'tasks'} · {p.credentials_count}{' '}
+              {p.credentials_count === 1 ? 'credential' : 'credentials'}
             </p>
           </div>
           <CategoryBadge category={p.category} />

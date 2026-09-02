@@ -218,8 +218,7 @@ export default function ProjectsPage() {
               {p.description && (
                 <p className="mt-1.5 line-clamp-2 text-base text-muted">{p.description}</p>
               )}
-              <div className="mt-auto pt-2.5" />
-              <div className="flex items-center gap-2">
+              <div className="mt-2.5 flex items-center gap-2">
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                   <PriorityToggle project={p} onChanged={mutate} />
                   <CategoryBadge category={p.category} />
@@ -236,7 +235,7 @@ export default function ProjectsPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
+              <div className="mt-auto flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
                 <span className="inline-flex items-center gap-1" title="Tasks">
                   <CheckSquare size={12} /> {p.tasks_count}
                 </span>

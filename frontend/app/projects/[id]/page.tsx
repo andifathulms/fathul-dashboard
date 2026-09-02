@@ -37,6 +37,7 @@ import Skeleton from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import { sshUrl } from '@/lib/ssh'
+import { cn } from '@/lib/utils'
 import type { Command, Credential, EnvVar, Project, Server, Task } from '@/lib/types'
 
 export default function ProjectDetailPage() {
@@ -180,7 +181,7 @@ export default function ProjectDetailPage() {
 
       {/* VM / Host access — SSH + password from the linked VM(s) */}
       {vms && vms.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className={cn('grid grid-cols-1 gap-4', vms.length > 1 && 'lg:grid-cols-2')}>
           {vms.map((vm) => (
             <WidgetCard
               key={vm.id}
