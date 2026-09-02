@@ -7,6 +7,7 @@ import {
   KeyRound,
   TerminalSquare,
   Timer,
+  CalendarRange,
   Server,
   NotebookPen,
   Moon,
@@ -33,6 +34,7 @@ const GROUPS = [
       { href: '/projects', label: 'Projects', icon: FolderKanban },
       { href: '/tasks', label: 'Tasks', icon: CheckSquare },
       { href: '/focus', label: 'Focus', icon: Timer },
+      { href: '/review', label: 'Review', icon: CalendarRange },
     ],
   },
   {
