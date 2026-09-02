@@ -22,7 +22,9 @@ Three rules hold the whole thing together:
 3. **Colour means state, not decoration.** Moss = good, amber = attention,
    rust = broken, cobalt = interactive. A colour never appears for flavour.
 
-Dark theme is a token swap of the same system, not a second design.
+Dark theme is a token swap of the same system, not a second design. Its
+neutrals stay **warm** — the paper hue dropped in lightness, not slate grey — so
+rule 1 still holds and cobalt remains the only cold thing on screen.
 
 ---
 
@@ -37,20 +39,20 @@ in a component.** Use the token classes. That is the only reason both themes wor
 
 | Token          | Light     | Dark      | Use                                            |
 | -------------- | --------- | --------- | ---------------------------------------------- |
-| `bg`           | `#F4F1E9` | `#12151B` | Page ground. Warm paper.                        |
-| `surface`      | `#FFFFFF` | `#191D25` | Cards, sidebar, top bar, modals.                |
-| `surface2`     | `#EDE9DE` | `#232833` | Sunken wells, hover fills, inset code, tracks.  |
-| `border`       | `#E2DCCD` | `#2A303B` | Default hairline.                               |
-| `borderStrong` | `#CFC7B4` | `#3A424F` | Emphasis: focused fields, active chips.         |
-| `text`         | `#16202E` | `#EDEAE1` | Primary ink.                                    |
-| `text2`        | `#40495A` | `#C2C6CE` | Secondary body copy — still fully readable.     |
-| `muted`        | `#6F6A61` | `#8B8F98` | Labels, metadata, placeholders. AA at 14px+.    |
-| `accent1`      | `#1F4FD8` | `#7FA0F5` | **Cobalt.** Links, primary buttons, active nav. |
-| `accent2`      | `#9C5A08` | `#D9A544` | Ochre. Freelance, secondary emphasis.           |
-| `highlight`    | `#17724C` | `#5BBB8C` | Moss. Success, server up, done.                 |
-| `warning`      | `#8A5807` | `#E0B155` | Attention, paused, medium priority.             |
-| `danger`       | `#B23520` | `#E38068` | Rust. Down, destructive, high priority.         |
-| `onAccent`     | `#FFFFFF` | `#0F1218` | Text on a filled accent surface.                |
+| `bg`           | `#F4F1E9` | `#1A1815` | Page ground. Warm paper.                        |
+| `surface`      | `#FFFFFF` | `#211F1B` | Cards, sidebar, top bar, modals.                |
+| `surface2`     | `#EDE9DE` | `#2C2923` | Sunken wells, hover fills, inset code, tracks.  |
+| `border`       | `#E2DCCD` | `#38342D` | Default hairline.                               |
+| `borderStrong` | `#CFC7B4` | `#4A453C` | Emphasis: focused fields, active chips.         |
+| `text`         | `#16202E` | `#F0EDE4` | Primary ink.                                    |
+| `text2`        | `#40495A` | `#C9C4B9` | Secondary body copy — still fully readable.     |
+| `muted`        | `#6F6A61` | `#969085` | Labels, metadata, placeholders. AA at 14px+.    |
+| `accent1`      | `#1F4FD8` | `#8AA9F7` | **Cobalt.** Links, primary buttons, active nav. |
+| `accent2`      | `#9C5A08` | `#E0AA5C` | Ochre. Freelance, secondary emphasis.           |
+| `highlight`    | `#17724C` | `#5FBE8F` | Moss. Success, server up, done.                 |
+| `warning`      | `#8A5807` | `#E3B45E` | Attention, paused, medium priority.             |
+| `danger`       | `#B23520` | `#E88068` | Rust. Down, destructive, high priority.         |
+| `onAccent`     | `#FFFFFF` | `#14120F` | Text on a filled accent surface.                |
 
 **Semantic pairs.** A tinted chip is always `bg-X/10 text-X ring-1 ring-inset
 ring-X/25` in light. Never fill a chip at full saturation except for the single
@@ -118,8 +120,12 @@ inputs · `rounded-xl` (12px) cards · `rounded-2xl` (16px) the Today band and
 modals. Nothing else.
 
 Shadows are soft and warm-black, never a glow. `shadow-card` is a 1px contact
-shadow plus a wide, faint diffusion; `shadow-lift` doubles the diffusion. In
-dark theme the same tokens deepen rather than change shape.
+shadow plus a wide, faint diffusion; `shadow-lift` doubles the diffusion.
+
+**Elevation changes medium in dark.** A black shadow on a near-black ground is
+invisible, so `.dark .card-lift` raises the *surface* (`surface2`) and
+strengthens the border instead of leaning on the shadow. The same reason the
+scrim goes heavier in dark: separation has to come from value, not shade.
 
 ---
 

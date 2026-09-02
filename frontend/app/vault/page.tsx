@@ -162,6 +162,7 @@ export default function VaultPage() {
                   </div>
                 </div>
 
+                {(project || c.url) && (
                 <div className="mt-3 flex items-center justify-between">
                   {project ? <CategoryBadge category={project.category} /> : <span />}
                   {c.url && (
@@ -175,6 +176,7 @@ export default function VaultPage() {
                     </a>
                   )}
                 </div>
+                )}
               </div>
             )
           })}

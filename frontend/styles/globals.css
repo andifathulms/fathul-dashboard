@@ -27,21 +27,23 @@
 }
 
 .dark {
-  /* Dark — the same system, swapped. */
-  --bg: 18 21 27;
-  --surface: 25 29 37;
-  --surface-2: 35 40 51;
-  --border: 42 48 59;
-  --border-strong: 58 66 79;
-  --text: 237 234 225;
-  --text-2: 194 198 206;
-  --muted: 139 143 152;
-  --accent1: 127 160 245;
-  --accent2: 217 165 68;
-  --highlight: 91 187 140;
-  --warning: 224 177 85;
-  --danger: 227 128 104;
-  --on-accent: 15 18 24;
+  /* Dark — the same system, swapped. The neutrals stay warm (the paper hue,
+     dropped in lightness) so cobalt is still the only cold thing on screen;
+     a slate-grey dark would have made this a second, unrelated design. */
+  --bg: 26 24 21;
+  --surface: 33 31 27;
+  --surface-2: 44 41 35;
+  --border: 56 52 45;
+  --border-strong: 74 69 60;
+  --text: 240 237 228;
+  --text-2: 201 196 185;
+  --muted: 150 144 133;
+  --accent1: 138 169 247;
+  --accent2: 224 170 92;
+  --highlight: 95 190 143;
+  --warning: 227 180 94;
+  --danger: 232 128 104;
+  --on-accent: 20 18 15;
   --shadow: 0 0 0;
   color-scheme: dark;
 }
@@ -118,6 +120,10 @@ h3 {
   }
   .card-lift {
     @apply rounded-xl border border-border bg-surface shadow-lift;
+  }
+  .dark .card-lift {
+    background: rgb(var(--surface-2));
+    border-color: rgb(var(--border-strong));
   }
   .card-hover {
     @apply transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-px hover:border-borderStrong hover:shadow-lift;
@@ -202,6 +208,9 @@ h3 {
   .scrim {
     background: rgb(var(--shadow) / 0.35);
     backdrop-filter: blur(3px);
+  }
+  .dark .scrim {
+    background: rgb(var(--shadow) / 0.62);
   }
 
   /* ── Skeletons ───────────────────────────────────────────── */
