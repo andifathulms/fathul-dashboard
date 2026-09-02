@@ -63,6 +63,31 @@ export const PRIORITY_STYLES: Record<
   low: { label: 'Low', chip: 'bg-muted/10 text-muted ring-1 ring-inset ring-muted/30', dot: 'bg-muted', rank: 2 },
 }
 
+// Recurrence, phrased the way you would say it out loud.
+export const REPEAT_LABELS: Record<string, string> = {
+  daily: 'Every day',
+  weekdays: 'Every weekday',
+  weekly: 'Every week',
+  monthly: 'Every month',
+}
+
+/** "Every 2 weeks" when the interval is more than one. */
+export function repeatLabel(repeat: string, interval: number): string {
+  if (!repeat) return ''
+  if (interval > 1) {
+    const unit = { daily: 'days', weekdays: 'weekdays', weekly: 'weeks', monthly: 'months' }[repeat]
+    return `Every ${interval} ${unit}`
+  }
+  return REPEAT_LABELS[repeat] ?? ''
+}
+
+/** Whole days between an ISO date and today — "waiting 6 days". */
+export function daysSince(iso: string): number {
+  const then = new Date(`${iso}T00:00:00`).getTime()
+  const now = new Date(todayISO() + 'T00:00:00').getTime()
+  return Math.max(0, Math.round((now - then) / 86_400_000))
+}
+
 export const STATUS_RANK: Record<ProjectStatus, number> = {
   active: 0,
   paused: 1,

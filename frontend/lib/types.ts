@@ -40,8 +40,17 @@ export interface Task {
   due_date: string | null
   estimate_pomodoros: number | null
   pomodoros_done: number
+  is_waiting: boolean
+  waiting_on: string
+  waiting_since: string | null
+  repeat: TaskRepeat
+  repeat_interval: number
+  repeat_parent: number | null
+  completed_at: string | null
   created_at: string
 }
+
+export type TaskRepeat = '' | 'daily' | 'weekdays' | 'weekly' | 'monthly'
 
 export interface Credential {
   id: number
@@ -315,4 +324,43 @@ export interface FocusStats {
   today_sec: number
   today_sessions: number
   target: number
+}
+
+export interface WeeklyReview {
+  id: number
+  week_start: string
+  reflection: string
+  updated_at: string
+}
+
+export interface ReviewDay {
+  date: string
+  sec: number
+  sessions: number
+  tasks_done: number
+}
+
+export interface ReviewProjectStat extends FocusProjectStat {
+  tasks_done: number
+}
+
+export interface ReviewSummary {
+  start: string
+  end: string
+  is_current_week: boolean
+  tasks: {
+    completed: Task[]
+    completed_count: number
+    created_count: number
+    carried_over: Task[]
+    waiting: Task[]
+    stale: Task[]
+  }
+  focus: {
+    total_sec: number
+    sessions: number
+    by_project: ReviewProjectStat[]
+  }
+  by_day: ReviewDay[]
+  logs: DailyLog[]
 }

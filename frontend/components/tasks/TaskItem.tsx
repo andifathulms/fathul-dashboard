@@ -1,12 +1,14 @@
 'use client'
 
-import { Play, Timer, Trash2 } from 'lucide-react'
+import { PauseCircle, Play, Repeat, Timer, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 import { useFocus } from '@/components/focus/FocusProvider'
+import Modal from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
-import { CATEGORY_STYLES, cn, formatDateShort } from '@/lib/utils'
+import { CATEGORY_STYLES, cn, daysSince, formatDateShort, repeatLabel } from '@/lib/utils'
 
 interface TaskItemProps {
   task: Task
@@ -31,6 +33,8 @@ export default function TaskItem({
   const project = projects?.find((p) => p.id === task.project)
   const toast = useToast()
   const { start, session } = useFocus()
+  const [waitingOpen, setWaitingOpen] = useState(false)
+  const [waitingOn, setWaitingOn] = useState('')
 
   const toggle = async () => {
     try {
@@ -58,6 +62,19 @@ export default function TaskItem({
       onChange()
     } catch (e) {
       toast.error((e as Error).message, "Couldn't set the estimate")
+    }
+  }
+
+  // Turning waiting ON asks what you are waiting for; turning it off is one
+  // click, because by then you already know.
+  const setWaiting = async (on: boolean, who = '') => {
+    try {
+      await api.patch(`/tasks/${task.id}/`, { is_waiting: on, waiting_on: on ? who : '' })
+      setWaitingOpen(false)
+      setWaitingOn('')
+      onChange()
+    } catch (e) {
+      toast.error((e as Error).message, "Couldn't update the task")
     }
   }
 
@@ -90,9 +107,33 @@ export default function TaskItem({
         )}
       </button>
 
-      <span className={cn('min-w-0 flex-1 text-base', task.is_done && 'text-muted line-through')}>
-        {task.title}
+      <span className={cn('flex min-w-0 flex-1 items-center gap-1.5 text-base', task.is_done && 'text-muted line-through')}>
+        <span className="truncate">{task.title}</span>
+        {task.repeat && (
+          <Repeat
+            size={12}
+            className="shrink-0 text-muted"
+            aria-label={repeatLabel(task.repeat, task.repeat_interval)}
+          />
+        )}
       </span>
+
+      {task.is_waiting && !task.is_done && (
+        <span
+          className="chip shrink-0 gap-1 bg-warning/10 text-warning ring-1 ring-inset ring-warning/25"
+          title={
+            task.waiting_since
+              ? `Waiting ${daysSince(task.waiting_since)} days`
+              : 'Waiting on someone else'
+          }
+        >
+          <PauseCircle size={11} />
+          {task.waiting_on || 'Waiting'}
+          {task.waiting_since && (
+            <span className="tnum opacity-70">· {daysSince(task.waiting_since)}d</span>
+          )}
+        </span>
+      )}
 
       {/* Pomodoro progress. Present once there is an estimate or any time
           logged — an untouched task stays as quiet as it was before. */}
@@ -131,7 +172,22 @@ export default function TaskItem({
         </span>
       )}
 
-      {showFocus && !task.is_done && session?.task !== task.id && (
+      {!task.is_done && (
+        <button
+          type="button"
+          onClick={() => (task.is_waiting ? setWaiting(false) : setWaitingOpen(true))}
+          aria-label={task.is_waiting ? 'No longer waiting' : 'Mark as waiting on someone'}
+          title={task.is_waiting ? 'No longer waiting' : 'Waiting on someone else'}
+          className={cn(
+            'icon-btn h-7 w-7 shrink-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100',
+            task.is_waiting ? 'text-warning opacity-100' : 'opacity-0 hover:text-warning'
+          )}
+        >
+          <PauseCircle size={14} />
+        </button>
+      )}
+
+      {showFocus && !task.is_done && !task.is_waiting && session?.task !== task.id && (
         <button
           type="button"
           onClick={focusOn}
@@ -154,6 +210,32 @@ export default function TaskItem({
           <Trash2 size={14} />
         </button>
       )}
+
+      <Modal
+        open={waitingOpen}
+        onClose={() => setWaitingOpen(false)}
+        title="Waiting on what?"
+        subtitle="It drops out of your daily agenda until you unblock it."
+        footer={
+          <>
+            <button className="btn" onClick={() => void setWaiting(true)}>
+              Just mark it waiting
+            </button>
+            <button className="btn-accent" onClick={() => void setWaiting(true, waitingOn.trim())}>
+              Save
+            </button>
+          </>
+        }
+      >
+        <input
+          className="input"
+          autoFocus
+          placeholder="Client reply, Pak Budi, invoice approval…"
+          value={waitingOn}
+          onChange={(e) => setWaitingOn(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && setWaiting(true, waitingOn.trim())}
+        />
+      </Modal>
     </div>
   )
 }
