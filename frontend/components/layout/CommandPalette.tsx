@@ -6,6 +6,8 @@ import {
   CheckSquare,
   Timer,
   CalendarRange,
+  CheckCircle2,
+  Plus,
   Moon,
   KeyRound,
   TerminalSquare,
@@ -17,11 +19,21 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { mutate as globalMutate } from 'swr'
 
 import { useToast } from '@/components/ui/Toast'
-import type { Command, Project } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import api from '@/lib/api'
+import type { Command, DailyLog, Project, Task } from '@/lib/types'
+import { cn, formatDateShort } from '@/lib/utils'
+
+/** Pull the matching line out of a journal entry, so the result shows the
+ *  sentence you searched for rather than the first line of that day. */
+function snippet(text: string, needle: string): string {
+  const at = text.toLowerCase().indexOf(needle.toLowerCase())
+  if (at < 0) return text.slice(0, 90)
+  const from = Math.max(0, at - 30)
+  return `${from > 0 ? '…' : ''}${text.slice(from, from + 90).trim()}`
+}
 
 const NAV = [
   { href: '/', label: 'Dashboard', icon: Home },
@@ -57,6 +69,8 @@ export default function CommandPalette() {
   // Only fetch the searchable data while the palette is open.
   const { data: projects } = useSWR<Project[]>(open ? '/projects/' : null)
   const { data: commands } = useSWR<Command[]>(open ? '/commands/' : null)
+  const { data: tasks } = useSWR<Task[]>(open ? '/tasks/?is_done=false' : null)
+  const { data: logs } = useSWR<DailyLog[]>(open ? '/logs/' : null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -116,16 +130,65 @@ export default function CommandPalette() {
         }
       },
     }))
-    return [...nav, ...proj, ...cmds]
-  }, [projects, commands, router, toast])
+    const taskItems: Item[] = (tasks ?? []).map((t) => ({
+      id: `task:${t.id}`,
+      label: t.title,
+      hint: t.project_name ?? (t.due_date ? formatDateShort(t.due_date) : 'No project'),
+      group: 'Tasks',
+      icon: CheckSquare,
+      run: () => router.push(t.project ? `/projects/${t.project}` : '/tasks'),
+    }))
+    return [...nav, ...proj, ...cmds, ...taskItems]
+  }, [projects, commands, tasks, router, toast])
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!s) return items
-    return items.filter(
+    const matches = items.filter(
       (i) => i.label.toLowerCase().includes(s) || i.hint?.toLowerCase().includes(s)
     )
-  }, [items, q])
+
+    // The journal is searched only once you type — it is the slowest thing to
+    // scan and the least likely thing you want with an empty query.
+    const journal: Item[] = (logs ?? [])
+      .filter((l) => l.journal.toLowerCase().includes(s))
+      .slice(0, 6)
+      .map((l) => ({
+        id: `log:${l.id}`,
+        label: formatDateShort(l.date),
+        hint: snippet(l.journal, s),
+        group: 'Daily log',
+        icon: NotebookPen,
+        run: () => router.push(`/log?date=${l.date}`),
+      }))
+
+    return [...matches, ...journal]
+  }, [items, q, logs, router])
+
+  // Quick capture: whatever you typed can always become a task. It sits last
+  // so it never steals Enter from a real match — and first by default when
+  // nothing matched, which is exactly when you meant to capture something.
+  const results = useMemo(() => {
+    const title = q.trim()
+    if (!title) return filtered
+    const capture: Item = {
+      id: 'capture',
+      label: `Add task “${title}”`,
+      hint: 'Captured with no due date',
+      group: 'Capture',
+      icon: Plus,
+      run: async () => {
+        try {
+          await api.post('/tasks/', { title, project: null, due_date: null })
+          await globalMutate((key) => typeof key === 'string' && key.startsWith('/tasks'))
+          toast.success(title, 'Task added')
+        } catch (e) {
+          toast.error((e as Error).message, "Couldn't add the task")
+        }
+      },
+    }
+    return [...filtered, capture]
+  }, [filtered, q, toast])
 
   useEffect(() => setActive(0), [q])
 
@@ -144,13 +207,13 @@ export default function CommandPalette() {
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActive((a) => Math.min(a + 1, filtered.length - 1))
+      setActive((a) => Math.min(a + 1, results.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActive((a) => Math.max(a - 1, 0))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      run(filtered[active])
+      run(results[active])
     }
   }
 
@@ -174,7 +237,7 @@ export default function CommandPalette() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search pages, projects, commands…"
+            placeholder="Search anything, or type to capture a task…"
             className="w-full bg-transparent py-3.5 text-md text-text outline-none placeholder:text-muted"
           />
           <kbd className="hidden shrink-0 rounded border border-border bg-surface2 px-1.5 py-0.5 font-mono text-xs text-muted sm:block">
@@ -183,12 +246,12 @@ export default function CommandPalette() {
         </div>
 
         <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
-          {filtered.length === 0 && (
+          {results.length === 0 && (
             <p className="px-3 py-10 text-center text-base text-muted">
               Nothing matches “{q}”.
             </p>
           )}
-          {filtered.map((it, idx) => {
+          {results.map((it, idx) => {
             const header = it.group !== lastGroup ? it.group : null
             lastGroup = it.group
             const Icon = it.icon

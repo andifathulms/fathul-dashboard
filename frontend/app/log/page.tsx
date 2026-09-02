@@ -21,6 +21,12 @@ function shiftDate(iso: string, days: number): string {
 export default function LogPage() {
   const today = todayISO()
   const [date, setDate] = useState(today)
+
+  // ?date=YYYY-MM-DD opens straight onto that day (journal search links here).
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('date')
+    if (wanted && /^\d{4}-\d{2}-\d{2}$/.test(wanted)) setDate(wanted)
+  }, [])
   const isToday = date === today
   const isPast = date < today
 
