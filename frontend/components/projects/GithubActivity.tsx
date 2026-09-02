@@ -19,12 +19,25 @@ import api from '@/lib/api'
 import type { GithubData, GithubRepo, GithubWeek, GithubWorkflowRun } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-// Sequential single-hue ramp (empty → bright green), monotonic in lightness on
-// the dark surface — GitHub's own contribution scale.
-const LEVELS = ['#1b2129', '#0e4429', '#006d32', '#26a641', '#39d353']
+// Sequential single-hue ramp (empty → densest), monotonic in lightness against
+// the paper ground. The empty cell is a token so it flips with the theme.
+const LEVELS = [
+  'rgb(var(--surface-2))',
+  'rgb(var(--highlight) / 0.22)',
+  'rgb(var(--highlight) / 0.45)',
+  'rgb(var(--highlight) / 0.72)',
+  'rgb(var(--highlight))',
+]
 
-// Small fixed categorical palette for the language bar (distinct hues, labeled).
-const LANG_COLORS = ['#38BDF8', '#FBBF24', '#34D399', '#A78BFA', '#F472B6', '#8A94A6']
+// Categorical palette for the language bar — five distinct hues, all labeled.
+const LANG_COLORS = [
+  'rgb(var(--accent1))',
+  'rgb(var(--accent2))',
+  'rgb(var(--highlight))',
+  'rgb(var(--danger))',
+  'rgb(var(--text-2))',
+  'rgb(var(--muted))',
+]
 
 function bucket(count: number): number {
   if (count <= 0) return 0

@@ -46,9 +46,9 @@ in a component.** Use the token classes. That is the only reason both themes wor
 | `text2`        | `#40495A` | `#C2C6CE` | Secondary body copy — still fully readable.     |
 | `muted`        | `#6F6A61` | `#8B8F98` | Labels, metadata, placeholders. AA at 14px+.    |
 | `accent1`      | `#1F4FD8` | `#7FA0F5` | **Cobalt.** Links, primary buttons, active nav. |
-| `accent2`      | `#B4690E` | `#D9A544` | Ochre. Freelance, secondary emphasis.           |
+| `accent2`      | `#9C5A08` | `#D9A544` | Ochre. Freelance, secondary emphasis.           |
 | `highlight`    | `#17724C` | `#5BBB8C` | Moss. Success, server up, done.                 |
-| `warning`      | `#9A6208` | `#E0B155` | Attention, paused, medium priority.             |
+| `warning`      | `#8A5807` | `#E0B155` | Attention, paused, medium priority.             |
 | `danger`       | `#B23520` | `#E38068` | Rust. Down, destructive, high priority.         |
 | `onAccent`     | `#FFFFFF` | `#0F1218` | Text on a filled accent surface.                |
 

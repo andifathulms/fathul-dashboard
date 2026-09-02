@@ -39,7 +39,7 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
 
   return (
     <div>
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
+      <span className="field-label">{label}</span>
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -56,11 +56,11 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
           ) : (
             <ImagePlus size={16} className="text-muted" />
           )}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="absolute inset-0 flex items-center justify-center bg-[rgb(var(--shadow)/0.55)] opacity-0 transition-opacity group-hover:opacity-100">
             {uploading ? <Loader2 size={14} className="animate-spin text-white" /> : <ImagePlus size={14} className="text-white" />}
           </span>
           {uploading && (
-            <span className="absolute inset-0 flex items-center justify-center bg-black/45">
+            <span className="absolute inset-0 flex items-center justify-center bg-[rgb(var(--shadow)/0.55)]">
               <Loader2 size={14} className="animate-spin text-white" />
             </span>
           )}

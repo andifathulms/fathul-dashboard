@@ -17,9 +17,9 @@
   --text-2: 64 73 90;
   --muted: 111 106 97;
   --accent1: 31 79 216;
-  --accent2: 180 105 14;
+  --accent2: 156 90 8;
   --highlight: 23 114 76;
-  --warning: 154 98 8;
+  --warning: 138 88 7;
   --danger: 178 53 32;
   --on-accent: 255 255 255;
   --shadow: 22 32 46;
@@ -170,7 +170,7 @@ h3 {
 
   /* ── Chips & wells ───────────────────────────────────────── */
   .chip {
-    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-sm font-semibold;
   }
   .well {
     @apply rounded-lg border border-border bg-surface2 px-3 py-2;

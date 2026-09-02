@@ -110,7 +110,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
               size={46}
               className="rounded-xl"
             />
-            <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-[rgb(var(--shadow)/0.55)] opacity-0 transition-opacity group-hover:opacity-100">
               {uploading ? (
                 <Loader2 size={16} className="animate-spin text-white" />
               ) : (
@@ -118,7 +118,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
               )}
             </span>
             {uploading && (
-              <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/45">
+              <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-[rgb(var(--shadow)/0.55)]">
                 <Loader2 size={16} className="animate-spin text-white" />
               </span>
             )}

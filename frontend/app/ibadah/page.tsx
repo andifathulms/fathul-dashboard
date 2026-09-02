@@ -509,17 +509,19 @@ function Dash() {
 
 // ---- Timeline ----
 
+// Segment colors come from the theme tokens so the timeline holds up in both
+// themes — no fixed hexes on a surface that changes underneath them.
 const SEG_COLORS: Record<string, string> = {
-  Subuh: '#38BDF8',
-  Dzuhur: '#FBBF24',
-  Ashar: '#34D399',
-  Maghrib: '#A78BFA',
-  Isya: '#818CF8',
+  Subuh: 'rgb(var(--accent1))',
+  Dzuhur: 'rgb(var(--warning))',
+  Ashar: 'rgb(var(--highlight))',
+  Maghrib: 'rgb(var(--accent2))',
+  Isya: 'rgb(var(--text-2))',
 }
 
-// Diagonal red hatch for forbidden (haram) prayer windows.
+// Diagonal hatch for the forbidden (haram) prayer windows.
 const HATCH =
-  'repeating-linear-gradient(45deg, rgba(239,68,68,0.55) 0, rgba(239,68,68,0.55) 2px, transparent 2px, transparent 5px)'
+  'repeating-linear-gradient(45deg, rgb(var(--danger) / 0.5) 0, rgb(var(--danger) / 0.5) 2px, transparent 2px, transparent 5px)'
 
 function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | null }) {
   const fajr = minutes(timings.Fajr)
@@ -533,7 +535,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
   const segments = [
     { label: 'Isya', start: 0, end: fajr, color: SEG_COLORS.Isya, faded: true },
     { label: 'Subuh', start: fajr, end: sunrise, color: SEG_COLORS.Subuh },
-    { label: 'Dhuha', start: sunrise + 15, end: dhuhr - 6, color: '#eab308', faded: true },
+    { label: 'Dhuha', start: sunrise + 15, end: dhuhr - 6, color: 'rgb(var(--warning))', faded: true },
     { label: 'Dzuhur', start: dhuhr, end: asr, color: SEG_COLORS.Dzuhur },
     { label: 'Ashar', start: asr, end: maghrib, color: SEG_COLORS.Ashar },
     { label: 'Maghrib', start: maghrib, end: isha, color: SEG_COLORS.Maghrib },
@@ -605,7 +607,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
       <div className="relative mt-3 h-10">
         {ticks.map((t) => (
           <div key={t.label} className="absolute -translate-x-1/2 text-center" style={{ left: pct(t.min) }}>
-            <div className="mx-auto h-2 w-[2px]" style={{ backgroundColor: SEG_COLORS[t.label] ?? '#8B949E' }} />
+            <div className="mx-auto h-2 w-[2px]" style={{ backgroundColor: SEG_COLORS[t.label] ?? 'rgb(var(--muted))' }} />
             <p className="mt-0.5 text-sm font-medium text-muted">{enName(t.label)}</p>
             <p className="font-mono text-sm text-text tnum">{timings[tickKey(t.label)]}</p>
           </div>

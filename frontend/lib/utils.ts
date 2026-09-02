@@ -70,18 +70,29 @@ export const STATUS_RANK: Record<ProjectStatus, number> = {
   archived: 3,
 }
 
-export function formatDateID(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+// Dates are formatted from fixed tables rather than toLocaleDateString: Node's
+// ICU and the browser disagree on the en-GB short month ("Sept" vs "Sep",
+// comma or none), and that mismatch fails hydration for the whole tree.
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+function asDate(date: Date | string): Date {
+  if (typeof date !== 'string') return date
+  // A bare YYYY-MM-DD parses as UTC — pin it to local midnight instead.
+  return new Date(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T00:00:00` : date)
 }
 
-/** Compact date for rows and metadata: "Mon, 2 Sep". */
+/** Full date for page headers: "Wednesday, 2 September 2026". */
+export function formatDateID(date: Date | string): string {
+  const d = asDate(date)
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+/** Compact date for rows and metadata: "Wed, 2 Sep". */
 export function formatDateShort(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const d = asDate(date)
+  return `${WEEKDAYS[d.getDay()].slice(0, 3)}, ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`
 }

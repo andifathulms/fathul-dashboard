@@ -29,7 +29,7 @@ export default function ProjectsWidget() {
 
   return (
     <WidgetCard
-      title="Active Projects"
+      title="Active projects"
       icon={<FolderKanban size={15} />}
       action={
         <Link href="/projects" className="text-sm font-medium text-accent1 hover:underline">

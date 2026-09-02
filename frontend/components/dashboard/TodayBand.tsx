@@ -8,7 +8,7 @@ import { useServers } from '@/hooks/useServers'
 import { usePrayer } from '@/hooks/usePrayer'
 import { PRAYER_SEQUENCE, formatCountdown } from '@/lib/prayer'
 import type { Project, Task } from '@/lib/types'
-import { cn, todayISO } from '@/lib/utils'
+import { cn, formatDateID, todayISO } from '@/lib/utils'
 
 function greeting(hour: number) {
   if (hour < 4) return 'Still up'
@@ -62,22 +62,22 @@ export default function TodayBand() {
           <Stat
             href="/tasks"
             icon={<CheckSquare size={14} />}
-            label="Tasks today"
+            label="Tasks"
             value={total ? `${done}/${total}` : '—'}
-            foot={total ? `${pct}% done` : 'nothing due'}
+            foot={total ? `${pct}% done` : 'nothing due today'}
             bar={total ? pct : null}
           />
           <Stat
             href="/projects"
             icon={<FolderKanban size={14} />}
-            label="Active projects"
+            label="Projects"
             value={projects ? String(projects.length) : '—'}
-            foot="in flight"
+            foot="active"
           />
           <Stat
             href="/servers"
             icon={<Server size={14} />}
-            label="VMs up"
+            label="VMs"
             value={servers ? `${up}/${servers.length}` : '—'}
             foot={servers && up === servers.length ? 'all reachable' : 'check status'}
           />
@@ -135,7 +135,7 @@ function Stat({ href, icon, label, value, foot, bar }: StatProps) {
       href={href}
       className="min-w-[126px] flex-1 rounded-xl border border-border bg-surface2/60 px-3 py-2.5 transition-colors hover:border-borderStrong hover:bg-surface2"
     >
-      <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+      <span className="flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold uppercase tracking-[0.06em] text-muted">
         {icon}
         {label}
       </span>
