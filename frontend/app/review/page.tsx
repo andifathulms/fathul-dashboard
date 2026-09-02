@@ -93,6 +93,8 @@ export default function ReviewPage() {
 
   const maxSec = Math.max(1, ...data.by_day.map((d) => d.sec))
   const daysWorked = data.by_day.filter((d) => d.sec > 0 || d.tasks_done > 0).length
+  // Monday-based count of days that have actually happened in this week.
+  const elapsed = data.is_current_week ? ((new Date().getDay() + 6) % 7) + 1 : 7
   const quiet =
     data.tasks.completed_count === 0 && data.focus.total_sec === 0 && data.logs.length === 0
 
@@ -156,8 +158,12 @@ export default function ReviewPage() {
             <Tile
               icon={<CalendarRange size={14} />}
               label="Days worked"
-              value={`${daysWorked}/7`}
-              hint={daysWorked >= 5 ? 'a full week' : 'the rest were quiet'}
+              value={`${daysWorked}/${elapsed}`}
+              hint={
+                daysWorked >= elapsed
+                  ? 'every day so far'
+                  : `${elapsed - daysWorked} quiet ${elapsed - daysWorked > 1 ? 'days' : 'day'}`
+              }
             />
             <Tile
               icon={<PauseCircle size={14} />}
@@ -198,7 +204,7 @@ export default function ReviewPage() {
             </div>
           </WidgetCard>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
             <WidgetCard
               title={`Finished (${data.tasks.completed_count})`}
               icon={<CheckSquare size={16} />}
@@ -257,7 +263,7 @@ export default function ReviewPage() {
             </WidgetCard>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
             <WidgetCard
               title={`Didn’t happen (${data.tasks.carried_over.length})`}
               icon={<Clock size={16} />}

@@ -84,7 +84,11 @@ export default function DayPlan() {
         icon={<Target size={14} />}
         label="On the list"
         value={`${open.length}`}
-        foot={estimated > 0 ? `${remainingOnEstimated} pomodoros left` : 'not sized'}
+        foot={
+          estimated > 0
+            ? `${remainingOnEstimated} pomodoros left${unestimated > 0 ? ` · ${unestimated} unsized` : ''}`
+            : 'none sized yet'
+        }
         href="/tasks"
       />
       <Metric
@@ -97,7 +101,7 @@ export default function DayPlan() {
         icon={<Timer size={14} />}
         label="Done today"
         value={`${completedToday}`}
-        foot="sessions"
+        foot={completedToday === 1 ? 'session' : 'sessions'}
         href="/focus"
       />
       {(waiting?.length ?? 0) > 0 && (
