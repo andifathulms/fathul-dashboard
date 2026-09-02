@@ -5,6 +5,8 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    FocusSession,
+    FocusSettings,
     IbadahLog,
     Project,
     Server,
@@ -68,3 +70,15 @@ class IbadahLogAdmin(admin.ModelAdmin):
 class UptimeCheckAdmin(admin.ModelAdmin):
     list_display = ('project', 'url', 'is_up', 'status_code', 'response_ms', 'checked_at')
     list_filter = ('is_up', 'project')
+
+
+@admin.register(FocusSession)
+class FocusSessionAdmin(admin.ModelAdmin):
+    list_display = ('started_at', 'kind', 'task', 'project', 'planned_min', 'actual_sec', 'completed')
+    list_filter = ('kind', 'completed', 'project')
+    search_fields = ('label', 'note')
+
+
+@admin.register(FocusSettings)
+class FocusSettingsAdmin(admin.ModelAdmin):
+    list_display = ('focus_min', 'short_break_min', 'long_break_min', 'daily_target_sessions')

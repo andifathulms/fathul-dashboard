@@ -55,6 +55,9 @@ class Task(models.Model):
         Project, null=True, blank=True, on_delete=models.SET_NULL, related_name='tasks'
     )
     due_date = models.DateField(null=True, blank=True)
+    # How many pomodoros this is expected to take. Null = not estimated, which
+    # is the normal case — only tasks you plan to sit down with get a number.
+    estimate_pomodoros = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -225,3 +228,73 @@ class IbadahLog(models.Model):
 
     def __str__(self):
         return f'Ibadah {self.date}'
+
+
+class FocusSession(models.Model):
+    """One run of the focus timer — a pomodoro or the break that follows it.
+
+    A session is opened when the timer starts and closed when it stops, so the
+    row with `ended_at` null is the one currently running (there is at most
+    one). `actual_sec` is tracked apart from `planned_min` because an abandoned
+    session still represents real time spent and must not be counted as a full
+    pomodoro in the stats.
+    """
+    KIND_CHOICES = [
+        ('focus', 'Focus'),
+        ('short_break', 'Short Break'),
+        ('long_break', 'Long Break'),
+    ]
+
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default='focus')
+    # A session may hang off a task, a project, both, or neither ("just work").
+    # project is kept alongside task so per-project totals survive the task
+    # being deleted, and so a session can name a project with no task at all.
+    task = models.ForeignKey(
+        Task, null=True, blank=True, on_delete=models.SET_NULL, related_name='focus_sessions'
+    )
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.SET_NULL, related_name='focus_sessions'
+    )
+    # Free text for when neither a task nor a project fits.
+    label = models.CharField(max_length=300, blank=True)
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+    planned_min = models.IntegerField(default=25)
+    actual_sec = models.IntegerField(default=0)
+    # True only when the session ran to the bell — the unit the stats count.
+    completed = models.BooleanField(default=False)
+    # "prayer", "manual", or whatever pulled you away. Empty when it finished.
+    interrupted_by = models.CharField(max_length=100, blank=True)
+    note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'{self.get_kind_display()} {self.started_at:%Y-%m-%d %H:%M} ({self.actual_sec}s)'
+
+
+class FocusSettings(models.Model):
+    """Singleton (pk=1) holding the timer preferences. Use load()."""
+    focus_min = models.IntegerField(default=25)
+    short_break_min = models.IntegerField(default=5)
+    long_break_min = models.IntegerField(default=15)
+    # A long break replaces the short one after this many focus sessions.
+    long_break_every = models.IntegerField(default=4)
+    auto_start_breaks = models.BooleanField(default=True)
+    sound_enabled = models.BooleanField(default=True)
+    daily_target_sessions = models.IntegerField(default=8)
+    # Offer a shortened session when the next adzan falls inside it.
+    pause_for_prayer = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'Focus settings'
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return 'Focus settings'

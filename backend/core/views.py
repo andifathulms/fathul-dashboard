@@ -14,6 +14,8 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    FocusSession,
+    FocusSettings,
     IbadahLog,
     Project,
     Server,
@@ -25,6 +27,8 @@ from .serializers import (
     CredentialSerializer,
     DailyLogSerializer,
     EnvVarSerializer,
+    FocusSessionSerializer,
+    FocusSettingsSerializer,
     IbadahLogSerializer,
     ProjectSerializer,
     ServerSerializer,
@@ -388,3 +392,206 @@ class AyatTodayView(APIView):
         day = date_cls.today().day
         index = (day - 1) % len(ayat_list)
         return Response(ayat_list[index])
+
+
+class FocusSessionViewSet(viewsets.ModelViewSet):
+    """The focus timer's session log, plus the endpoints that drive the timer.
+
+    The timer is server-owned: the client asks for the running session rather
+    than holding it, so a refresh, a second tab, or a closed laptop all pick
+    the same session back up.
+    """
+    queryset = FocusSession.objects.all()
+    serializer_class = FocusSessionSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        params = self.request.query_params
+        date = params.get('date')
+        if date:
+            qs = qs.filter(started_at__date=date)
+        start, end = params.get('from'), params.get('to')
+        if start:
+            qs = qs.filter(started_at__date__gte=start)
+        if end:
+            qs = qs.filter(started_at__date__lte=end)
+        if params.get('project'):
+            qs = qs.filter(project=params['project'])
+        if params.get('task'):
+            qs = qs.filter(task=params['task'])
+        if params.get('kind'):
+            qs = qs.filter(kind=params['kind'])
+        return qs
+
+    @staticmethod
+    def _close(session, *, completed=False, interrupted_by='', actual_sec=None):
+        """End a running session, deriving elapsed time from the clock."""
+        from django.utils import timezone
+
+        now = timezone.now()
+        if actual_sec is None:
+            actual_sec = int((now - session.started_at).total_seconds())
+        # Guard against a clock skew or a bad client value producing a negative
+        # or absurd duration that would poison the totals.
+        session.actual_sec = max(0, min(int(actual_sec), session.planned_min * 60 + 3600))
+        session.ended_at = now
+        session.completed = completed
+        session.interrupted_by = interrupted_by
+        session.save()
+        return session
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """The session currently running, or 204 when the timer is idle."""
+        session = FocusSession.objects.filter(ended_at__isnull=True).order_by('-started_at').first()
+        if not session:
+            return Response(status=204)
+        return Response(self.get_serializer(session).data)
+
+    @action(detail=False, methods=['post'])
+    def start(self, request):
+        """Open a session. Any session left running is abandoned first."""
+        from django.utils import timezone
+
+        for orphan in FocusSession.objects.filter(ended_at__isnull=True):
+            self._close(orphan, interrupted_by='abandoned')
+
+        settings_obj = FocusSettings.load()
+        kind = request.data.get('kind', 'focus')
+        default_min = {
+            'focus': settings_obj.focus_min,
+            'short_break': settings_obj.short_break_min,
+            'long_break': settings_obj.long_break_min,
+        }.get(kind, settings_obj.focus_min)
+
+        task_id = request.data.get('task') or None
+        project_id = request.data.get('project') or None
+        # A task always implies its project, so per-project totals stay right
+        # even when the picker only named the task.
+        if task_id and not project_id:
+            task = Task.objects.filter(pk=task_id).first()
+            if task:
+                project_id = task.project_id
+
+        session = FocusSession.objects.create(
+            kind=kind,
+            task_id=task_id,
+            project_id=project_id,
+            label=request.data.get('label', ''),
+            started_at=timezone.now(),
+            planned_min=int(request.data.get('planned_min') or default_min),
+        )
+        return Response(self.get_serializer(session).data, status=201)
+
+    @action(detail=True, methods=['post'])
+    def stop(self, request, pk=None):
+        """Close a session — `completed` says whether it ran to the bell."""
+        session = self.get_object()
+        if session.ended_at:
+            return Response(self.get_serializer(session).data)
+        session = self._close(
+            session,
+            completed=bool(request.data.get('completed')),
+            interrupted_by=request.data.get('interrupted_by', ''),
+            actual_sec=request.data.get('actual_sec'),
+        )
+        if request.data.get('note'):
+            session.note = request.data['note']
+            session.save(update_fields=['note'])
+        return Response(self.get_serializer(session).data)
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Aggregates for the stats tab: totals, per-project, per-day, per-hour.
+
+        Bucketed in Python against local time — SQLite has no timezone-aware
+        date functions, and a pomodoro at 23:30 belongs to the day you felt it.
+        """
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        rng = request.query_params.get('range', 'week')
+        today = timezone.localdate()
+        span = {'today': 1, 'week': 7, 'month': 30, 'quarter': 90}.get(rng)
+        start = today - timedelta(days=span - 1) if span else None
+
+        qs = FocusSession.objects.filter(kind='focus', ended_at__isnull=False)
+        window = qs.filter(started_at__date__gte=start) if start else qs
+
+        by_project, by_day, by_hour = {}, {}, [0] * 24
+        total_sec = sessions_done = 0
+        for s in window.select_related('project'):
+            local = timezone.localtime(s.started_at)
+            day = local.date().isoformat()
+            total_sec += s.actual_sec
+            if s.completed:
+                sessions_done += 1
+            by_hour[local.hour] += s.actual_sec
+
+            bucket = by_day.setdefault(day, {'date': day, 'sec': 0, 'sessions': 0})
+            bucket['sec'] += s.actual_sec
+            bucket['sessions'] += 1 if s.completed else 0
+
+            key = s.project_id
+            entry = by_project.setdefault(
+                key,
+                {
+                    'project': key,
+                    'name': s.project.name if s.project else 'No project',
+                    'category': s.project.category if s.project else None,
+                    'sec': 0,
+                    'sessions': 0,
+                },
+            )
+            entry['sec'] += s.actual_sec
+            entry['sessions'] += 1 if s.completed else 0
+
+        # Fill the gaps so the chart shows quiet days rather than skipping them.
+        days = []
+        if start:
+            for i in range(span):
+                d = (start + timedelta(days=i)).isoformat()
+                days.append(by_day.get(d, {'date': d, 'sec': 0, 'sessions': 0}))
+        else:
+            days = sorted(by_day.values(), key=lambda x: x['date'])
+
+        # Streak: consecutive days back from today with a completed session.
+        done_days = {
+            timezone.localtime(s.started_at).date()
+            for s in qs.filter(completed=True).only('started_at')
+        }
+        streak, cursor = 0, today
+        while cursor in done_days:
+            streak += 1
+            cursor -= timedelta(days=1)
+
+        today_qs = qs.filter(started_at__date__gte=today - timedelta(days=1))
+        today_sessions = [
+            s for s in today_qs if timezone.localtime(s.started_at).date() == today
+        ]
+        settings_obj = FocusSettings.load()
+
+        return Response({
+            'range': rng,
+            'total_sec': total_sec,
+            'sessions': sessions_done,
+            'by_project': sorted(by_project.values(), key=lambda x: -x['sec']),
+            'by_day': days,
+            'by_hour': by_hour,
+            'streak': streak,
+            'today_sec': sum(s.actual_sec for s in today_sessions),
+            'today_sessions': sum(1 for s in today_sessions if s.completed),
+            'target': settings_obj.daily_target_sessions,
+        })
+
+    @action(detail=False, methods=['get', 'patch'], url_path='settings')
+    def settings_(self, request):
+        """The singleton timer preferences — GET to read, PATCH to change."""
+        obj = FocusSettings.load()
+        if request.method == 'PATCH':
+            serializer = FocusSettingsSerializer(obj, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        return Response(FocusSettingsSerializer(obj).data)

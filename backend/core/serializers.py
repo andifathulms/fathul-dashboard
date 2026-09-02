@@ -5,6 +5,8 @@ from .models import (
     Credential,
     DailyLog,
     EnvVar,
+    FocusSession,
+    FocusSettings,
     IbadahLog,
     Project,
     Server,
@@ -35,13 +37,17 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.name', read_only=True, default=None)
+    pomodoros_done = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'is_done', 'project', 'project_name',
-            'due_date', 'created_at',
+            'due_date', 'estimate_pomodoros', 'pomodoros_done', 'created_at',
         ]
+
+    def get_pomodoros_done(self, obj):
+        return obj.focus_sessions.filter(kind='focus', completed=True).count()
 
 
 class CredentialSerializer(serializers.ModelSerializer):
@@ -117,4 +123,27 @@ class UptimeCheckSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'url', 'checked_at', 'is_up', 'status_code', 'response_ms',
             'error', 'server', 'content_type', 'final_url', 'ssl_days_left',
+        ]
+
+
+class FocusSessionSerializer(serializers.ModelSerializer):
+    task_title = serializers.CharField(source='task.title', read_only=True, default=None)
+    project_name = serializers.CharField(source='project.name', read_only=True, default=None)
+
+    class Meta:
+        model = FocusSession
+        fields = [
+            'id', 'kind', 'task', 'task_title', 'project', 'project_name', 'label',
+            'started_at', 'ended_at', 'planned_min', 'actual_sec', 'completed',
+            'interrupted_by', 'note',
+        ]
+
+
+class FocusSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FocusSettings
+        fields = [
+            'focus_min', 'short_break_min', 'long_break_min', 'long_break_every',
+            'auto_start_breaks', 'sound_enabled', 'daily_target_sessions',
+            'pause_for_prayer', 'updated_at',
         ]
