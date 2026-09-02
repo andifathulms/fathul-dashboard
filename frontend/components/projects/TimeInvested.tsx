@@ -63,17 +63,20 @@ export default function TimeInvested({ projectId }: { projectId: number }) {
             </span>
           </div>
 
-          <div className="flex h-16 items-end gap-1">
+          <div className="flex h-16 items-stretch gap-1">
             {series.map(([day, sec]) => (
-              <div key={day} className="flex flex-1 flex-col items-center justify-end gap-1">
-                <div
-                  title={`${day} — ${formatDuration(sec)}`}
-                  className={cn(
-                    'w-full rounded-t-[3px]',
-                    sec > 0 ? 'bg-accent2' : 'bg-surface2'
-                  )}
-                  style={{ height: `${Math.max(sec > 0 ? 6 : 3, (sec / max) * 100)}%` }}
-                />
+              <div key={day} className="flex flex-1 flex-col items-center gap-1">
+                {/* Filler track — a percentage height needs a resolved parent. */}
+                <div className="flex w-full flex-1 items-end justify-center">
+                  <div
+                    title={`${day} — ${formatDuration(sec)}`}
+                    className={cn(
+                      'w-full max-w-[18px] rounded-t-[3px]',
+                      sec > 0 ? 'bg-accent2' : 'bg-surface2'
+                    )}
+                    style={{ height: `${Math.max(sec > 0 ? 6 : 3, (sec / max) * 100)}%` }}
+                  />
+                </div>
                 <span className="text-xs text-muted">
                   {WEEKDAY_INITIALS[new Date(`${day}T00:00:00`).getDay()]}
                 </span>

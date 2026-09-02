@@ -118,14 +118,14 @@ export default function FocusStats() {
         <>
           {/* Change over time: one series, so no legend — the title names it. */}
           <WidgetCard title="Focus per day" icon={<TrendingUp size={16} />}>
-            <div className="flex h-40 items-end gap-1">
+            <div className="flex h-40 items-stretch gap-1">
               {days.map((d) => {
                 const height = (d.sec / maxDay) * 100
                 const date = new Date(`${d.date}T00:00:00`)
                 return (
                   <div
                     key={d.date}
-                    className="group relative flex flex-1 flex-col items-center justify-end gap-1.5"
+                    className="group relative flex flex-1 flex-col items-center gap-1.5"
                     onMouseEnter={() => setHovered(d.date)}
                     onMouseLeave={() => setHovered(null)}
                   >
@@ -135,14 +135,18 @@ export default function FocusStats() {
                         <span className="text-muted"> · {d.sessions} sessions</span>
                       </div>
                     )}
-                    <div
-                      className={cn(
-                        'w-full rounded-t-[4px] transition-colors',
-                        d.sec > 0 ? 'bg-accent2' : 'bg-surface2',
-                        hovered === d.date && d.sec > 0 && 'bg-accent2/80'
-                      )}
-                      style={{ height: `${Math.max(d.sec > 0 ? 4 : 2, height)}%` }}
-                    />
+                    {/* The bar's percentage height needs a parent with a
+                        resolved height — hence this filler track. */}
+                    <div className="flex w-full flex-1 items-end justify-center">
+                      <div
+                        className={cn(
+                          'w-full max-w-[34px] rounded-t-[4px] transition-colors',
+                          d.sec > 0 ? 'bg-accent2' : 'bg-surface2',
+                          hovered === d.date && d.sec > 0 && 'bg-accent2/80'
+                        )}
+                        style={{ height: `${Math.max(d.sec > 0 ? 4 : 2, height)}%` }}
+                      />
+                    </div>
                     {days.length <= 31 && (
                       <span className="text-xs text-muted tnum">
                         {days.length <= 7
