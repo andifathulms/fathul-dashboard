@@ -3,6 +3,7 @@
 import { LocateFixed, MapPin, Menu } from 'lucide-react'
 import { useState } from 'react'
 
+import FocusPill from '@/components/focus/FocusPill'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useToast } from '@/components/ui/Toast'
 import { usePrayer } from '@/hooks/usePrayer'
@@ -53,6 +54,8 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <FocusPill />
+
           {next && (
             <div className="flex items-center gap-2 rounded-lg bg-accent1/10 px-2.5 py-1 ring-1 ring-inset ring-accent1/20">
               <span className="text-sm font-semibold text-accent1">{next.label}</span>

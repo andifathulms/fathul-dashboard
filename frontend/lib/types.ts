@@ -38,6 +38,8 @@ export interface Task {
   project: number | null
   project_name: string | null
   due_date: string | null
+  estimate_pomodoros: number | null
+  pomodoros_done: number
   created_at: string
 }
 
@@ -255,4 +257,62 @@ export interface UptimeData {
   checks: UptimeCheck[]
   sla: { h24: UptimeSla; d7: UptimeSla; d30: UptimeSla }
   incidents: UptimeIncident[]
+}
+
+export type FocusKind = 'focus' | 'short_break' | 'long_break'
+
+export interface FocusSession {
+  id: number
+  kind: FocusKind
+  task: number | null
+  task_title: string | null
+  project: number | null
+  project_name: string | null
+  label: string
+  started_at: string
+  ended_at: string | null
+  planned_min: number
+  actual_sec: number
+  completed: boolean
+  interrupted_by: string
+  note: string
+}
+
+export interface FocusSettings {
+  focus_min: number
+  short_break_min: number
+  long_break_min: number
+  long_break_every: number
+  auto_start_breaks: boolean
+  sound_enabled: boolean
+  daily_target_sessions: number
+  pause_for_prayer: boolean
+  updated_at: string
+}
+
+export interface FocusProjectStat {
+  project: number | null
+  name: string
+  category: ProjectCategory | null
+  sec: number
+  sessions: number
+}
+
+export interface FocusDayStat {
+  date: string
+  sec: number
+  sessions: number
+}
+
+export interface FocusStats {
+  range: string
+  total_sec: number
+  sessions: number
+  by_project: FocusProjectStat[]
+  by_day: FocusDayStat[]
+  by_hour: number[]
+  streak: number
+  today_sec: number
+  today_sessions: number
+  target: number
 }

@@ -6,6 +6,7 @@ import {
   CheckSquare,
   KeyRound,
   TerminalSquare,
+  Timer,
   Server,
   NotebookPen,
   Moon,
@@ -31,6 +32,7 @@ const GROUPS = [
     items: [
       { href: '/projects', label: 'Projects', icon: FolderKanban },
       { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+      { href: '/focus', label: 'Focus', icon: Timer },
     ],
   },
   {
