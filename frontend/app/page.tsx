@@ -1,5 +1,6 @@
 import AyatWidget from '@/components/dashboard/AyatWidget'
 import DailyLogWidget from '@/components/dashboard/DailyLogWidget'
+import DayPlan from '@/components/dashboard/DayPlan'
 import DhikrCounter from '@/components/dashboard/DhikrCounter'
 import FocusWidget from '@/components/dashboard/FocusWidget'
 import IbadahWidget from '@/components/dashboard/IbadahWidget'
@@ -14,6 +15,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <TodayBand />
+      <DayPlan />
 
       <div className="stagger-in grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="flex flex-col gap-4 xl:col-span-5">
