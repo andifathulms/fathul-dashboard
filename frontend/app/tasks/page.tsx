@@ -41,6 +41,7 @@ export default function TasksPage() {
   const [title, setTitle] = useState('')
   const [project, setProject] = useState<string>('')
   const [due, setDue] = useState('')
+  const [estimate, setEstimate] = useState('')
 
   const { data: tasks, isLoading, mutate } = useSWR<Task[]>('/tasks/')
   const { data: projects } = useSWR<Project[]>('/projects/')
@@ -54,10 +55,12 @@ export default function TasksPage() {
         title: title.trim(),
         project: project ? Number(project) : null,
         due_date: due || null,
+        estimate_pomodoros: estimate ? Number(estimate) : null,
       })
       setTitle('')
       setProject('')
       setDue('')
+      setEstimate('')
       mutate()
     } catch (e) {
       toast.error((e as Error).message, "Couldn't add the task")
@@ -118,6 +121,20 @@ export default function TasksPage() {
             onChange={(e) => setDue(e.target.value)}
             aria-label="Due date"
           />
+          <select
+            className="select sm:w-36"
+            value={estimate}
+            onChange={(e) => setEstimate(e.target.value)}
+            aria-label="Pomodoro estimate"
+            title="How many pomodoros this should take"
+          >
+            <option value="">No estimate</option>
+            {[1, 2, 3, 4, 5, 6, 8].map((n) => (
+              <option key={n} value={n}>
+                {n} pomodoro{n > 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
           <button onClick={add} className="btn-accent shrink-0">
             <Plus size={16} /> Add task
           </button>

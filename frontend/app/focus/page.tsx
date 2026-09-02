@@ -6,10 +6,12 @@ import useSWR from 'swr'
 
 import FocusSettingsModal from '@/components/focus/FocusSettingsModal'
 import { useFocus } from '@/components/focus/FocusProvider'
+import FocusStats from '@/components/focus/FocusStats'
 import TimerRing from '@/components/focus/TimerRing'
 import PageHeader from '@/components/layout/PageHeader'
 import WidgetCard from '@/components/ui/Card'
 import EmptyState from '@/components/ui/EmptyState'
+import Segmented from '@/components/ui/Segmented'
 import { useToast } from '@/components/ui/Toast'
 import { KIND_LABELS, formatDuration } from '@/lib/focus'
 import type { FocusKind, Project, Task } from '@/lib/types'
@@ -54,6 +56,7 @@ export default function FocusPage() {
   const [label, setLabel] = useState('')
   const [phase, setPhase] = useState<FocusKind>('focus')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tab, setTab] = useState<'timer' | 'stats'>('timer')
   const toast = useToast()
 
   const openTasks = (tasks ?? []).filter((t) => !t.is_done)
@@ -99,7 +102,20 @@ export default function FocusPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <Segmented
+        className="mb-4"
+        ariaLabel="Focus view"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { key: 'timer', label: 'Timer' },
+          { key: 'stats', label: 'Stats' },
+        ]}
+      />
+
+      {tab === 'stats' && <FocusStats />}
+
+      <div className={cn('grid grid-cols-1 gap-4 lg:grid-cols-12', tab !== 'timer' && 'hidden')}>
         {/* The timer is the primary object on this page — the one lifted card. */}
         <section className="card-lift flex flex-col items-center gap-5 p-6 lg:col-span-7">
           <TimerRing
