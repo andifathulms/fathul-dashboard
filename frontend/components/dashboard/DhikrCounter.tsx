@@ -47,13 +47,13 @@ export default function DhikrCounter() {
   const pct = Math.min((state.count / state.target) * 100, 100)
   const reached = state.count >= state.target
 
-  if (!ready) return <section className="card p-5" />
+  if (!ready) return <section className="card h-[268px]" />
 
   return (
-    <section className="card flex flex-col items-center gap-4 p-5">
+    <section className="card flex flex-col items-center gap-4 p-4">
       <div className="flex w-full items-center justify-between">
-        <h3 className="widget-title">Dzikir Counter</h3>
-        <button onClick={reset} className="icon-btn h-7 w-7" aria-label="Reset">
+        <h3 className="widget-title">Dhikr counter</h3>
+        <button onClick={reset} className="icon-btn h-7 w-7" aria-label="Reset count" title="Reset count">
           <RotateCcw size={14} />
         </button>
       </div>
@@ -64,7 +64,9 @@ export default function DhikrCounter() {
             key={p}
             onClick={() => setLabel(p)}
             className={`chip transition-colors ${
-              state.label === p ? 'bg-highlight/15 text-highlight' : 'bg-bg text-muted hover:text-text'
+              state.label === p
+                ? 'bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/25'
+                : 'bg-surface2 text-muted hover:text-text'
             }`}
           >
             {p}
@@ -74,20 +76,24 @@ export default function DhikrCounter() {
 
       <button
         onClick={increment}
-        className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-border bg-bg transition-transform active:scale-95"
+        className="relative flex h-32 w-32 items-center justify-center rounded-full transition-transform active:scale-95"
         style={{
-          background: `conic-gradient(var(--highlight) ${pct}%, var(--bg) ${pct}%)`,
+          background: `conic-gradient(rgb(var(--highlight)) ${pct}%, rgb(var(--surface-2)) ${pct}%)`,
         }}
-        aria-label="Increment dhikr"
+        aria-label={`Count ${state.label}. Currently ${state.count} of ${state.target}.`}
       >
-        <span className="flex h-[112px] w-[112px] flex-col items-center justify-center rounded-full bg-surface">
-          <span className="text-3xl font-bold tabular-nums">{state.count}</span>
-          <span className="text-xs text-muted">/ {state.target}</span>
+        <span className="flex h-[112px] w-[112px] flex-col items-center justify-center rounded-full bg-surface shadow-card">
+          <span className="font-display text-3xl font-semibold tnum">{state.count}</span>
+          <span className="text-sm text-muted tnum">/ {state.target}</span>
         </span>
       </button>
 
-      <p className="text-sm font-medium text-highlight">
-        {reached ? `${state.label} ✓ tercapai` : state.label}
+      <p className="text-base font-medium">
+        {reached ? (
+          <span className="text-highlight">{state.label} — target reached</span>
+        ) : (
+          <span className="text-text2">Tap to count {state.label}</span>
+        )}
       </p>
     </section>
   )

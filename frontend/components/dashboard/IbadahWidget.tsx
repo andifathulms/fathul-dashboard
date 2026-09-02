@@ -49,25 +49,27 @@ export default function IbadahWidget() {
       title="Ibadah"
       icon={<Moon size={15} />}
       action={
-        <Link href="/ibadah" className="text-xs text-accent1 hover:underline">
-          Detail
+        <Link href="/ibadah" className="text-sm font-medium text-accent1 hover:underline">
+          Details
         </Link>
       }
-      bodyClassName="space-y-3"
+      bodyClassName="flex flex-col gap-3"
     >
       {/* Streak + today's fardhu */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-2">
-          <Flame size={20} className={cn(streak > 0 ? 'text-accent2' : 'text-muted')} />
+        <div className="flex items-center gap-2 rounded-lg bg-surface2 px-3 py-2">
+          <Flame size={19} className={cn(streak > 0 ? 'text-accent2' : 'text-muted')} />
           <div className="leading-tight">
-            <p className="font-mono text-lg font-semibold">{streak}</p>
-            <p className="text-[10px] text-muted">day streak</p>
+            <p className="font-display text-lg font-semibold tnum">{streak}</p>
+            <p className="text-sm text-muted">day streak</p>
           </div>
         </div>
         <div className="flex-1">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-muted">Fardh today</span>
-            <span className="font-mono text-sm font-semibold text-highlight">{todayFardhu}/5</span>
+            <span className="text-sm text-muted">Fardh today</span>
+            <span className="font-mono text-base font-semibold text-highlight tnum">
+              {todayFardhu}/5
+            </span>
           </div>
           <div className="mt-1.5 flex gap-1">
             {PRAYERS.map((p) => (
@@ -85,7 +87,7 @@ export default function IbadahWidget() {
               />
             ))}
           </div>
-          <p className="mt-1 text-[10px] text-muted">{jamaahWeek} in congregation this week</p>
+          <p className="mt-1 text-sm text-muted">{jamaahWeek} in congregation this week</p>
         </div>
       </div>
 
@@ -101,10 +103,10 @@ export default function IbadahWidget() {
                 title={d}
                 className={cn(
                   'h-7 w-full rounded-md',
-                  complete ? 'bg-highlight' : partial ? 'bg-highlight/40' : 'bg-bg'
+                  complete ? 'bg-highlight' : partial ? 'bg-highlight/40' : 'bg-surface2'
                 )}
               />
-              <span className="text-[9px] text-muted">{DAY_ABBR[dow]}</span>
+              <span className="text-xs text-muted">{DAY_ABBR[dow]}</span>
             </div>
           )
         })}

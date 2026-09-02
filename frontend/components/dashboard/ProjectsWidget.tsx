@@ -32,28 +32,32 @@ export default function ProjectsWidget() {
       title="Active Projects"
       icon={<FolderKanban size={15} />}
       action={
-        <Link href="/projects" className="text-xs text-accent1 hover:underline">
-          All
+        <Link href="/projects" className="text-sm font-medium text-accent1 hover:underline">
+          All projects
         </Link>
       }
-      bodyClassName="space-y-2"
+      bodyClassName="flex flex-col gap-0.5"
     >
       {isLoading && <SkeletonRows rows={3} />}
       {projects?.length === 0 && (
-        <EmptyState compact icon={<FolderKanban size={18} />} title="No active projects yet" />
+        <EmptyState
+          compact
+          icon={<FolderKanban size={18} />}
+          title="No active projects"
+          hint="Projects you mark active show up here."
+        />
       )}
       {sorted?.map((p) => (
         <Link
           key={p.id}
           href={`/projects/${p.id}`}
-          className="group relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-bg py-2.5 pl-4 pr-3 transition-all hover:border-accent1/40 hover:bg-surface2/50"
+          className="row group -mx-1 gap-2.5 px-2"
         >
-          <span className={cn('absolute inset-y-0 left-0 w-[3px]', PRIORITY_STYLES[p.priority].dot)} />
           <PriorityToggle project={p} onChanged={mutate} compact />
-          <ProjectAvatar project={p} size={30} />
+          <ProjectAvatar project={p} size={28} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{p.name}</p>
-            <p className="mt-0.5 text-[11px] text-muted">
+            <p className="truncate text-base font-medium">{p.name}</p>
+            <p className="text-sm text-muted tnum">
               {p.tasks_count} tasks · {p.credentials_count} credentials
             </p>
           </div>

@@ -18,7 +18,7 @@ export default function ProjectAvatar({
         src={project.icon_url}
         alt=""
         style={{ width: size, height: size }}
-        className={cn('shrink-0 rounded-lg object-cover ring-1 ring-inset ring-white/5', className)}
+        className={cn('shrink-0 rounded-lg border border-border object-cover', className)}
       />
     )
   }

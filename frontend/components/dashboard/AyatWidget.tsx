@@ -3,29 +3,37 @@
 import { BookOpen } from 'lucide-react'
 import useSWR from 'swr'
 
+import Skeleton from '@/components/ui/Skeleton'
 import type { Ayat } from '@/lib/types'
 
 export default function AyatWidget() {
   const { data: ayat } = useSWR<Ayat>('/ayat/today/')
 
   return (
-    <section className="card relative overflow-hidden bg-gradient-to-br from-surface to-accent1/5 p-5">
-      <div className="mb-3 flex items-center gap-2 text-muted">
+    <section className="card overflow-hidden">
+      <div className="flex items-center gap-2 px-4 pb-2 pt-3.5 text-muted">
         <BookOpen size={15} />
-        <h3 className="widget-title">Verse of the Day</h3>
+        <h3 className="widget-title">Verse of the day</h3>
       </div>
+
       {ayat ? (
-        <div className="space-y-3">
-          <p dir="rtl" className="text-right text-2xl leading-loose text-text" lang="ar">
+        <div className="flex flex-col gap-3 px-4 pb-4">
+          <p dir="rtl" lang="ar" className="text-right text-2xl leading-[2] text-text">
             {ayat.arabic}
           </p>
-          <p className="text-sm italic leading-relaxed text-muted">“{ayat.translation}”</p>
-          <p className="text-xs font-medium text-accent1">
+          <p className="border-l-2 border-accent1/30 pl-3 text-base leading-relaxed text-text2">
+            {ayat.translation}
+          </p>
+          <p className="text-sm font-semibold text-accent1">
             QS. {ayat.surah} : {ayat.ayat}
           </p>
         </div>
       ) : (
-        <p className="text-sm text-muted">Loading verse…</p>
+        <div className="flex flex-col gap-2 px-4 pb-4">
+          <Skeleton className="h-7 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-1/3" />
+        </div>
       )}
     </section>
   )

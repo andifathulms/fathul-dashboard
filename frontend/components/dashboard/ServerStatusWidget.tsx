@@ -20,15 +20,20 @@ export default function ServerStatusWidget() {
       title="VMs"
       icon={<ServerIcon size={15} />}
       action={
-        <Link href="/servers" className="text-xs text-accent1 hover:underline">
-          All
+        <Link href="/servers" className="text-sm font-medium text-accent1 hover:underline">
+          All VMs
         </Link>
       }
-      bodyClassName="space-y-2"
+      bodyClassName="flex flex-col gap-0.5"
     >
       {isLoading && <SkeletonRows rows={3} />}
       {servers?.length === 0 && (
-        <EmptyState compact icon={<ServerIcon size={18} />} title="No VMs yet" />
+        <EmptyState
+          compact
+          icon={<ServerIcon size={18} />}
+          title="No VMs yet"
+          hint="Add a machine to watch its status here."
+        />
       )}
       {servers?.map((s) => {
         const pingable = serverPingable(s)
@@ -40,7 +45,7 @@ export default function ServerStatusWidget() {
         return (
           <div
             key={s.id}
-            className="flex items-center justify-between gap-2 rounded-lg border border-border bg-bg px-3 py-2.5 transition-all hover:border-borderStrong hover:bg-surface2/40"
+            className="row group -mx-1 justify-between px-2"
           >
             <div className="flex min-w-0 items-center gap-2.5">
               {pingable ? (
@@ -55,13 +60,13 @@ export default function ServerStatusWidget() {
                 />
               )}
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{s.name}</p>
-                <p className="truncate font-mono text-[11px] text-muted">{sub}</p>
+                <p className="truncate text-base font-medium">{s.name}</p>
+                <p className="truncate font-mono text-sm text-muted">{sub}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {pingable && ping?.latency_ms != null && (
-                <span className="font-mono text-[11px] text-highlight">{ping.latency_ms}ms</span>
+                <span className="font-mono text-sm text-highlight tnum">{ping.latency_ms} ms</span>
               )}
               {url && (
                 <a href={url} title="Open in Terminal (SSH)" className="icon-btn" aria-label="Open in Terminal">

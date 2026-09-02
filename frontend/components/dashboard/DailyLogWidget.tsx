@@ -9,7 +9,7 @@ import TaskItem from '@/components/tasks/TaskItem'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { DailyLog, Project, Task } from '@/lib/types'
-import { formatDateID, todayISO } from '@/lib/utils'
+import { formatDateShort, todayISO } from '@/lib/utils'
 
 export default function DailyLogWidget() {
   const today = todayISO()
@@ -66,13 +66,19 @@ export default function DailyLogWidget() {
     }, 500)
   }
 
+  const done = tasks?.filter((t) => t.is_done).length ?? 0
+  const total = tasks?.length ?? 0
+
   return (
     <WidgetCard
-      title="Daily Log"
+      title="Daily log"
       icon={<NotebookPen size={15} />}
-      action={<span className="text-[11px] text-muted">{formatDateID(new Date())}</span>}
-      bodyClassName="space-y-4"
-      className="h-full"
+      action={
+        <span className="text-sm text-muted">
+          {done}/{total || 0} done · {formatDateShort(new Date())}
+        </span>
+      }
+      bodyClassName="flex flex-col gap-4"
     >
       {/* Add task */}
       <div className="flex gap-2">
@@ -83,15 +89,17 @@ export default function DailyLogWidget() {
           placeholder="Add a task for today…"
           className="input"
         />
-        <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add task">
+        <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add task" title="Add task">
           <Plus size={16} />
         </button>
       </div>
 
       {/* Tasks checklist */}
-      <div className="space-y-0.5">
+      <div className="flex flex-col gap-0.5">
         {tasks?.length === 0 && (
-          <p className="px-2 py-3 text-sm text-muted">No tasks for today. ✨</p>
+          <p className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-base text-muted">
+            Nothing due today. Add one above.
+          </p>
         )}
         {tasks?.map((t) => (
           <TaskItem key={t.id} task={t} projects={projects} onChange={mutateTasks} showDelete />
@@ -101,17 +109,20 @@ export default function DailyLogWidget() {
       {/* Journal */}
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label className="widget-title">Today&apos;s Notes</label>
-          {saved === 'saving' && <span className="text-[11px] text-muted">saving…</span>}
-          {saved === 'done' && <span className="text-[11px] text-highlight">saved ✓</span>}
+          <label htmlFor="fd-journal" className="field-label mb-0">
+            Notes
+          </label>
+          {saved === 'saving' && <span className="text-sm text-muted">Saving…</span>}
+          {saved === 'done' && <span className="text-sm text-highlight">Saved</span>}
         </div>
         <textarea
+          id="fd-journal"
           value={journal}
           onChange={(e) => setJournal(e.target.value)}
           onBlur={saveJournal}
           rows={6}
           placeholder="What did you work on today?"
-          className="input resize-none leading-relaxed"
+          className="textarea resize-none bg-surface2/50"
         />
       </div>
     </WidgetCard>
