@@ -1,6 +1,6 @@
 'use client'
 
-import { Pause, Play, Settings2, SkipForward, Square, Timer } from 'lucide-react'
+import { NotebookPen, Pause, Play, Settings2, SkipForward, Square, Timer } from 'lucide-react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
@@ -11,10 +11,14 @@ import TimerRing from '@/components/focus/TimerRing'
 import PageHeader from '@/components/layout/PageHeader'
 import WidgetCard from '@/components/ui/Card'
 import EmptyState from '@/components/ui/EmptyState'
+import Modal from '@/components/ui/Modal'
 import Segmented from '@/components/ui/Segmented'
 import { useToast } from '@/components/ui/Toast'
+import { usePrayer } from '@/hooks/usePrayer'
+import api from '@/lib/api'
 import { KIND_LABELS, formatDuration } from '@/lib/focus'
-import type { FocusKind, Project, Task } from '@/lib/types'
+import { formatCountdown } from '@/lib/prayer'
+import type { DailyLog, FocusKind, FocusSession, Project, Task } from '@/lib/types'
 import { CATEGORY_STYLES, cn, todayISO } from '@/lib/utils'
 
 /** The phases you can start by hand. Breaks are normally automatic, but a
@@ -57,6 +61,9 @@ export default function FocusPage() {
   const [phase, setPhase] = useState<FocusKind>('focus')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [tab, setTab] = useState<'timer' | 'stats'>('timer')
+  const [stopped, setStopped] = useState<FocusSession | null>(null)
+  const [note, setNote] = useState('')
+  const { next: nextPrayer } = usePrayer()
   const toast = useToast()
 
   const openTasks = (tasks ?? []).filter((t) => !t.is_done)
@@ -65,13 +72,27 @@ export default function FocusPage() {
   const progress = total > 0 ? elapsed / total : 0
   const isBreak = session ? session.kind !== 'focus' : false
 
-  const begin = async () => {
+  // A session that would run through the adzan is a session you will not
+  // finish. Offer the shorter one rather than letting it break.
+  const focusMin = settings?.focus_min ?? 25
+  const prayerClash =
+    (settings?.pause_for_prayer ?? true) &&
+    phase === 'focus' &&
+    !session &&
+    nextPrayer?.minutesUntil != null &&
+    nextPrayer.minutesUntil >= 5 &&
+    nextPrayer.minutesUntil < focusMin
+      ? nextPrayer
+      : null
+
+  const begin = async (plannedMin?: number) => {
     try {
       await start({
         kind: phase,
         task: taskId ? Number(taskId) : null,
         project: projectId ? Number(projectId) : null,
         label: label.trim(),
+        plannedMin,
       })
     } catch (e) {
       toast.error((e as Error).message, "Couldn't start the timer")
@@ -80,9 +101,57 @@ export default function FocusPage() {
 
   const end = async (completed: boolean) => {
     try {
-      await stop({ completed, interruptedBy: completed ? '' : 'manual' })
+      const closed = await stop({ completed, interruptedBy: completed ? '' : 'manual' })
+      // Only ask about a focus session you actually sat through — a 20-second
+      // false start has no story worth recording.
+      if (closed && closed.kind === 'focus' && closed.actual_sec >= 60) {
+        setNote('')
+        setStopped(closed)
+      }
     } catch (e) {
       toast.error((e as Error).message, "Couldn't stop the timer")
+    }
+  }
+
+  const saveNote = async () => {
+    if (!stopped) return
+    try {
+      if (note.trim()) await api.patch(`/focus/${stopped.id}/`, { note: note.trim() })
+      setStopped(null)
+    } catch (e) {
+      toast.error((e as Error).message, "Couldn't save the note")
+    }
+  }
+
+  // Hand the day's sessions to the journal, where the rest of the day lives.
+  const addToLog = async () => {
+    const focused = todaySessions.filter((s) => s.kind === 'focus' && s.actual_sec > 0)
+    if (focused.length === 0) return
+    const lines = focused.map((s) => {
+      const what = s.task_title || s.project_name || s.label || 'Focus'
+      return `- ${clockOf(s.started_at)} · ${what} · ${formatDuration(s.actual_sec)}${
+        s.note ? ` — ${s.note}` : ''
+      }`
+    })
+    const block = [
+      `Focus — ${formatDuration(focusedSecToday)} across ${completedToday} sessions`,
+      ...lines,
+    ].join('\n')
+
+    try {
+      let log: DailyLog | null = null
+      try {
+        const res = await api.get<DailyLog>(`/logs/?date=${today}`)
+        log = res.data
+      } catch {
+        const res = await api.post<DailyLog>('/logs/', { date: today, journal: '' })
+        log = res.data
+      }
+      const journal = log.journal ? `${log.journal.trimEnd()}\n\n${block}` : block
+      await api.patch(`/logs/${log.id}/`, { journal })
+      toast.success('Added to today’s journal', 'Daily log')
+    } catch (e) {
+      toast.error((e as Error).message, "Couldn't write to the log")
     }
   }
 
@@ -224,9 +293,29 @@ export default function FocusPage() {
                 </>
               )}
 
-              <button className="btn-accent w-full justify-center" onClick={() => void begin()}>
-                <Play size={16} /> Start {KIND_LABELS[phase].toLowerCase()}
-              </button>
+              {prayerClash && (
+                <div className="rounded-lg bg-accent1/10 px-3 py-2 text-sm text-accent1 ring-1 ring-inset ring-accent1/25">
+                  {prayerClash.label} is in {formatCountdown(prayerClash.minutesUntil)} — a full{' '}
+                  {focusMin}-minute session would run through the adzan.
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  className="btn-accent flex-1 justify-center"
+                  onClick={() => void begin()}
+                >
+                  <Play size={16} /> Start {KIND_LABELS[phase].toLowerCase()}
+                </button>
+                {prayerClash && (
+                  <button
+                    className="btn shrink-0 justify-center"
+                    onClick={() => void begin(prayerClash.minutesUntil ?? undefined)}
+                  >
+                    Fit to {prayerClash.label} ({prayerClash.minutesUntil}m)
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </section>
@@ -237,9 +326,19 @@ export default function FocusPage() {
             icon={<Timer size={16} />}
             bodyClassName="flex flex-col gap-0.5"
             action={
-              <span className="text-sm text-muted tnum">
-                {formatDuration(focusedSecToday)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted tnum">{formatDuration(focusedSecToday)}</span>
+                {focusedSecToday > 0 && (
+                  <button
+                    onClick={() => void addToLog()}
+                    className="icon-btn h-7 w-7"
+                    aria-label="Add today’s sessions to the daily log"
+                    title="Add to the daily log"
+                  >
+                    <NotebookPen size={14} />
+                  </button>
+                )}
+              </div>
             }
           >
             {todaySessions.length === 0 ? (
@@ -294,6 +393,32 @@ export default function FocusPage() {
       </div>
 
       <FocusSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <Modal
+        open={Boolean(stopped)}
+        onClose={() => setStopped(null)}
+        title="What pulled you away?"
+        subtitle="Optional — but the pattern is the useful part."
+        footer={
+          <>
+            <button className="btn" onClick={() => setStopped(null)}>
+              Skip
+            </button>
+            <button className="btn-accent" onClick={() => void saveNote()}>
+              Save note
+            </button>
+          </>
+        }
+      >
+        <textarea
+          className="textarea"
+          rows={3}
+          autoFocus
+          placeholder="Slack, a call, ran out of steam…"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </Modal>
     </div>
   )
 }

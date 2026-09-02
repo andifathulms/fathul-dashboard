@@ -20,6 +20,7 @@ import useSWR from 'swr'
 
 import GithubActivity from '@/components/projects/GithubActivity'
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
+import TimeInvested from '@/components/projects/TimeInvested'
 import UptimeWidget from '@/components/projects/UptimeWidget'
 import VmAccess from '@/components/servers/VmAccess'
 import ProjectForm from '@/components/projects/ProjectForm'
@@ -206,6 +207,8 @@ export default function ProjectDetailPage() {
 
         {/* GitHub analytics — one card per linked repo, half-width in the grid */}
         <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
+
+        <TimeInvested projectId={pid} />
 
         <WidgetCard title="Tasks" bodyClassName="flex flex-col gap-2">
           <div className="flex gap-2">

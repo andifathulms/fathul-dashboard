@@ -1,6 +1,7 @@
 import AyatWidget from '@/components/dashboard/AyatWidget'
 import DailyLogWidget from '@/components/dashboard/DailyLogWidget'
 import DhikrCounter from '@/components/dashboard/DhikrCounter'
+import FocusWidget from '@/components/dashboard/FocusWidget'
 import IbadahWidget from '@/components/dashboard/IbadahWidget'
 import ProjectsWidget from '@/components/dashboard/ProjectsWidget'
 import QuickAccessWidget from '@/components/dashboard/QuickAccessWidget'
@@ -21,6 +22,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-4 xl:col-span-4">
+          <FocusWidget />
           <ProjectsWidget />
           <ServerStatusWidget />
           <IbadahWidget />

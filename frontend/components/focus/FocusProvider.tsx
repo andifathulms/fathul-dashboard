@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 
+import { usePrayer } from '@/hooks/usePrayer'
 import api from '@/lib/api'
 import {
   KIND_LABELS,
@@ -42,7 +43,8 @@ interface FocusContextValue {
   running: boolean
   paused: boolean
   start: (opts?: StartOptions) => Promise<void>
-  stop: (opts?: StopOptions) => Promise<void>
+  /** Resolves with the closed session, so a caller can attach a note to it. */
+  stop: (opts?: StopOptions) => Promise<FocusSession | null>
   pause: () => void
   resume: () => void
   /** End the current phase early and move straight to what comes next. */
@@ -158,8 +160,8 @@ export default function FocusProvider({ children }: { children: React.ReactNode 
 
   const stop = useCallback(
     async (opts: StopOptions = {}) => {
-      if (!session) return
-      await api.post(`/focus/${session.id}/stop/`, {
+      if (!session) return null
+      const { data } = await api.post<FocusSession>(`/focus/${session.id}/stop/`, {
         completed: opts.completed ?? false,
         interrupted_by: opts.interruptedBy ?? '',
         note: opts.note ?? '',
@@ -169,6 +171,7 @@ export default function FocusProvider({ children }: { children: React.ReactNode 
       setPause(null)
       await mutateActive('', { revalidate: false })
       void mutateToday()
+      return data
     },
     [session, elapsed, mutateActive, mutateToday]
   )
@@ -228,6 +231,23 @@ export default function FocusProvider({ children }: { children: React.ReactNode 
     }
     void done()
   }, [session, paused, remaining, total, settings, completedToday, start, mutateActive, mutateToday])
+
+  // When the adzan arrives mid-session the timer pauses itself rather than
+  // being abandoned — going to pray should not cost you the pomodoro. The
+  // arrival is detected by the next-prayer label rolling over to the one after.
+  const { next: nextPrayer } = usePrayer()
+  const nextPrayerKey = nextPrayer ? String(nextPrayer.key) : null
+  const lastPrayerKey = useRef<string | null>(null)
+  useEffect(() => {
+    const key = nextPrayerKey
+    const previous = lastPrayerKey.current
+    lastPrayerKey.current = key
+    if (!previous || !key || previous === key) return
+    if (!settings?.pause_for_prayer) return
+    if (!session || session.kind !== 'focus' || paused) return
+    doPause()
+    notify(`Adzan ${previous}`, 'Timer paused — resume when you get back.')
+  }, [nextPrayerKey, settings?.pause_for_prayer, session, paused, doPause])
 
   const skip = useCallback(async () => {
     if (!session) return
