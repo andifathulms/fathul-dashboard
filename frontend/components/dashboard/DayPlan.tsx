@@ -31,7 +31,12 @@ export default function DayPlan() {
   const { settings, completedToday } = useFocus()
   const { timings, now } = usePrayer()
 
-  const open = (tasks ?? []).filter((t) => !t.is_done)
+  const agendaOpen = (tasks ?? []).filter((t) => !t.is_done)
+  // A day you picked beats a day the query picked. Falls back to the agenda so
+  // the strip still works before you have starred anything.
+  const chosen = agendaOpen.filter((t) => t.today_on === today)
+  const open = chosen.length > 0 ? chosen : agendaOpen
+  const picked = chosen.length > 0
   const estimated = open.reduce((sum, t) => sum + (t.estimate_pomodoros ?? 0), 0)
   const remainingOnEstimated = open.reduce(
     (sum, t) => sum + Math.max(0, (t.estimate_pomodoros ?? 0) - t.pomodoros_done),
@@ -82,7 +87,7 @@ export default function DayPlan() {
     <section className="card flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3.5">
       <Metric
         icon={<Target size={14} />}
-        label="On the list"
+        label={picked ? 'Doing today' : 'On the list'}
         value={`${open.length}`}
         foot={
           estimated > 0

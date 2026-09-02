@@ -43,6 +43,7 @@ export interface Task {
   is_waiting: boolean
   waiting_on: string
   waiting_since: string | null
+  today_on: string | null
   repeat: TaskRepeat
   repeat_interval: number
   repeat_parent: number | null

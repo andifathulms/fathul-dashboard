@@ -23,8 +23,9 @@ import useSWR, { mutate as globalMutate } from 'swr'
 
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
+import { parseTask } from '@/lib/nlp'
 import type { Command, DailyLog, Project, Task } from '@/lib/types'
-import { cn, formatDateShort } from '@/lib/utils'
+import { cn, formatDateShort, todayISO } from '@/lib/utils'
 
 /** Pull the matching line out of a journal entry, so the result shows the
  *  sentence you searched for rather than the first line of that day. */
@@ -52,9 +53,18 @@ interface Item {
   id: string
   label: string
   hint?: string
+  /** Rendered under the label instead of `hint` — used for the capture preview. */
+  preview?: React.ReactNode
   group: string
   icon: LucideIcon
   run: () => void
+}
+
+const MATCH_TONES: Record<string, string> = {
+  date: 'bg-accent1/10 text-accent1 ring-accent1/25',
+  project: 'bg-accent2/10 text-accent2 ring-accent2/25',
+  repeat: 'bg-highlight/10 text-highlight ring-highlight/25',
+  estimate: 'bg-muted/10 text-muted ring-muted/30',
 }
 
 export default function CommandPalette() {
@@ -169,17 +179,43 @@ export default function CommandPalette() {
   // so it never steals Enter from a real match — and first by default when
   // nothing matched, which is exactly when you meant to capture something.
   const results = useMemo(() => {
-    const title = q.trim()
-    if (!title) return filtered
+    const raw = q.trim()
+    if (!raw) return filtered
+
+    // "deploy staging besok #ekiosk" carries its own due date and project —
+    // the preview below shows what was understood before you commit to it.
+    const parsed = parseTask(raw, projects ?? [])
+    const title = parsed.title || raw
     const capture: Item = {
       id: 'capture',
       label: `Add task “${title}”`,
-      hint: 'Captured with no due date',
+      preview:
+        parsed.matched.length > 0 ? (
+          <span className="mt-0.5 flex flex-wrap items-center gap-1">
+            {parsed.matched.map((m) => (
+              <span
+                key={m.kind + m.text}
+                className={cn('chip text-xs ring-1 ring-inset', MATCH_TONES[m.kind])}
+              >
+                {m.label}
+              </span>
+            ))}
+          </span>
+        ) : undefined,
+      hint: parsed.matched.length === 0 ? 'Captured with no due date' : undefined,
       group: 'Capture',
       icon: Plus,
       run: async () => {
         try {
-          await api.post('/tasks/', { title, project: null, due_date: null })
+          await api.post('/tasks/', {
+            title,
+            project: parsed.project?.id ?? null,
+            due_date: parsed.dueDate,
+            repeat: parsed.repeat,
+            repeat_interval: parsed.repeatInterval,
+            estimate_pomodoros: parsed.estimate,
+            today_on: parsed.forToday ? todayISO() : null,
+          })
           await globalMutate((key) => typeof key === 'string' && key.startsWith('/tasks'))
           toast.success(title, 'Task added')
         } catch (e) {
@@ -188,7 +224,7 @@ export default function CommandPalette() {
       },
     }
     return [...filtered, capture]
-  }, [filtered, q, toast])
+  }, [filtered, q, projects, toast])
 
   useEffect(() => setActive(0), [q])
 
@@ -284,6 +320,7 @@ export default function CommandPalette() {
                     {it.hint && (
                       <span className="block truncate font-mono text-xs text-muted">{it.hint}</span>
                     )}
+                    {it.preview}
                   </span>
                   {idx === active && <CornerDownLeft size={14} className="shrink-0 text-muted" />}
                 </button>

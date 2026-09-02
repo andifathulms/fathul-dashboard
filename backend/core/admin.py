@@ -25,7 +25,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_done', 'is_waiting', 'repeat', 'project', 'due_date', 'completed_at')
+    list_display = ('title', 'is_done', 'is_waiting', 'today_on', 'repeat', 'project', 'due_date', 'completed_at')
     list_filter = ('is_done', 'is_waiting', 'repeat', 'project')
     search_fields = ('title',)
 

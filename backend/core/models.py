@@ -71,6 +71,11 @@ class Task(models.Model):
     is_waiting = models.BooleanField(default=False)
     waiting_on = models.CharField(max_length=200, blank=True)
     waiting_since = models.DateField(null=True, blank=True)
+    # The day you chose to do this, which is not the same as the day it is due.
+    # Stored as the date rather than a boolean so the flag clears itself at
+    # midnight — a star you set on Monday must not still be lit on Thursday,
+    # and that should not depend on a nightly job having run.
+    today_on = models.DateField(null=True, blank=True)
     # Recurrence. An empty `repeat` is a one-off, which is most tasks.
     repeat = models.CharField(max_length=20, choices=REPEAT_CHOICES, blank=True)
     repeat_interval = models.IntegerField(default=1)

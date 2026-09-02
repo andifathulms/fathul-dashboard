@@ -45,7 +45,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'is_done', 'project', 'project_name',
             'due_date', 'estimate_pomodoros', 'pomodoros_done',
-            'is_waiting', 'waiting_on', 'waiting_since',
+            'is_waiting', 'waiting_on', 'waiting_since', 'today_on',
             'repeat', 'repeat_interval', 'repeat_parent',
             'completed_at', 'created_at',
         ]

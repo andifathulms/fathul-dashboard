@@ -66,7 +66,11 @@ export default function FocusPage() {
   const { next: nextPrayer } = usePrayer()
   const toast = useToast()
 
-  const openTasks = (tasks ?? []).filter((t) => !t.is_done)
+  // What you chose for today rises to the top of the picker — it is the list
+  // you are most likely to be starting a session on.
+  const openTasks = (tasks ?? [])
+    .filter((t) => !t.is_done)
+    .sort((a, b) => Number(b.today_on === today) - Number(a.today_on === today))
   const target = settings?.daily_target_sessions ?? 8
   const total = session ? session.planned_min * 60 : 0
   const progress = total > 0 ? elapsed / total : 0

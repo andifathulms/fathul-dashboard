@@ -230,6 +230,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         waiting = self.request.query_params.get('is_waiting')
         if waiting is not None:
             qs = qs.filter(is_waiting=waiting.lower() == 'true')
+        # ?today=YYYY-MM-DD → only what you chose to do that day.
+        today = self.request.query_params.get('today')
+        if today:
+            qs = qs.filter(today_on=today)
         search = self.request.query_params.get('search')
         if search:
             qs = qs.filter(title__icontains=search)

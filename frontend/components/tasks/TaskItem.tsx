@@ -1,6 +1,6 @@
 'use client'
 
-import { PauseCircle, Play, Repeat, Timer, Trash2 } from 'lucide-react'
+import { PauseCircle, Play, Repeat, Star, Timer, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { useFocus } from '@/components/focus/FocusProvider'
@@ -8,7 +8,7 @@ import Modal from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
-import { CATEGORY_STYLES, cn, daysSince, formatDateShort, repeatLabel } from '@/lib/utils'
+import { CATEGORY_STYLES, cn, daysSince, formatDateShort, repeatLabel, todayISO } from '@/lib/utils'
 
 interface TaskItemProps {
   task: Task
@@ -35,6 +35,9 @@ export default function TaskItem({
   const { start, session } = useFocus()
   const [waitingOpen, setWaitingOpen] = useState(false)
   const [waitingOn, setWaitingOn] = useState('')
+  // The flag is stored as the day it was set, so yesterday's star is simply
+  // not today's — no nightly job has to remember to put it out.
+  const isToday = task.today_on === todayISO()
 
   const toggle = async () => {
     try {
@@ -42,6 +45,15 @@ export default function TaskItem({
       onChange()
     } catch (e) {
       toast.error((e as Error).message, 'Failed to update task')
+    }
+  }
+
+  const toggleToday = async () => {
+    try {
+      await api.patch(`/tasks/${task.id}/`, { today_on: isToday ? null : todayISO() })
+      onChange()
+    } catch (e) {
+      toast.error((e as Error).message, "Couldn't update the task")
     }
   }
 
@@ -89,6 +101,22 @@ export default function TaskItem({
 
   return (
     <div className="row group -mx-1 px-2 py-2">
+      {!task.is_done && (
+        <button
+          type="button"
+          onClick={toggleToday}
+          aria-label={isToday ? 'Remove from today' : 'Do this today'}
+          aria-pressed={isToday}
+          title={isToday ? 'Remove from today' : 'Do this today'}
+          className={cn(
+            'shrink-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100',
+            isToday ? 'text-accent2 opacity-100' : 'text-muted opacity-0 hover:text-accent2'
+          )}
+        >
+          <Star size={14} fill={isToday ? 'currentColor' : 'none'} />
+        </button>
+      )}
+
       <button
         type="button"
         onClick={toggle}

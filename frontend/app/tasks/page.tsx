@@ -19,20 +19,24 @@ type Filter = 'all' | 'open' | 'done'
 
 /** Tasks group by when they're due, not by the order they were typed — that's
  *  the only grouping that tells you what to do next. */
-type Bucket = 'overdue' | 'today' | 'upcoming' | 'waiting' | 'someday'
+type Bucket = 'chosen' | 'overdue' | 'today' | 'upcoming' | 'waiting' | 'someday'
 
 const BUCKET_LABELS: Record<Bucket, string> = {
+  chosen: 'Doing today',
   overdue: 'Overdue',
   today: 'Today',
   upcoming: 'Upcoming',
   waiting: 'Waiting on someone',
   someday: 'No due date',
 }
-const BUCKET_ORDER: Bucket[] = ['overdue', 'today', 'upcoming', 'waiting', 'someday']
+const BUCKET_ORDER: Bucket[] = ['chosen', 'overdue', 'today', 'upcoming', 'waiting', 'someday']
 
 function bucketOf(task: Task, today: string): Bucket {
   // Blocked beats due: a task you cannot act on is not overdue, it is stuck.
   if (task.is_waiting) return 'waiting'
+  // What you chose beats what the calendar decided — that is the whole point
+  // of choosing. An overdue task you starred still reads as today's work.
+  if (task.today_on === today) return 'chosen'
   if (!task.due_date) return 'someday'
   if (task.due_date < today) return 'overdue'
   if (task.due_date === today) return 'today'
@@ -191,11 +195,13 @@ export default function TasksPage() {
             title={`${BUCKET_LABELS[bucket]} (${items.length})`}
             bodyClassName="flex flex-col gap-0.5"
             className={
-              bucket === 'overdue'
-                ? 'border-danger/30'
-                : bucket === 'waiting'
-                  ? 'border-warning/30'
-                  : undefined
+              bucket === 'chosen'
+                ? 'border-accent2/40'
+                : bucket === 'overdue'
+                  ? 'border-danger/30'
+                  : bucket === 'waiting'
+                    ? 'border-warning/30'
+                    : undefined
             }
           >
             {items.map((t) => (
