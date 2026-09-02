@@ -20,7 +20,9 @@ import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
 import { CategoryBadge, StatusBadge } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
-import Skeleton from '@/components/ui/Skeleton'
+import Segmented from '@/components/ui/Segmented'
+import { SearchField, FilterBar } from '@/components/ui/Segmented'
+import { SkeletonCards } from '@/components/ui/Skeleton'
 import type { Project, ProjectCategory, ProjectStatus } from '@/lib/types'
 import { CATEGORY_LABELS, PRIORITY_STYLES, STATUS_RANK, cn } from '@/lib/utils'
 
@@ -96,31 +98,19 @@ export default function ProjectsPage() {
         icon={<FolderKanban size={20} />}
         action={
           <button onClick={() => setShowForm(true)} className="btn-accent">
-            <Plus size={16} /> New Project
+            <Plus size={16} /> Add project
           </button>
         }
       />
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-lg bg-surface p-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setStatus(f.key)}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                status === f.key ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text'
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      <FilterBar>
+        <Segmented ariaLabel="Filter by status" value={status} onChange={setStatus} options={FILTERS} />
+
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as ProjectCategory | 'all')}
-            className="input w-auto text-xs"
+            className="select w-auto"
             aria-label="Filter by category"
           >
             <option value="all">All categories</option>
@@ -133,8 +123,8 @@ export default function ProjectsPage() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="input w-auto text-xs"
-            aria-label="Sort"
+            className="select w-auto"
+            aria-label="Sort projects"
           >
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>
@@ -142,52 +132,50 @@ export default function ProjectsPage() {
               </option>
             ))}
           </select>
-          <div className="flex rounded-lg bg-surface p-0.5">
+          <div className="flex rounded-lg border border-border bg-surface p-0.5">
             <button
               onClick={() => changeView('grid')}
-              className={cn('flex h-7 w-7 items-center justify-center rounded-md transition-colors', view === 'grid' ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text')}
+              className={cn(
+                'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
+                view === 'grid' ? 'bg-accent1/10 text-accent1' : 'text-muted hover:text-text'
+              )}
               aria-label="Grid view"
-              title="Grid"
+              aria-pressed={view === 'grid'}
+              title="Grid view"
             >
               <LayoutGrid size={15} />
             </button>
             <button
               onClick={() => changeView('list')}
-              className={cn('flex h-7 w-7 items-center justify-center rounded-md transition-colors', view === 'list' ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text')}
+              className={cn(
+                'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
+                view === 'list' ? 'bg-accent1/10 text-accent1' : 'text-muted hover:text-text'
+              )}
               aria-label="List view"
-              title="List"
+              aria-pressed={view === 'list'}
+              title="List view"
             >
               <List size={15} />
             </button>
           </div>
-          <div className="relative w-full max-w-[200px] sm:w-48">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search…"
-              className="input pl-9"
-            />
-          </div>
+          <SearchField value={q} onChange={setQ} placeholder="Search projects" className="sm:w-48" />
         </div>
-      </div>
+      </FilterBar>
 
-      {isLoading && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-xl" />
-          ))}
-        </div>
-      )}
+      {isLoading && <SkeletonCards count={6} />}
       {filtered?.length === 0 && (
         <div className="card">
           <EmptyState
             icon={<FolderKanban size={22} />}
-            title="No projects here yet"
-            hint={q || status !== 'all' || category !== 'all' ? 'Try changing the filters or search terms.' : 'Create your first project to get started.'}
+            title={q || status !== 'all' || category !== 'all' ? 'Nothing matches those filters' : 'No projects yet'}
+            hint={
+              q || status !== 'all' || category !== 'all'
+                ? 'Clear the search or pick a different status.'
+                : 'A project holds its tasks, credentials, repos and servers in one place.'
+            }
             action={
               <button onClick={() => setShowForm(true)} className="btn-accent">
-                <Plus size={16} /> New Project
+                <Plus size={16} /> Add project
               </button>
             }
           />
@@ -201,11 +189,10 @@ export default function ProjectsPage() {
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
-              className="group card card-hover relative flex flex-col overflow-hidden p-4 pl-5"
+              className="group card card-hover flex flex-col overflow-hidden p-4"
             >
-              <span className={cn('absolute inset-y-0 left-0 z-10 w-1', PRIORITY_STYLES[p.priority].dot)} />
               {p.lockup_horizontal_url ? (
-                <div className="relative -mx-4 -mt-4 mb-3 h-24 overflow-hidden border-b border-border">
+                <div className="relative -mx-4 -mt-4 mb-3 h-24 overflow-hidden border-b border-border bg-surface2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.lockup_horizontal_url}
@@ -214,19 +201,23 @@ export default function ProjectsPage() {
                   />
                   <ArrowUpRight
                     size={16}
-                    className="absolute right-3 top-3 text-text/70 drop-shadow transition-colors group-hover:text-accent1"
+                    className="absolute right-3 top-3 rounded bg-surface/80 p-px text-muted backdrop-blur transition-colors group-hover:text-accent1"
                   />
                 </div>
               ) : (
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <ProjectAvatar project={p} size={34} />
-                    <h3 className="truncate font-semibold leading-tight">{p.name}</h3>
+                    <ProjectAvatar project={p} size={32} />
+                    <h3 className="truncate font-display text-md font-semibold leading-tight">
+                      {p.name}
+                    </h3>
                   </div>
                   <ArrowUpRight size={16} className="shrink-0 text-muted transition-colors group-hover:text-accent1" />
                 </div>
               )}
-              {p.description && <p className="mt-1 line-clamp-2 text-[13px] text-muted">{p.description}</p>}
+              {p.description && (
+                <p className="mt-1.5 line-clamp-2 text-base text-muted">{p.description}</p>
+              )}
               <div className="mt-auto pt-2.5" />
               <div className="flex items-center gap-2">
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -235,7 +226,7 @@ export default function ProjectsPage() {
                   <StatusBadge status={p.status} />
                 </div>
                 {p.tech_stack?.length > 0 && (
-                  <div className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-muted">
+                  <div className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-sm text-muted">
                     {p.tech_stack.slice(0, 3).map((t, i) => (
                       <span key={t} className="inline-flex items-center gap-1.5">
                         {i > 0 && <span className="text-border">·</span>}
@@ -245,11 +236,11 @@ export default function ProjectsPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-[11px] text-muted">
-                <span className="inline-flex items-center gap-1">
+              <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
+                <span className="inline-flex items-center gap-1" title="Tasks">
                   <CheckSquare size={12} /> {p.tasks_count}
                 </span>
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1" title="Credentials">
                   <KeyRound size={12} /> {p.credentials_count}
                 </span>
                 <span className="ml-auto" title={`Updated ${p.updated_at.slice(0, 10)}`}>
@@ -263,18 +254,17 @@ export default function ProjectsPage() {
 
       {/* List view */}
       {view === 'list' && (
-        <div className="card stagger-in divide-y divide-border overflow-hidden">
+        <div className="card stagger-in flex flex-col overflow-hidden p-1.5">
           {filtered?.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
-              className="group relative flex items-center gap-3 py-2.5 pl-4 pr-3 transition-colors hover:bg-surface2/40"
+              className="row group"
             >
-              <span className={cn('absolute inset-y-0 left-0 w-1', PRIORITY_STYLES[p.priority].dot)} />
-              <ProjectAvatar project={p} size={30} />
+              <ProjectAvatar project={p} size={28} />
               <div className="min-w-0 flex-1">
-                <span className="truncate text-sm font-medium">{p.name}</span>
-                <div className="mt-0.5 flex items-center gap-2.5 text-[11px] text-muted">
+                <span className="truncate text-base font-medium">{p.name}</span>
+                <div className="flex items-center gap-2.5 text-sm text-muted tnum">
                   <span className="inline-flex items-center gap-1">
                     <CheckSquare size={11} /> {p.tasks_count}
                   </span>
@@ -282,7 +272,9 @@ export default function ProjectsPage() {
                     <KeyRound size={11} /> {p.credentials_count}
                   </span>
                   {p.tech_stack?.length > 0 && (
-                    <span className="hidden truncate font-mono md:inline">{p.tech_stack.slice(0, 3).join(' · ')}</span>
+                    <span className="hidden truncate font-mono md:inline">
+                    {p.tech_stack.slice(0, 3).join(' · ')}
+                  </span>
                   )}
                 </div>
               </div>

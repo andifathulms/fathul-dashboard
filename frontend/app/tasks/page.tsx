@@ -8,27 +8,44 @@ import PageHeader from '@/components/layout/PageHeader'
 import TaskItem from '@/components/tasks/TaskItem'
 import WidgetCard from '@/components/ui/Card'
 import EmptyState from '@/components/ui/EmptyState'
+import Segmented from '@/components/ui/Segmented'
+import { SkeletonRows } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import type { Project, Task } from '@/lib/types'
-import { cn, todayISO } from '@/lib/utils'
+import { todayISO } from '@/lib/utils'
 
 type Filter = 'all' | 'open' | 'done'
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'open', label: 'Open' },
-  { key: 'done', label: 'Done' },
-]
+
+/** Tasks group by when they're due, not by the order they were typed — that's
+ *  the only grouping that tells you what to do next. */
+type Bucket = 'overdue' | 'today' | 'upcoming' | 'someday'
+
+const BUCKET_LABELS: Record<Bucket, string> = {
+  overdue: 'Overdue',
+  today: 'Today',
+  upcoming: 'Upcoming',
+  someday: 'No due date',
+}
+const BUCKET_ORDER: Bucket[] = ['overdue', 'today', 'upcoming', 'someday']
+
+function bucketOf(task: Task, today: string): Bucket {
+  if (!task.due_date) return 'someday'
+  if (task.due_date < today) return 'overdue'
+  if (task.due_date === today) return 'today'
+  return 'upcoming'
+}
 
 export default function TasksPage() {
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<Filter>('open')
   const [title, setTitle] = useState('')
   const [project, setProject] = useState<string>('')
   const [due, setDue] = useState('')
 
-  const { data: tasks, mutate } = useSWR<Task[]>('/tasks/')
+  const { data: tasks, isLoading, mutate } = useSWR<Task[]>('/tasks/')
   const { data: projects } = useSWR<Project[]>('/projects/')
   const toast = useToast()
+  const today = todayISO()
 
   const add = async () => {
     if (!title.trim()) return
@@ -43,35 +60,50 @@ export default function TasksPage() {
       setDue('')
       mutate()
     } catch (e) {
-      toast.error((e as Error).message, 'Failed to add task')
+      toast.error((e as Error).message, "Couldn't add the task")
     }
   }
 
-  const visible = tasks?.filter((t) =>
+  const all = tasks ?? []
+  const doneCount = all.filter((t) => t.is_done).length
+  const openCount = all.length - doneCount
+
+  const visible = all.filter((t) =>
     filter === 'all' ? true : filter === 'done' ? t.is_done : !t.is_done
   )
-  const open = visible?.filter((t) => !t.is_done) ?? []
-  const done = visible?.filter((t) => t.is_done) ?? []
-  const doneCount = tasks?.filter((t) => t.is_done).length ?? 0
+
+  const openBuckets = BUCKET_ORDER.map((b) => ({
+    bucket: b,
+    items: visible.filter((t) => !t.is_done && bucketOf(t, today) === b),
+  })).filter((g) => g.items.length > 0)
+
+  const doneItems = visible.filter((t) => t.is_done)
 
   return (
     <div>
       <PageHeader
         title="Tasks"
-        subtitle={`${(tasks?.length ?? 0) - doneCount} open · ${doneCount} done`}
+        subtitle={`${openCount} open · ${doneCount} done`}
         icon={<CheckSquare size={20} />}
       />
 
-      <WidgetCard className="mb-5" bodyClassName="space-y-3">
+      {/* Capture bar — the primary action on this page, so it leads. */}
+      <div className="card-lift mb-5 p-3">
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
-            placeholder="New task… (e.g. remember to pay back the nasi goreng debt)"
+            placeholder="What needs doing?"
+            aria-label="Task title"
             className="input flex-1"
           />
-          <select className="input sm:w-44" value={project} onChange={(e) => setProject(e.target.value)}>
+          <select
+            className="select sm:w-40"
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
+            aria-label="Project"
+          >
             <option value="">No project</option>
             {projects?.map((p) => (
               <option key={p.id} value={p.id}>
@@ -84,53 +116,64 @@ export default function TasksPage() {
             className="input sm:w-40"
             value={due}
             onChange={(e) => setDue(e.target.value)}
-            min={undefined}
-            placeholder={todayISO()}
+            aria-label="Due date"
           />
           <button onClick={add} className="btn-accent shrink-0">
-            <Plus size={16} /> Add
+            <Plus size={16} /> Add task
           </button>
         </div>
-      </WidgetCard>
-
-      <div className="mb-4 flex gap-1 rounded-lg bg-surface p-1 w-fit">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-              filter === f.key ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text'
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
       </div>
 
-      <div className="space-y-5">
-        {open.length > 0 && (
-          <WidgetCard title={`Open (${open.length})`} bodyClassName="space-y-0.5">
-            {open.map((t) => (
+      <Segmented
+        className="mb-4"
+        ariaLabel="Filter tasks"
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { key: 'open', label: 'Open', count: openCount },
+          { key: 'done', label: 'Done', count: doneCount },
+          { key: 'all', label: 'All', count: all.length },
+        ]}
+      />
+
+      {isLoading && (
+        <div className="card p-4">
+          <SkeletonRows rows={5} />
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {openBuckets.map(({ bucket, items }) => (
+          <WidgetCard
+            key={bucket}
+            title={`${BUCKET_LABELS[bucket]} (${items.length})`}
+            bodyClassName="flex flex-col gap-0.5"
+            className={bucket === 'overdue' ? 'border-danger/30' : undefined}
+          >
+            {items.map((t) => (
+              <TaskItem key={t.id} task={t} projects={projects} onChange={mutate} showDelete />
+            ))}
+          </WidgetCard>
+        ))}
+
+        {doneItems.length > 0 && (
+          <WidgetCard title={`Done (${doneItems.length})`} bodyClassName="flex flex-col gap-0.5">
+            {doneItems.map((t) => (
               <TaskItem key={t.id} task={t} projects={projects} onChange={mutate} showDelete />
             ))}
           </WidgetCard>
         )}
 
-        {done.length > 0 && (
-          <WidgetCard title={`Done (${done.length})`} bodyClassName="space-y-0.5">
-            {done.map((t) => (
-              <TaskItem key={t.id} task={t} projects={projects} onChange={mutate} showDelete />
-            ))}
-          </WidgetCard>
-        )}
-
-        {visible?.length === 0 && (
+        {!isLoading && visible.length === 0 && (
           <div className="card">
             <EmptyState
               icon={<CheckSquare size={22} />}
-              title="No tasks"
-              hint={filter === 'all' ? 'Add a task above to get started.' : 'No tasks in this filter.'}
+              title={filter === 'done' ? 'Nothing finished yet' : 'No open tasks'}
+              hint={
+                filter === 'all'
+                  ? 'Add one above — a task without a project is perfectly fine.'
+                  : 'Switch the filter to see the rest.'
+              }
             />
           </div>
         )}

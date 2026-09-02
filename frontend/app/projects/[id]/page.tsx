@@ -101,7 +101,15 @@ export default function ProjectDetailPage() {
   }
 
   if (isLoading) return <ProjectDetailSkeleton />
-  if (!project) return <p className="py-10 text-center text-sm text-muted">Project not found.</p>
+  if (!project)
+    return (
+      <p className="py-16 text-center text-base text-muted">
+        That project no longer exists.{' '}
+        <Link href="/projects" className="text-accent1 hover:underline">
+          Back to projects
+        </Link>
+      </p>
+    )
 
   // Prefer the repos list; fall back to the legacy single repo_url.
   const repos =
@@ -112,70 +120,74 @@ export default function ProjectDetailPage() {
         : []
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4">
       <Link
         href="/projects"
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text"
+        className="inline-flex w-fit items-center gap-1.5 text-base text-muted transition-colors hover:text-text"
       >
-        <ArrowLeft size={15} /> Projects
+        <ArrowLeft size={15} /> All projects
       </Link>
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-3.5">
-          <ProjectAvatar project={project} size={48} className="mt-0.5 rounded-xl" />
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-            {project.description && <p className="mt-1.5 max-w-2xl text-muted">{project.description}</p>}
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <PriorityBadge priority={project.priority} />
-              <CategoryBadge category={project.category} />
-              <StatusBadge status={project.status} />
-              {project.tech_stack?.map((t) => (
-                <TechTag key={t}>{t}</TechTag>
-              ))}
+      <header className="card-lift flex flex-col gap-4 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3.5">
+            <ProjectAvatar project={project} size={44} className="mt-0.5 rounded-xl" />
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
+              {project.description && (
+                <p className="mt-1 max-w-[62ch] text-base text-text2">{project.description}</p>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <PriorityBadge priority={project.priority} />
+                <CategoryBadge category={project.category} />
+                <StatusBadge status={project.status} />
+                {project.tech_stack?.map((t) => (
+                  <TechTag key={t}>{t}</TechTag>
+                ))}
+              </div>
             </div>
           </div>
+          <div className="flex shrink-0 gap-2">
+            <button onClick={() => setEditing(true)} className="btn">
+              <Pencil size={14} /> <span className="hidden sm:inline">Edit</span>
+            </button>
+            <button onClick={remove} className="btn-danger" aria-label="Delete project" title="Delete project">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button onClick={() => setEditing(true)} className="btn">
-            <Pencil size={14} /> <span className="hidden sm:inline">Edit</span>
-          </button>
-          <button onClick={remove} className="btn-danger" aria-label="Delete project">
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
 
-      {(repos.length > 0 || project.live_url || project.local_path) && (
-        <div className="flex flex-wrap gap-2">
-          {repos.map((r, i) => (
-            <a key={i} href={r.url} target="_blank" rel="noreferrer" className="btn text-xs">
-              <Github size={14} /> {r.label || 'Repository'}
-            </a>
-          ))}
-          {project.live_url && (
-            <a href={project.live_url} target="_blank" rel="noreferrer" className="btn text-xs">
-              <ExternalLink size={14} /> Live
-            </a>
-          )}
-          {project.local_path && (
-            <a href={`vscode://file/${project.local_path}?windowId=_blank`} className="btn text-xs">
-              <Code2 size={14} /> Open in VS Code
-            </a>
-          )}
-        </div>
-      )}
+        {(repos.length > 0 || project.live_url || project.local_path) && (
+          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+            {repos.map((r, i) => (
+              <a key={i} href={r.url} target="_blank" rel="noreferrer" className="btn btn-sm">
+                <Github size={14} /> {r.label || 'Repository'}
+              </a>
+            ))}
+            {project.live_url && (
+              <a href={project.live_url} target="_blank" rel="noreferrer" className="btn btn-sm">
+                <ExternalLink size={14} /> Live site
+              </a>
+            )}
+            {project.local_path && (
+              <a href={`vscode://file/${project.local_path}?windowId=_blank`} className="btn btn-sm">
+                <Code2 size={14} /> Open in VS Code
+              </a>
+            )}
+          </div>
+        )}
+      </header>
 
       {/* VM / Host access — SSH + password from the linked VM(s) */}
       {vms && vms.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {vms.map((vm) => (
             <WidgetCard
               key={vm.id}
               title={`VM · ${vm.name}`}
               icon={<ServerIcon size={15} />}
               action={
-                <span className="text-[11px] uppercase tracking-wide text-muted">
+                <span className="text-xs uppercase tracking-[0.08em] text-muted">
                   {vm.provider}
                   {vm.requires_vpn ? ' · VPN' : ''}
                 </span>
@@ -187,14 +199,14 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Web uptime/status — only when a live_url is set */}
         <UptimeWidget projectId={pid} hasUrl={!!project.live_url} />
 
         {/* GitHub analytics — one card per linked repo, half-width in the grid */}
         <GithubActivity projectId={pid} hasRepo={repos.some((r) => /github\.com/.test(r.url))} />
 
-        <WidgetCard title="Tasks" bodyClassName="space-y-2">
+        <WidgetCard title="Tasks" bodyClassName="flex flex-col gap-2">
           <div className="flex gap-2">
             <input
               value={newTask}
@@ -207,8 +219,10 @@ export default function ProjectDetailPage() {
               <Plus size={16} />
             </button>
           </div>
-          <div className="space-y-0.5">
-            {tasks?.length === 0 && <EmptyState compact title="No tasks yet" />}
+          <div className="flex flex-col gap-0.5">
+            {tasks?.length === 0 && (
+              <EmptyState compact title="No tasks yet" hint="Add the first one above." />
+            )}
             {tasks?.map((t) => (
               <TaskItem key={t.id} task={t} onChange={mutateTasks} showDelete />
             ))}
@@ -219,25 +233,25 @@ export default function ProjectDetailPage() {
           title="Credentials"
           icon={<KeyRound size={15} />}
           action={<AddButton onClick={() => setShowCred(true)} />}
-          bodyClassName="space-y-2"
+          bodyClassName="flex flex-col gap-2"
         >
           {creds?.length === 0 && <EmptyState compact title="No credentials yet" />}
           {creds?.map((c) => (
-            <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
+            <div key={c.id} className="group rounded-lg border border-border px-3 py-2 transition-colors hover:bg-surface2">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium">{c.label}</span>
+                <span className="truncate text-base font-medium">{c.label}</span>
                 <div className="flex items-center gap-1">
                   <CopyButton value={c.password} label="Copy password" />
                   <button
                     onClick={() => deleteCred(c.id)}
-                    className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                    className="icon-btn h-7 w-7 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                     aria-label="Delete credential"
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
               </div>
-              {c.username && <p className="text-[11px] text-muted">{c.username}</p>}
+              {c.username && <p className="truncate font-mono text-sm text-muted">{c.username}</p>}
               <div className="mt-1">
                 <RevealToggle value={c.password} />
               </div>
@@ -249,13 +263,13 @@ export default function ProjectDetailPage() {
           title="Commands"
           icon={<TerminalSquare size={15} />}
           action={<AddButton onClick={() => setShowCmd(true)} />}
-          bodyClassName="space-y-1.5"
+          bodyClassName="flex flex-col gap-1"
         >
           {commands?.length === 0 && <EmptyState compact title="No commands yet" />}
           {commands?.map((c) => (
-            <div key={c.id} className="group rounded-lg border border-border bg-bg px-3 py-2">
+            <div key={c.id} className="group rounded-lg border border-border px-3 py-2 transition-colors hover:bg-surface2">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs font-medium">{c.title}</span>
+                <span className="truncate text-base font-medium">{c.title}</span>
                 <div className="flex items-center gap-1">
                   {sshUrl(c.command) && (
                     <a
@@ -270,36 +284,38 @@ export default function ProjectDetailPage() {
                   <CopyButton value={c.command} />
                   <button
                     onClick={() => deleteCommand(c.id)}
-                    className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                    className="icon-btn h-7 w-7 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                     aria-label="Delete command"
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
               </div>
-              <code className="mt-1 block truncate font-mono text-[11px] text-muted">{c.command}</code>
+              <code className="mt-0.5 block truncate font-mono text-sm text-muted">{c.command}</code>
             </div>
           ))}
         </WidgetCard>
 
         <WidgetCard
-          title="Environment Variables"
+          title="Environment variables"
           action={<AddButton onClick={() => setShowEnv(true)} />}
-          bodyClassName="space-y-1.5"
+          bodyClassName="flex flex-col gap-1"
         >
-          {envs?.length === 0 && <EmptyState compact title="No env vars yet" />}
+          {envs?.length === 0 && (
+            <EmptyState compact title="No variables yet" hint="Paste a whole .env with Add." />
+          )}
           {envs?.map((e) => (
             <div
               key={e.id}
-              className="group flex items-center justify-between gap-2 rounded-lg border border-border bg-bg px-3 py-2"
+              className="group flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 transition-colors hover:bg-surface2"
             >
-              <code className="truncate font-mono text-[11px] text-accent2">{e.key}</code>
+              <code className="truncate font-mono text-sm font-medium text-accent2">{e.key}</code>
               <div className="flex items-center gap-1">
                 <RevealToggle value={e.value} />
                 <CopyButton value={e.value} />
                 <button
                   onClick={() => deleteEnv(e.id)}
-                  className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                  className="icon-btn h-7 w-7 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                   aria-label="Delete env var"
                 >
                   <Trash2 size={13} />
@@ -312,7 +328,9 @@ export default function ProjectDetailPage() {
 
       {project.notes && (
         <WidgetCard title="Notes">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-text/90">{project.notes}</p>
+          <p className="max-w-[68ch] whitespace-pre-wrap text-base leading-[1.7] text-text2">
+            {project.notes}
+          </p>
         </WidgetCard>
       )}
 
@@ -360,7 +378,7 @@ function ProjectDetailSkeleton() {
           <Skeleton className="h-6 w-20" />
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-52 w-full rounded-xl" />
         ))}

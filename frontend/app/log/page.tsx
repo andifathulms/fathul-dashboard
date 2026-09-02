@@ -96,28 +96,48 @@ export default function LogPage() {
   return (
     <div>
       <PageHeader
-        title="Daily Log"
-        subtitle="Daily journal & tasks — one note per day"
+        title="Daily log"
+        subtitle="One note and one task list per day"
         icon={<NotebookPen size={20} />}
+        action={
+          !isToday && (
+            <button onClick={() => setDate(today)} className="btn">
+              Back to today
+            </button>
+          )
+        }
       />
 
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Previous day">
+      {/* Date shuttle — the page's only navigation, so it reads as one object. */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-2 shadow-card">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setDate(shiftDate(date, -1))}
+            className="icon-btn"
+            aria-label="Previous day"
+            title="Previous day"
+          >
             <ChevronLeft size={18} />
           </button>
-          <div className="min-w-[230px] text-center">
-            <p className="text-sm font-semibold">{formatDateID(`${date}T00:00:00`)}</p>
-            {isToday && <p className="text-[11px] text-highlight">Today</p>}
+          <div className="min-w-[240px] px-2 text-center">
+            <p className="font-display text-md font-semibold">
+              {formatDateID(`${date}T00:00:00`)}
+            </p>
           </div>
           <button
             onClick={() => setDate(shiftDate(date, 1))}
             disabled={isToday}
             className="icon-btn disabled:opacity-30"
             aria-label="Next day"
+            title="Next day"
           >
             <ChevronRight size={18} />
           </button>
+          {isToday && (
+            <span className="chip ml-1 bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/25">
+              Today
+            </span>
+          )}
         </div>
         <input
           type="date"
@@ -125,26 +145,30 @@ export default function LogPage() {
           max={today}
           onChange={(e) => e.target.value && setDate(e.target.value)}
           className="input w-auto"
+          aria-label="Jump to date"
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <WidgetCard title="Tasks" bodyClassName="space-y-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <WidgetCard title="Tasks" bodyClassName="flex flex-col gap-3">
           <div className="flex gap-2">
             <input
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTask()}
               placeholder="Add a task…"
+              aria-label="New task"
               className="input"
             />
-            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add">
+            <button onClick={addTask} className="btn-accent shrink-0" aria-label="Add task" title="Add task">
               <Plus size={16} />
             </button>
           </div>
-          <div className="space-y-0.5">
+          <div className="flex flex-col gap-0.5">
             {tasks?.length === 0 && (
-              <p className="px-2 py-3 text-sm text-muted">No tasks for this date.</p>
+              <p className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-base text-muted">
+                Nothing logged for this day.
+              </p>
             )}
             {tasks?.map((t) => (
               <TaskItem key={t.id} task={t} projects={projects} onChange={mutateTasks} showDelete />
@@ -157,10 +181,10 @@ export default function LogPage() {
           icon={<NotebookPen size={15} />}
           action={
             <div className="flex items-center gap-2">
-              {saved === 'saving' && <span className="text-[11px] text-muted">saving…</span>}
-              {saved === 'done' && <span className="text-[11px] text-highlight">saved ✓</span>}
+              {saved === 'saving' && <span className="text-sm text-muted">Saving…</span>}
+              {saved === 'done' && <span className="text-sm text-highlight">Saved</span>}
               {isPast && locked && (
-                <button onClick={() => setLocked(false)} className="btn text-xs">
+                <button onClick={() => setLocked(false)} className="btn btn-sm">
                   <Pencil size={12} /> Edit
                 </button>
               )}
@@ -168,14 +192,16 @@ export default function LogPage() {
           }
         >
           {locked ? (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-3">
               {journal ? (
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text/90">{journal}</p>
+                <p className="max-w-[68ch] whitespace-pre-wrap text-base leading-[1.7] text-text2">
+                  {journal}
+                </p>
               ) : (
-                <p className="text-sm text-muted">No notes for this day.</p>
+                <p className="text-base text-muted">Nothing was written this day.</p>
               )}
-              <p className="flex items-center gap-1.5 pt-2 text-[11px] text-muted">
-                <Lock size={11} /> Past notes are locked — click Edit to change.
+              <p className="flex items-center gap-1.5 border-t border-border pt-2.5 text-sm text-muted">
+                <Lock size={11} /> Past notes are read-only. Choose Edit to change one.
               </p>
             </div>
           ) : (
@@ -183,9 +209,10 @@ export default function LogPage() {
               value={journal}
               onChange={(e) => setJournal(e.target.value)}
               onBlur={saveJournal}
-              rows={12}
+              rows={14}
               placeholder="What did you work on today?"
-              className="input resize-none leading-relaxed"
+              aria-label="Notes"
+              className="textarea resize-none bg-surface2/40 text-base leading-[1.7]"
             />
           )}
         </WidgetCard>
