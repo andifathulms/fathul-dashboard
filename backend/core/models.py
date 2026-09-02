@@ -84,7 +84,14 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['is_done', 'due_date', '-created_at']
+        # nulls_last matters: SQLite sorts NULL first ascending, which put every
+        # undated carry-over above the tasks actually due today — so a task you
+        # just added for today landed at the bottom of the list.
+        ordering = [
+            'is_done',
+            models.F('due_date').asc(nulls_last=True),
+            '-created_at',
+        ]
 
     def __str__(self):
         return self.title

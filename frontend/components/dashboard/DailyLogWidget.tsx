@@ -95,7 +95,7 @@ export default function DailyLogWidget() {
       </div>
 
       {/* Tasks checklist */}
-      <div className="flex flex-col gap-0.5">
+      <div className="flex max-h-[420px] flex-col gap-0.5 overflow-y-auto">
         {tasks?.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-base text-muted">
             Nothing due today. Add one above.

@@ -119,10 +119,6 @@ export default function FocusProvider({ children }: { children: React.ReactNode 
     setPause(session ? readPause(session.id) : null)
   }, [session?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    requestNotifyPermission()
-  }, [])
-
   const elapsed = session
     ? Math.max(
         0,
@@ -142,6 +138,9 @@ export default function FocusProvider({ children }: { children: React.ReactNode 
 
   const start = useCallback(
     async (opts: StartOptions = {}) => {
+      // Asked here, inside the click that starts a session: Safari rejects a
+      // permission request that does not come from a user gesture.
+      requestNotifyPermission()
       const { data } = await api.post<FocusSession>('/focus/start/', {
         kind: opts.kind ?? 'focus',
         task: opts.task ?? null,

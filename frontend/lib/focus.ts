@@ -67,7 +67,9 @@ export function playChime(kind: FocusKind) {
 export function requestNotifyPermission() {
   try {
     if ('Notification' in window && Notification.permission === 'default') {
-      void Notification.requestPermission()
+      // Must be caught: outside a user gesture Safari rejects this, and an
+      // unhandled rejection shows up as a console error on every page load.
+      Notification.requestPermission().catch(() => {})
     }
   } catch {
     /* not supported */
