@@ -69,7 +69,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
       icon={<Activity size={15} />}
       action={
         <div className="flex items-center gap-2.5">
-          {latest && <span className="text-[11px] text-muted">checked {timeAgo(latest.checked_at)}</span>}
+          {latest && <span className="text-sm text-muted">checked {timeAgo(latest.checked_at)}</span>}
           <button
             onClick={runCheck}
             disabled={checking}
@@ -96,21 +96,21 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
                   ? 'bg-muted/20 text-muted'
                   : latest.is_up
                     ? 'bg-highlight/15 text-highlight'
-                    : 'bg-red-500/15 text-red-400'
+                    : 'bg-danger/10 text-danger'
               )}
             >
               <span className={cn('h-2 w-2 rounded-full', latest?.is_up ? 'bg-highlight' : latest ? 'bg-red-500' : 'bg-muted')} />
               {checking ? 'Checking…' : !latest ? 'Not checked' : latest.is_up ? 'Online' : 'Offline'}
             </span>
             {latest?.status_code != null && (
-              <span className="font-mono text-sm text-text/90">HTTP {latest.status_code}</span>
+              <span className="font-mono text-sm text-text2">HTTP {latest.status_code}</span>
             )}
             {latest?.response_ms != null && (
               <span className="font-mono text-sm text-highlight">{latest.response_ms}ms</span>
             )}
           </div>
 
-          {latest?.error && <p className="text-[11px] text-red-400">{latest.error}</p>}
+          {latest?.error && <p className="text-sm text-danger">{latest.error}</p>}
 
           {/* Stat row */}
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
@@ -153,9 +153,9 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
               <p className="widget-title mb-1.5">Downtime Incidents</p>
               <div className="space-y-1">
                 {data.incidents.map((inc, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-lg bg-bg px-2.5 py-1.5 text-[12px]">
+                  <div key={i} className="flex items-center gap-2 rounded-lg bg-surface2 px-2.5 py-1.5 text-base">
                     <span className={cn('h-2 w-2 shrink-0 rounded-full', inc.ongoing ? 'bg-red-500 animate-pulse-dot' : 'bg-muted')} />
-                    <span className="text-text/90">{new Date(inc.start).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-text2">{new Date(inc.start).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                     <span className="text-muted">
                       {inc.ongoing ? 'down now' : `${inc.duration_min}m`}
                       {inc.status_code ? ` · HTTP ${inc.status_code}` : inc.error ? ` · ${inc.error}` : ''}
@@ -171,7 +171,7 @@ export default function UptimeWidget({ projectId, hasUrl }: UptimeWidgetProps) {
               href={data.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-accent1 hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-accent1 hover:underline"
             >
               <ExternalLink size={11} /> {data.url}
             </a>
@@ -186,10 +186,10 @@ function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; tot
   const pct = sla.pct
   const color = pct == null ? 'text-muted' : pct >= 99 ? 'text-highlight' : pct >= 95 ? 'text-warning' : 'text-danger'
   return (
-    <div className="rounded-lg border border-border/60 bg-bg px-2 py-2.5 text-center">
-      <p className={cn('font-mono text-lg font-bold tabular-nums', color)}>{pct == null ? '—' : `${pct}%`}</p>
-      <p className="mt-0.5 text-[10px] font-medium text-muted">{label}</p>
-      <p className="text-[9px] text-muted/60">{sla.total} checks</p>
+    <div className="rounded-lg border border-border bg-surface2 px-2 py-2.5 text-center">
+      <p className={cn('font-mono text-lg font-bold tnum', color)}>{pct == null ? '—' : `${pct}%`}</p>
+      <p className="mt-0.5 text-xs font-medium text-muted">{label}</p>
+      <p className="text-xs text-muted/60">{sla.total} checks</p>
     </div>
   )
 }
@@ -197,9 +197,9 @@ function SlaTile({ label, sla }: { label: string; sla: { pct: number | null; tot
 function Stat({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.06em] text-muted">{label}</p>
-      <p className="mt-0.5 max-w-[160px] truncate text-[15px] font-semibold tabular-nums">{value}</p>
-      {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
+      <p className="text-xs uppercase tracking-[0.06em] text-muted">{label}</p>
+      <p className="mt-0.5 max-w-[160px] truncate text-md font-semibold tnum">{value}</p>
+      {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>
   )
 }
@@ -224,7 +224,7 @@ function History({ checks }: { checks: UptimeCheck[] }) {
           )
         })}
       </div>
-      <p className="mt-1 text-[10px] text-muted">Last {items.length} checks</p>
+      <p className="mt-1 text-xs text-muted">Last {items.length} checks</p>
     </div>
   )
 }

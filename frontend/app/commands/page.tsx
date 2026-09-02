@@ -1,6 +1,6 @@
 'use client'
 
-import { TerminalSquare, Plus, Search, Pencil, Trash2, Terminal } from 'lucide-react'
+import { TerminalSquare, Plus, Pencil, Trash2, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
@@ -10,21 +10,23 @@ import WidgetCard from '@/components/ui/Card'
 import { useConfirm } from '@/components/ui/ConfirmDialog'
 import CopyButton from '@/components/ui/CopyButton'
 import EmptyState from '@/components/ui/EmptyState'
+import Segmented, { FilterBar, SearchField } from '@/components/ui/Segmented'
 import { useToast } from '@/components/ui/Toast'
 import api from '@/lib/api'
 import { sshUrl } from '@/lib/ssh'
 import type { Command, CommandCategory, Project } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
+// Category is a label, not a state — so these are quiet tints, all one weight.
 const CAT_COLORS: Record<CommandCategory, string> = {
-  docker: 'bg-accent1/15 text-accent1',
-  git: 'bg-accent2/15 text-accent2',
-  pm2: 'bg-highlight/15 text-highlight',
-  django: 'bg-highlight/15 text-highlight',
-  nginx: 'bg-accent1/15 text-accent1',
-  ssh: 'bg-accent2/15 text-accent2',
-  python: 'bg-accent1/15 text-accent1',
-  general: 'bg-muted/20 text-muted',
+  docker: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/20',
+  git: 'bg-accent2/10 text-accent2 ring-1 ring-inset ring-accent2/20',
+  pm2: 'bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/20',
+  django: 'bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/20',
+  nginx: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/20',
+  ssh: 'bg-accent2/10 text-accent2 ring-1 ring-inset ring-accent2/20',
+  python: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/20',
+  general: 'bg-muted/10 text-muted ring-1 ring-inset ring-muted/25',
 }
 
 export default function CommandsPage() {
@@ -54,7 +56,7 @@ export default function CommandsPage() {
     <div>
       <PageHeader
         title="Commands"
-        subtitle="Frequently used snippets & commands — one click to copy"
+        subtitle="Snippets you reach for often. One click copies."
         icon={<TerminalSquare size={20} />}
         action={
           <button
@@ -64,52 +66,53 @@ export default function CommandsPage() {
             }}
             className="btn-accent"
           >
-            <Plus size={16} /> New Command
+            <Plus size={16} /> Add command
           </button>
         }
       />
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-1 rounded-lg bg-surface p-1">
-          <Chip active={category === 'all'} onClick={() => setCategory('all')}>
-            all
-          </Chip>
-          {CATEGORIES.map((c) => (
-            <Chip key={c} active={category === c} onClick={() => setCategory(c)}>
-              {c}
-            </Chip>
-          ))}
-        </div>
-        <div className="relative ml-auto w-full max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search commands…"
-            className="input pl-9"
-          />
-        </div>
-      </div>
+      <FilterBar>
+        <Segmented
+          ariaLabel="Filter by category"
+          value={category}
+          onChange={setCategory}
+          options={[
+            { key: 'all' as const, label: 'All' },
+            ...CATEGORIES.map((c) => ({ key: c, label: c })),
+          ]}
+          className="flex-wrap"
+        />
+        <SearchField
+          className="ml-auto sm:w-64"
+          value={q}
+          onChange={setQ}
+          placeholder="Search commands"
+        />
+      </FilterBar>
 
       {commands?.length === 0 && (
         <div className="card">
           <EmptyState
             icon={<TerminalSquare size={22} />}
-            title="No commands yet"
-            hint={q || category !== 'all' ? 'Nothing matches this filter.' : 'Save snippets & commands you use often.'}
+            title={q || category !== 'all' ? 'Nothing matches that filter' : 'No commands yet'}
+            hint={
+              q || category !== 'all'
+                ? 'Clear the search or pick another category.'
+                : 'Save a snippet once and copy it from anywhere, including ⌘K.'
+            }
           />
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="stagger-in grid grid-cols-1 gap-4 lg:grid-cols-2">
         {commands?.map((c) => (
-          <WidgetCard key={c.id} bodyClassName="space-y-2">
+          <WidgetCard key={c.id} bodyClassName="flex flex-col gap-2" className="group">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <span className={cn('chip capitalize', CAT_COLORS[c.category])}>{c.category}</span>
-                <span className="text-sm font-medium">{c.title}</span>
+                <span className="truncate text-base font-medium">{c.title}</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-0.5">
                 {sshUrl(c.command) && (
                   <a
                     href={sshUrl(c.command)!}
@@ -127,25 +130,27 @@ export default function CommandsPage() {
                     setShowForm(true)
                   }}
                   className="icon-btn h-7 w-7"
-                  aria-label="Edit"
+                  aria-label="Edit command"
+                  title="Edit"
                 >
                   <Pencil size={13} />
                 </button>
                 <button
                   onClick={() => remove(c.id, c.title)}
-                  className="icon-btn h-7 w-7 hover:text-red-400"
-                  aria-label="Delete"
+                  className="icon-btn h-7 w-7 hover:text-danger"
+                  aria-label="Delete command"
+                  title="Delete"
                 >
                   <Trash2 size={13} />
                 </button>
               </div>
             </div>
-            <pre className="overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-[12.5px] text-text/90">
+            <pre className="well overflow-x-auto font-mono text-base leading-relaxed text-text2">
               {c.command}
             </pre>
             {c.project_names.length > 0 && (
-              <p className="truncate text-[11px] text-muted">
-                ↳ {c.project_names.map((p) => p.name).join(', ')}
+              <p className="truncate text-sm text-muted">
+                Used in {c.project_names.map((p) => p.name).join(', ')}
               </p>
             )}
           </WidgetCard>
@@ -160,27 +165,5 @@ export default function CommandsPage() {
         initial={editing}
       />
     </div>
-  )
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors',
-        active ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text'
-      )}
-    >
-      {children}
-    </button>
   )
 }

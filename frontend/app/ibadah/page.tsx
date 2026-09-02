@@ -128,31 +128,51 @@ export default function IbadahPage() {
   const merged = { ...rangeLogs, [date]: data }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Ibadah"
-        subtitle="Daily prayer schedule & tracking — fardh, congregation, and rawatib"
+        subtitle="Prayer times and daily tracking — fardh, congregation, and rawatib"
         icon={<Moon size={20} />}
+        action={
+          !isToday && (
+            <button onClick={() => setDate(today)} className="btn">
+              Back to today
+            </button>
+          )
+        }
       />
 
-      {/* Date navigation */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setDate(shiftDate(date, -1))} className="icon-btn" aria-label="Previous day">
+      {/* Date shuttle — same control as the daily log, so it reads the same. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-2 shadow-card">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setDate(shiftDate(date, -1))}
+            className="icon-btn"
+            aria-label="Previous day"
+            title="Previous day"
+          >
             <ChevronLeft size={18} />
           </button>
-          <div className="min-w-[230px] text-center">
-            <p className="text-sm font-semibold">{formatDateID(`${date}T00:00:00`)}</p>
-            {isToday && <p className="text-[11px] text-highlight">Today · {location.label}</p>}
+          <div className="min-w-[240px] px-2 text-center">
+            <p className="font-display text-md font-semibold">
+              {formatDateID(`${date}T00:00:00`)}
+            </p>
+            {isToday && <p className="text-sm text-muted">{location.label}</p>}
           </div>
           <button
             onClick={() => setDate(shiftDate(date, 1))}
             disabled={isToday}
             className="icon-btn disabled:opacity-30"
             aria-label="Next day"
+            title="Next day"
           >
             <ChevronRight size={18} />
           </button>
+          {isToday && (
+            <span className="chip ml-1 bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/25">
+              Today
+            </span>
+          )}
         </div>
         <input
           type="date"
@@ -160,10 +180,11 @@ export default function IbadahPage() {
           max={today}
           onChange={(e) => e.target.value && setDate(e.target.value)}
           className="input w-auto"
+          aria-label="Jump to date"
         />
       </div>
 
-      <WidgetCard title="Prayer Timeline" icon={<Moon size={15} />}>
+      <WidgetCard title="Prayer timeline" icon={<Moon size={15} />}>
         {timings ? (
           <PrayerTimeline timings={timings} now={isToday ? now : null} />
         ) : (
@@ -171,24 +192,24 @@ export default function IbadahPage() {
         )}
       </WidgetCard>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <ProgressStat label="Fardh" done={fardhuDone} total={5} color="text-highlight" />
         <ProgressStat label="Congregation" done={jamaahDone} total={5} color="text-accent1" />
         <ProgressStat label="Rawatib" done={rawatibDone} total={rawatibTotal} color="text-accent2" />
       </div>
 
       <WidgetCard
-        title="Prayer Checklist"
+        title="Prayer checklist"
         action={
-          <span className="text-[11px] text-muted">
-            {saved === 'saving' ? 'saving…' : saved === 'done' ? 'saved ✓' : ''}
+          <span className="text-sm text-muted">
+            {saved === 'saving' ? 'Saving…' : saved === 'done' ? 'Saved' : ''}
           </span>
         }
         bodyClassName="overflow-x-auto"
       >
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wide text-muted">
+            <tr className="text-xs uppercase tracking-[0.08em] text-muted">
               <th className="pb-2 text-left font-medium">Prayer</th>
               <th className="pb-2 text-center font-medium">Qabliyah</th>
               <th className="pb-2 text-center font-medium">Fardh</th>
@@ -199,7 +220,7 @@ export default function IbadahPage() {
           </thead>
           <tbody>
             {PRAYERS.map((p) => (
-              <tr key={p.key} className="border-t border-border transition-colors hover:bg-bg/60">
+              <tr key={p.key} className="border-t border-border transition-colors hover:bg-surface2/60">
                 <td className="py-2.5 font-medium">
                   <span className="flex items-center gap-2">
                     <span
@@ -208,7 +229,7 @@ export default function IbadahPage() {
                     />
                     {enName(p.key)}
                     {timings && (
-                      <span className="font-mono text-[11px] text-muted">{timings[keyOf(p.key)]}</span>
+                      <span className="font-mono text-sm text-muted">{timings[keyOf(p.key)]}</span>
                     )}
                   </span>
                 </td>
@@ -250,14 +271,14 @@ export default function IbadahPage() {
             ))}
           </tbody>
         </table>
-        <p className="mt-3 text-[11px] text-muted">
-          Can be checked anytime (including early in the window). <b className="text-text/80">On Time</b> = prayed
+        <p className="mt-3 text-sm text-muted">
+          Can be checked anytime (including early in the window). <b className="text-text2">On Time</b> = prayed
           early in the window; leave empty if prayed late. Check Fardh first to enable On Time &amp; Congregation.
         </p>
 
         {/* Sunnah (non-rawatib) prayers — single check each */}
         <div className="mt-4 border-t border-border pt-3">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Sunnah Prayers</p>
+          <p className="field-label">Sunnah prayers</p>
           <div className="flex flex-wrap gap-2">
             {SUNNAH.map((name) => {
               const on = !!data[name]?.done
@@ -271,7 +292,7 @@ export default function IbadahPage() {
                     'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors',
                     on
                       ? 'border-highlight/50 bg-highlight/15 text-highlight'
-                      : 'border-border bg-bg text-muted hover:text-text'
+                      : 'border-border bg-surface2 text-muted hover:text-text'
                   )}
                 >
                   <span
@@ -327,14 +348,14 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
   // Cell tone per prayer/day: best achievement wins.
   const tone = (d: string, prayer: string): string => {
     const c = merged[d]?.[prayer]
-    if (!c?.fardhu) return 'bg-bg'
+    if (!c?.fardhu) return 'bg-surface2'
     if (c.jamaah) return 'bg-accent1'
     if (c.ontime) return 'bg-highlight'
     return 'bg-highlight/40'
   }
 
   return (
-    <WidgetCard title="7-Day Summary" bodyClassName="space-y-4">
+    <WidgetCard title="Last 7 days" bodyClassName="flex flex-col gap-4">
       <div className="grid grid-cols-4 gap-3 text-center">
         <SummaryStat value={`${streak}`} label="Day streak" sub="all fardh complete" color="text-accent2" />
         <SummaryStat value={`${fardhuWeek}/35`} label="Fardh" color="text-highlight" />
@@ -352,9 +373,9 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
                 const dow = new Date(`${d}T00:00:00`).getDay()
                 const dayNum = d.slice(8)
                 return (
-                  <th key={d} className="text-center text-[10px] font-medium text-muted">
+                  <th key={d} className="text-center text-xs font-medium text-muted">
                     <div>{DAY_ABBR[dow]}</div>
-                    <div className="text-[9px] opacity-70">{dayNum}</div>
+                    <div className="text-xs opacity-70">{dayNum}</div>
                   </th>
                 )
               })}
@@ -363,7 +384,7 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
           <tbody>
             {PRAYERS.map((p) => (
               <tr key={p.key}>
-                <td className="pr-1 text-right text-[11px] text-muted">{enName(p.key)}</td>
+                <td className="pr-1 text-right text-sm text-muted">{enName(p.key)}</td>
                 {week.map((d) => (
                   <td key={d} className="text-center">
                     <span
@@ -379,8 +400,8 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
-        <Legend cls="bg-bg border border-border" label="Not yet" />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+        <Legend cls="bg-surface2 border border-border" label="Not yet" />
         <Legend cls="bg-highlight/40" label="Fardh" />
         <Legend cls="bg-highlight" label="On time" />
         <Legend cls="bg-accent1" label="Congregation" />
@@ -391,10 +412,10 @@ function WeeklySummary({ merged, today }: { merged: Record<string, Matrix>; toda
 
 function SummaryStat({ value, label, sub, color }: { value: string; label: string; sub?: string; color: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-bg px-2 py-3">
-      <p className={cn('font-mono text-2xl font-bold tabular-nums', color)}>{value}</p>
-      <p className="mt-0.5 text-[11px] font-medium text-muted">{label}</p>
-      {sub && <p className="text-[9px] text-muted/70">{sub}</p>}
+    <div className="rounded-lg border border-border bg-surface2 px-2 py-3">
+      <p className={cn('font-mono text-2xl font-bold tnum', color)}>{value}</p>
+      <p className="mt-0.5 text-sm font-medium text-muted">{label}</p>
+      {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>
   )
 }
@@ -421,15 +442,15 @@ function keyOf(label: string): keyof PrayerTimings {
 function ProgressStat({ label, done, total, color }: { label: string; done: number; total: number; color: string }) {
   const pct = total ? Math.round((done / total) * 100) : 0
   return (
-    <WidgetCard bodyClassName="space-y-2">
+    <WidgetCard bodyClassName="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</span>
-        <span className={cn('font-mono text-lg font-bold tabular-nums', color)}>
+        <span className="field-label mb-0">{label}</span>
+        <span className={cn('font-mono text-lg font-bold tnum', color)}>
           {done}
-          <span className="text-xs font-medium text-muted">/{total}</span>
+          <span className="text-base font-medium text-muted tnum">/{total}</span>
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-bg">
+      <div className="h-1.5 overflow-hidden rounded-full bg-border">
         <div
           className={cn('h-full rounded-full bg-current transition-all duration-500', color)}
           style={{ width: `${pct}%` }}
@@ -539,8 +560,8 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
   const currentIdx = nowMin >= 0 ? segments.findIndex((s) => nowMin >= s.start && nowMin < s.end) : -1
 
   return (
-    <div className="space-y-1">
-      <div className="relative h-10 overflow-hidden rounded-lg bg-bg">
+    <div className="flex flex-col gap-1">
+      <div className="relative h-10 overflow-hidden rounded-lg bg-surface2">
         {segments.map((s, i) => {
           const isCurrent = i === currentIdx
           return (
@@ -574,7 +595,7 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
         )}
       </div>
 
-      <div className="flex justify-between text-[9px] text-muted">
+      <div className="flex justify-between text-sm text-muted">
         {[0, 6, 12, 18, 24].map((h) => (
           <span key={h}>{String(h).padStart(2, '0')}:00</span>
         ))}
@@ -585,14 +606,14 @@ function PrayerTimeline({ timings, now }: { timings: PrayerTimings; now: Date | 
         {ticks.map((t) => (
           <div key={t.label} className="absolute -translate-x-1/2 text-center" style={{ left: pct(t.min) }}>
             <div className="mx-auto h-2 w-[2px]" style={{ backgroundColor: SEG_COLORS[t.label] ?? '#8B949E' }} />
-            <p className="mt-0.5 text-[10px] font-medium text-muted">{enName(t.label)}</p>
-            <p className="font-mono text-[11px] text-text">{timings[tickKey(t.label)]}</p>
+            <p className="mt-0.5 text-sm font-medium text-muted">{enName(t.label)}</p>
+            <p className="font-mono text-sm text-text tnum">{timings[tickKey(t.label)]}</p>
           </div>
         ))}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[10px] text-muted">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-sm text-muted">
         <span className="inline-flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundImage: HATCH }} /> Forbidden prayer times
         </span>

@@ -68,9 +68,9 @@ export default function EnvImportModal({
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Paste your .env file contents</span>
+          <span className="field-label">Paste your .env file contents</span>
           <textarea
-            className="input resize-none font-mono text-[13px] leading-relaxed"
+            className="input resize-none font-mono text-base leading-relaxed"
             rows={10}
             placeholder={'DATABASE_URL=postgres://...\nSECRET_KEY=abc123\n# comments are ignored'}
             value={content}
@@ -79,8 +79,8 @@ export default function EnvImportModal({
         </label>
         {lockedProjectId == null && (
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Link to project</span>
-            <select className="input" value={project} onChange={(e) => setProject(e.target.value)}>
+            <span className="field-label">Link to project</span>
+            <select className="select" value={project} onChange={(e) => setProject(e.target.value)}>
               <option value="">No project</option>
               {projects?.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -90,7 +90,7 @@ export default function EnvImportModal({
             </select>
           </label>
         )}
-        <p className="text-[11px] text-muted">
+        <p className="text-sm text-muted">
           Empty lines and comments (#) are skipped. Each KEY=VALUE is saved separately.
         </p>
       </div>

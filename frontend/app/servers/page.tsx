@@ -10,7 +10,7 @@ import VmAccess from '@/components/servers/VmAccess'
 import WidgetCard from '@/components/ui/Card'
 import { useConfirm } from '@/components/ui/ConfirmDialog'
 import EmptyState from '@/components/ui/EmptyState'
-import { SkeletonRows } from '@/components/ui/Skeleton'
+import { SkeletonCards } from '@/components/ui/Skeleton'
 import StatusDot from '@/components/ui/StatusDot'
 import { useToast } from '@/components/ui/Toast'
 import { useServers } from '@/hooks/useServers'
@@ -20,9 +20,9 @@ import type { Credential, Project, Server, ServerProvider } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const PROVIDER_BADGE: Record<ServerProvider, string> = {
-  gcp: 'bg-accent1/15 text-accent1 ring-1 ring-inset ring-accent1/25',
-  pdns: 'bg-accent2/15 text-accent2 ring-1 ring-inset ring-accent2/25',
-  other: 'bg-muted/20 text-muted ring-1 ring-inset ring-muted/25',
+  gcp: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/25',
+  pdns: 'bg-accent2/10 text-accent2 ring-1 ring-inset ring-accent2/25',
+  other: 'bg-muted/10 text-muted ring-1 ring-inset ring-muted/25',
 }
 const PROVIDER_LABEL: Record<ServerProvider, string> = { gcp: 'GCP', pdns: 'PDNS', other: 'Other' }
 
@@ -46,12 +46,12 @@ export default function ServersPage() {
     <div>
       <PageHeader
         title="VMs"
-        subtitle="Your hosts & VMs — SSH access, passwords, and the apps running on them"
+        subtitle="SSH access, passwords, and what runs where"
         icon={<ServerIcon size={20} />}
         action={
           <div className="flex gap-2">
             <button onClick={pingAll} className="btn">
-              <RefreshCw size={15} /> Ping
+              <RefreshCw size={15} /> Check all
             </button>
             <button
               onClick={() => {
@@ -60,62 +60,68 @@ export default function ServersPage() {
               }}
               className="btn-accent"
             >
-              <Plus size={16} /> New VM
+              <Plus size={16} /> Add VM
             </button>
           </div>
         }
       />
 
-      {isLoading && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <SkeletonRows key={i} rows={1} className="[&>div]:h-44" />
-          ))}
-        </div>
-      )}
+      {isLoading && <SkeletonCards count={3} className="[&>div]:h-44" />}
       {servers?.length === 0 && (
         <div className="card">
           <EmptyState
             icon={<ServerIcon size={22} />}
             title="No VMs yet"
-            hint="Register your VMs/hosts for quick SSH + password access and to see the apps running on them."
+            hint="Register a machine to get one-click SSH, its password, and a live status check."
             action={
               <button onClick={() => setShowForm(true)} className="btn-accent">
-                <Plus size={16} /> New VM
+                <Plus size={16} /> Add VM
               </button>
             }
           />
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="stagger-in grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {servers?.map((s) => {
           const pingable = serverPingable(s)
           const ping = pings[s.id]
           const status = ping?.checking ? 'checking' : ping?.status ?? 'checking'
           return (
-            <WidgetCard key={s.id} bodyClassName="space-y-3">
+            <WidgetCard key={s.id} bodyClassName="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  {pingable && <StatusDot status={status} />}
+                  {pingable && <StatusDot status={status} className="mt-1.5" />}
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold leading-tight">{s.name}</h3>
+                    <h3 className="truncate font-display text-md font-semibold leading-tight">
+                      {s.name}
+                    </h3>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       <span className={cn('chip', PROVIDER_BADGE[s.provider])}>{PROVIDER_LABEL[s.provider]}</span>
                       {s.requires_vpn && (
-                        <span className="chip inline-flex items-center gap-1 bg-warning/15 text-warning ring-1 ring-inset ring-warning/25">
+                        <span className="chip inline-flex items-center gap-1 bg-warning/10 text-warning ring-1 ring-inset ring-warning/25">
                           <ShieldAlert size={10} /> VPN
                         </span>
                       )}
                       {pingable && ping?.latency_ms != null && (
-                        <span className="font-mono text-[11px] text-highlight">{ping.latency_ms}ms</span>
+                        <span className="font-mono text-sm text-highlight tnum">
+                          {ping.latency_ms} ms
+                        </span>
+                      )}
+                      {pingable && ping?.status === 'down' && (
+                        <span className="text-sm font-medium text-danger">Unreachable</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-1">
+                <div className="flex shrink-0 gap-0.5">
                   {pingable && (
-                    <button onClick={() => pingServer(s.id)} className="icon-btn h-7 w-7" aria-label="Ping">
+                    <button
+                      onClick={() => pingServer(s.id)}
+                      className="icon-btn h-7 w-7"
+                      aria-label="Check status"
+                      title="Check status"
+                    >
                       <RefreshCw size={13} />
                     </button>
                   )}
@@ -125,26 +131,32 @@ export default function ServersPage() {
                       setShowForm(true)
                     }}
                     className="icon-btn h-7 w-7"
-                    aria-label="Edit"
+                    aria-label="Edit VM"
+                    title="Edit"
                   >
                     <Pencil size={13} />
                   </button>
-                  <button onClick={() => remove(s.id, s.name)} className="icon-btn h-7 w-7 hover:text-danger" aria-label="Delete">
+                  <button
+                    onClick={() => remove(s.id, s.name)}
+                    className="icon-btn h-7 w-7 hover:text-danger"
+                    aria-label="Delete VM"
+                    title="Delete"
+                  >
                     <Trash2 size={13} />
                   </button>
                 </div>
               </div>
 
-              {s.description && <p className="text-sm text-muted">{s.description}</p>}
+              {s.description && <p className="text-base text-muted">{s.description}</p>}
 
               <VmAccess server={s} />
 
               {s.project_names?.length > 0 && (
                 <div className="border-t border-border pt-2.5">
-                  <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">Apps on this VM</p>
+                  <p className="field-label">Apps on this VM</p>
                   <div className="flex flex-wrap gap-1.5">
                     {s.project_names.map((p) => (
-                      <span key={p.id} className="chip border border-border bg-bg text-muted">
+                      <span key={p.id} className="chip border border-border bg-surface2 font-normal text-text2">
                         {p.name}
                       </span>
                     ))}

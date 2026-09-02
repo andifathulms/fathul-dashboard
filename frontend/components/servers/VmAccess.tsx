@@ -17,8 +17,8 @@ export default function VmAccess({ server }: { server: Server }) {
   return (
     <div className="space-y-2">
       {ssh && (
-        <div className="flex items-center justify-between gap-2 rounded-lg bg-bg px-3 py-2">
-          <code className="flex min-w-0 items-center gap-2 truncate font-mono text-[12px] text-text/90">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-surface2 px-3 py-2">
+          <code className="flex min-w-0 items-center gap-2 truncate font-mono text-base text-text2">
             <Terminal size={13} className="shrink-0 text-muted" />
             {ssh}
           </code>
@@ -40,9 +40,9 @@ export default function VmAccess({ server }: { server: Server }) {
       )}
 
       {cred && (
-        <div className="flex items-center justify-between gap-2 rounded-lg bg-bg px-3 py-2">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-surface2 px-3 py-2">
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-muted">Password · {cred.label}</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Password · {cred.label}</p>
             <RevealToggle value={cred.password} />
           </div>
           <CopyButton value={cred.password} label="Copy password" />

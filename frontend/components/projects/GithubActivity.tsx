@@ -125,7 +125,7 @@ interface RepoCardMeta {
 function MetaControl({ meta }: { meta?: RepoCardMeta }) {
   if (!meta) return null
   return (
-    <span className="flex items-center gap-1.5 text-[11px] text-muted">
+    <span className="flex items-center gap-1.5 text-sm text-muted">
       {meta.fetchedAt && (
         <span title={new Date(meta.fetchedAt).toLocaleString('en-US')}>updated {timeAgo(meta.fetchedAt)}</span>
       )}
@@ -188,7 +188,7 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
                 href={r.info.html_url}
                 target="_blank"
                 rel="noreferrer"
-                className="chip inline-flex items-center gap-1 border border-border bg-bg text-accent1 hover:underline"
+                className="chip inline-flex items-center gap-1 border border-border bg-surface2 text-accent1 hover:underline"
               >
                 {r.info.private && <Lock size={10} />}
                 {r.label} · {r.info.full_name.split('/')[1]}
@@ -220,7 +220,7 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
       <CiChips items={repos.map((r) => ({ label: r.label, run: r.workflow_runs?.[0] }))} />
 
       {computing && weeks.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
+        <div className="flex items-center gap-2 rounded-lg bg-surface2 px-3 py-3 text-sm text-muted">
           <RefreshCw size={14} className="animate-spin" /> GitHub is computing statistics…
         </div>
       ) : weeks.length > 0 ? (
@@ -239,12 +239,12 @@ function CombinedCard({ repos, meta }: { repos: GithubRepo[]; meta?: RepoCardMet
                 href={c.html_url ?? undefined}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-surface2"
               >
-                <span className="chip shrink-0 bg-border/40 text-[10px] text-muted">{c.repoLabel}</span>
-                <code className="shrink-0 font-mono text-[11px] text-accent2">{c.sha}</code>
-                <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{c.message}</span>
-                <span className="shrink-0 text-[11px] text-muted">{timeAgo(c.date)}</span>
+                <span className="chip shrink-0 bg-border/40 text-xs text-muted">{c.repoLabel}</span>
+                <code className="shrink-0 font-mono text-sm text-accent2">{c.sha}</code>
+                <span className="min-w-0 flex-1 truncate text-base text-text2">{c.message}</span>
+                <span className="shrink-0 text-sm text-muted">{timeAgo(c.date)}</span>
               </a>
             ))}
           </div>
@@ -349,7 +349,7 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
       <CiChips items={[{ run: repo.workflow_runs?.[0] }]} />
 
       {repo.computing ? (
-        <div className="flex items-center gap-2 rounded-lg bg-bg px-3 py-3 text-sm text-muted">
+        <div className="flex items-center gap-2 rounded-lg bg-surface2 px-3 py-3 text-sm text-muted">
           <RefreshCw size={14} className="animate-spin" /> GitHub is computing statistics…
         </div>
       ) : weeks.length > 0 ? (
@@ -368,11 +368,11 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
                 href={c.html_url ?? undefined}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
+                className="flex items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-surface2"
               >
-                <code className="shrink-0 font-mono text-[11px] text-accent2">{c.sha}</code>
-                <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{c.message}</span>
-                <span className="shrink-0 text-[11px] text-muted">{timeAgo(c.date)}</span>
+                <code className="shrink-0 font-mono text-sm text-accent2">{c.sha}</code>
+                <span className="min-w-0 flex-1 truncate text-base text-text2">{c.message}</span>
+                <span className="shrink-0 text-sm text-muted">{timeAgo(c.date)}</span>
               </a>
             ))}
           </div>
@@ -406,8 +406,8 @@ function RepoCard({ repo, meta }: { repo: GithubRepo; meta?: RepoCardMeta }) {
 function Stat({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.06em] text-muted">{label}</p>
-      <p className="mt-0.5 flex items-center gap-1 text-[15px] font-semibold tabular-nums">
+      <p className="text-xs uppercase tracking-[0.06em] text-muted">{label}</p>
+      <p className="mt-0.5 flex items-center gap-1 text-md font-semibold tnum">
         {icon && <span className="text-muted">{icon}</span>}
         {value}
       </p>
@@ -423,7 +423,7 @@ function Languages({ langs }: { langs: Record<string, number> }) {
     .slice(0, 5)
   return (
     <div className="space-y-1.5">
-      <div className="flex h-2 overflow-hidden rounded-full bg-bg">
+      <div className="flex h-2 overflow-hidden rounded-full bg-surface2">
         {top.map(([name, bytes], i) => (
           <div
             key={name}
@@ -432,7 +432,7 @@ function Languages({ langs }: { langs: Record<string, number> }) {
           />
         ))}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
         {top.map(([name, bytes], i) => (
           <span key={name} className="inline-flex items-center gap-1">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: LANG_COLORS[i] }} />
@@ -458,7 +458,7 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
   return (
     <div className="overflow-x-auto">
       <div className="inline-flex flex-col gap-1">
-        <div className="flex gap-[2px] pl-0.5 text-[9px] text-muted">
+        <div className="flex gap-[2px] pl-0.5 text-xs text-muted">
           {monthLabels.map((label, i) => (
             <div key={i} className="w-[9px] shrink-0">
               {label}
@@ -482,7 +482,7 @@ function Heatmap({ weeks }: { weeks: GithubWeek[] }) {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-end gap-1 pt-0.5 text-[9px] text-muted">
+        <div className="flex items-center justify-end gap-1 pt-0.5 text-xs text-muted">
           <span>Less</span>
           {LEVELS.map((c, i) => (
             <div key={i} className="h-[9px] w-[9px] rounded-[2px]" style={{ backgroundColor: c }} />
@@ -517,7 +517,7 @@ function CiChips({ items }: { items: { label?: string; run?: GithubWorkflowRun }
               href={i.run!.html_url ?? undefined}
               target="_blank"
               rel="noreferrer"
-              className="chip inline-flex items-center gap-1.5 border border-border bg-bg"
+              className="chip inline-flex items-center gap-1.5 border border-border bg-surface2"
               title={i.run!.name ?? undefined}
             >
               <span className={cn('h-2 w-2 rounded-full', t.dot)} />
@@ -556,12 +556,12 @@ function ItemList({ title, icon, items }: { title: string; icon: React.ReactNode
             href={it.html_url ?? undefined}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-bg"
+            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-surface2"
           >
-            {it.label && <span className="chip shrink-0 bg-border/40 text-[10px] text-muted">{it.label}</span>}
-            <span className="shrink-0 font-mono text-[11px] text-muted">#{it.number}</span>
-            <span className="min-w-0 flex-1 truncate text-[13px] text-text/90">{it.title}</span>
-            {it.user && <span className="shrink-0 text-[11px] text-muted">{it.user}</span>}
+            {it.label && <span className="chip shrink-0 bg-border/40 text-xs text-muted">{it.label}</span>}
+            <span className="shrink-0 font-mono text-sm text-muted">#{it.number}</span>
+            <span className="min-w-0 flex-1 truncate text-base text-text2">{it.title}</span>
+            {it.user && <span className="shrink-0 text-sm text-muted">{it.user}</span>}
           </a>
         ))}
       </div>

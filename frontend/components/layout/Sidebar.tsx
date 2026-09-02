@@ -114,7 +114,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile
           title="Search (⌘K)"
           aria-label="Search"
           className={cn(
-            'flex w-full items-center gap-2 rounded-lg border border-border bg-bg text-base text-muted transition-colors hover:border-borderStrong hover:text-text',
+            'flex w-full items-center gap-2 rounded-lg border border-border bg-surface2 text-base text-muted transition-colors hover:border-borderStrong hover:text-text',
             collapsed ? 'px-3 py-2 lg:h-9 lg:w-9 lg:justify-center lg:px-0' : 'px-2.5 py-1.5'
           )}
         >

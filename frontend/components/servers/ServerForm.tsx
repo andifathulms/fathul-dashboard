@@ -91,7 +91,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
             </Field>
           </div>
           <Field label="Provider">
-            <select className="input" value={form.provider} onChange={(e) => set('provider', e.target.value)}>
+            <select className="select" value={form.provider} onChange={(e) => set('provider', e.target.value)}>
               {PROVIDERS.map((p) => (
                 <option key={p.value} value={p.value}>
                   {p.label}
@@ -101,7 +101,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
           </Field>
         </div>
 
-        <div className="rounded-lg border border-border bg-bg/40 p-3">
+        <div className="rounded-lg border border-border bg-surface2/40 p-3">
           <p className="mb-2 text-xs font-medium text-muted">SSH access — enter an alias, or user@ip</p>
           <Field label="SSH alias (~/.ssh/config)">
             <input
@@ -140,19 +140,19 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
         {form.provider === 'gcp' && (
           <div className="grid grid-cols-3 gap-2">
             <Field label="GCP project">
-              <input className="input font-mono text-[13px]" value={form.gcp_project} onChange={(e) => set('gcp_project', e.target.value)} />
+              <input className="input font-mono text-base" value={form.gcp_project} onChange={(e) => set('gcp_project', e.target.value)} />
             </Field>
             <Field label="Zone">
-              <input className="input font-mono text-[13px]" placeholder="asia-southeast2-a" value={form.gcp_zone} onChange={(e) => set('gcp_zone', e.target.value)} />
+              <input className="input font-mono text-base" placeholder="asia-southeast2-a" value={form.gcp_zone} onChange={(e) => set('gcp_zone', e.target.value)} />
             </Field>
             <Field label="Instance">
-              <input className="input font-mono text-[13px]" value={form.gcp_instance} onChange={(e) => set('gcp_instance', e.target.value)} />
+              <input className="input font-mono text-base" value={form.gcp_instance} onChange={(e) => set('gcp_instance', e.target.value)} />
             </Field>
           </div>
         )}
 
         <Field label="Login/sudo password (from Vault)">
-          <select className="input" value={form.credential} onChange={(e) => set('credential', e.target.value)}>
+          <select className="select" value={form.credential} onChange={(e) => set('credential', e.target.value)}>
             <option value="">No password</option>
             {credentials?.map((c) => (
               <option key={c.id} value={c.id}>
@@ -163,7 +163,8 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
         </Field>
 
         <Field label="Description">
-          <textarea className="input resize-none" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
+          <textarea
+            className="textarea resize-none" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
         </Field>
 
         {projects && projects.length > 0 && (
@@ -179,7 +180,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
                     'chip border transition-colors ' +
                     (form.projects.includes(p.id)
                       ? 'border-accent1/50 bg-accent1/15 text-accent1'
-                      : 'border-border bg-bg text-muted hover:text-text')
+                      : 'border-border bg-surface2 text-muted hover:text-text')
                   }
                 >
                   {p.name}
@@ -196,7 +197,7 @@ export default function ServerForm({ open, onClose, onSaved, projects, credentia
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   )

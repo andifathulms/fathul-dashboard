@@ -87,21 +87,21 @@ export default function CommandForm({
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Title</span>
+          <span className="field-label">Title</span>
           <input className="input" value={form.title} onChange={(e) => set('title', e.target.value)} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Command</span>
+          <span className="field-label">Command</span>
           <textarea
-            className="input resize-none font-mono text-[13px]"
+            className="textarea resize-none font-mono"
             rows={3}
             value={form.command}
             onChange={(e) => set('command', e.target.value)}
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-muted">Category</span>
-          <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
+          <span className="field-label">Category</span>
+          <select className="select" value={form.category} onChange={(e) => set('category', e.target.value)}>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -111,11 +111,11 @@ export default function CommandForm({
         </label>
         {lockedProjectId == null && (
           <div>
-            <span className="mb-1 block text-xs font-medium text-muted">
+            <span className="field-label">
               Projects (optional — same command can belong to more than one)
             </span>
             {projects && projects.length > 0 ? (
-              <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-border bg-bg/40 p-2">
+              <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-border bg-surface2/40 p-2">
                 {projects.map((p) => {
                   const active = form.projects.includes(p.id)
                   return (
@@ -124,8 +124,10 @@ export default function CommandForm({
                       key={p.id}
                       onClick={() => toggleProject(p.id)}
                       className={cn(
-                        'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-                        active ? 'bg-accent1/15 text-accent1 ring-1 ring-inset ring-accent1/25' : 'bg-surface text-muted hover:text-text'
+                        'rounded-md px-2.5 py-1 text-sm font-medium transition-colors',
+                        active
+                          ? 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/25'
+                          : 'bg-surface2 text-muted hover:text-text'
                       )}
                     >
                       {p.name}
@@ -134,7 +136,7 @@ export default function CommandForm({
                 })}
               </div>
             ) : (
-              <p className="text-[11px] text-muted">No projects yet.</p>
+              <p className="text-sm text-muted">No projects yet.</p>
             )}
           </div>
         )}

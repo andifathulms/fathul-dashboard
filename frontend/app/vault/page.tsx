@@ -1,6 +1,6 @@
 'use client'
 
-import { KeyRound, Plus, Search, Upload, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { KeyRound, Plus, Upload, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
@@ -14,6 +14,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import RevealToggle from '@/components/ui/RevealToggle'
 import { useToast } from '@/components/ui/Toast'
 import { CategoryBadge } from '@/components/ui/Badge'
+import Segmented, { FilterBar, SearchField } from '@/components/ui/Segmented'
 import api from '@/lib/api'
 import type { Credential, EnvVar, Project } from '@/lib/types'
 import { CATEGORY_STYLES, cn } from '@/lib/utils'
@@ -55,7 +56,7 @@ export default function VaultPage() {
     <div>
       <PageHeader
         title="Vault"
-        subtitle="Credentials & environment variables — stored locally, unencrypted"
+        subtitle="Credentials and environment variables. Stored on this machine, unencrypted."
         icon={<KeyRound size={20} />}
         action={
           tab === 'credentials' ? (
@@ -66,7 +67,7 @@ export default function VaultPage() {
               }}
               className="btn-accent"
             >
-              <Plus size={16} /> Credential
+              <Plus size={16} /> Add credential
             </button>
           ) : (
             <button onClick={() => setShowImport(true)} className="btn-accent">
@@ -76,84 +77,86 @@ export default function VaultPage() {
         }
       />
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-lg bg-surface p-1">
-          {(['credentials', 'envvars'] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors',
-                tab === t ? 'bg-accent1/15 text-accent1' : 'text-muted hover:text-text'
-              )}
-            >
-              {t === 'credentials' ? 'Credentials' : 'Env Vars'}
-            </button>
-          ))}
-        </div>
-        <div className="relative ml-auto w-full max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={`Search ${tab === 'credentials' ? 'credentials' : 'env vars'}…`}
-            className="input pl-9"
-          />
-        </div>
-      </div>
+      <FilterBar>
+        <Segmented
+          ariaLabel="Vault section"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { key: 'credentials', label: 'Credentials', count: creds?.length },
+            { key: 'envvars', label: 'Env vars', count: envs?.length },
+          ]}
+        />
+        <SearchField
+          className="ml-auto sm:w-64"
+          value={q}
+          onChange={setQ}
+          placeholder={tab === 'credentials' ? 'Search credentials' : 'Search variables'}
+        />
+      </FilterBar>
 
       {tab === 'credentials' && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredCreds?.length === 0 && <Empty label="No credentials yet." />}
+          {filteredCreds?.length === 0 && (
+            <Empty
+              label={q ? 'Nothing matches that search' : 'No credentials yet'}
+              hint={q ? 'Try a shorter term.' : 'Add one and it stays on this machine.'}
+            />
+          )}
           {filteredCreds?.map((c) => {
             const project = projects?.find((p) => p.id === c.project)
             return (
-              <div key={c.id} className="card card-hover group relative overflow-hidden p-4 pl-5">
-                <span
-                  className={cn(
-                    'absolute inset-y-0 left-0 w-1',
-                    project ? CATEGORY_STYLES[project.category].bar : 'bg-accent1/60'
-                  )}
-                />
+              <div key={c.id} className="card card-hover group flex flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/15">
+                    <span
+                      className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                        project
+                          ? CATEGORY_STYLES[project.category].chip
+                          : 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/20'
+                      )}
+                    >
                       <KeyRound size={15} />
                     </span>
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold leading-tight">{c.label}</h3>
-                      {c.category && <p className="mt-0.5 text-[11px] text-muted">{c.category}</p>}
+                      <h3 className="truncate font-display text-md font-semibold leading-tight">
+                        {c.label}
+                      </h3>
+                      {c.category && <p className="truncate text-sm text-muted">{c.category}</p>}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="row-actions">
                     <button
                       onClick={() => {
                         setEditing(c)
                         setShowCred(true)
                       }}
                       className="icon-btn h-7 w-7"
-                      aria-label="Edit"
+                      aria-label="Edit credential"
+                      title="Edit"
                     >
                       <Pencil size={13} />
                     </button>
                     <button
                       onClick={() => deleteCred(c.id, c.label)}
-                      className="icon-btn h-7 w-7 hover:text-red-400"
-                      aria-label="Delete"
+                      className="icon-btn h-7 w-7 hover:text-danger"
+                      aria-label="Delete credential"
+                      title="Delete"
                     >
                       <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-2 text-sm">
+                <div className="mt-3 flex flex-col gap-1.5">
                   {c.username && (
-                    <div className="flex items-center justify-between gap-2 rounded-lg bg-bg px-3 py-1.5">
-                      <span className="truncate font-mono text-[13px]">{c.username}</span>
+                    <div className="well flex items-center justify-between gap-2 py-1">
+                      <span className="truncate font-mono text-base">{c.username}</span>
                       <CopyButton value={c.username} label="Copy username" />
                     </div>
                   )}
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-bg px-3 py-1.5">
+                  <div className="well flex items-center justify-between gap-2 py-1">
                     <RevealToggle value={c.password} />
                     <CopyButton value={c.password} label="Copy password" />
                   </div>
@@ -166,7 +169,7 @@ export default function VaultPage() {
                       href={c.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-accent1 hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-accent1 hover:underline"
                     >
                       <ExternalLink size={11} /> Open
                     </a>
@@ -179,16 +182,18 @@ export default function VaultPage() {
       )}
 
       {tab === 'envvars' && (
-        <WidgetCard bodyClassName="space-y-1.5">
-          {filteredEnvs?.length === 0 && <Empty label="No env vars yet. Import from .env." />}
+        <WidgetCard bodyClassName="flex flex-col gap-0.5">
+          {filteredEnvs?.length === 0 && (
+            <Empty label="No variables yet" hint="Import a whole .env file to fill this in." />
+          )}
           {filteredEnvs?.map((e) => {
             const project = projects?.find((p) => p.id === e.project)
             return (
               <div
                 key={e.id}
-                className="group flex items-center gap-3 rounded-lg border border-border bg-bg px-3 py-2 transition-all hover:border-borderStrong hover:bg-surface2/40"
+                className="row group -mx-1 px-2"
               >
-                <code className="shrink-0 font-mono text-[13px] text-accent2">{e.key}</code>
+                <code className="shrink-0 font-mono text-base font-medium text-accent2">{e.key}</code>
                 <span className="text-muted">=</span>
                 <div className="min-w-0 flex-1">
                   <RevealToggle value={e.value} />
@@ -197,8 +202,9 @@ export default function VaultPage() {
                 <CopyButton value={e.value} />
                 <button
                   onClick={() => deleteEnv(e.id)}
-                  className="icon-btn h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                  aria-label="Delete"
+                  className="icon-btn h-7 w-7 shrink-0 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+                  aria-label="Delete variable"
+                  title="Delete"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -225,10 +231,10 @@ export default function VaultPage() {
   )
 }
 
-function Empty({ label }: { label: string }) {
+function Empty({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="card col-span-full">
-      <EmptyState icon={<KeyRound size={22} />} title={label} />
+      <EmptyState icon={<KeyRound size={22} />} title={label} hint={hint} />
     </div>
   )
 }

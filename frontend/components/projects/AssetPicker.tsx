@@ -46,7 +46,7 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
           onClick={() => ref.current?.click()}
           title="Choose file"
           className={cn(
-            'group relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-bg',
+            'group relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface2',
             box
           )}
         >
@@ -66,7 +66,7 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
           )}
         </button>
         <input
-          className="input font-mono text-[13px]"
+          className="input font-mono text-base"
           placeholder="https://… or /path.png"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -77,7 +77,7 @@ export default function AssetPicker({ label, value, onChange, shape = 'wide', hi
           </button>
         )}
       </div>
-      {hint && <p className="mt-1 text-[11px] text-muted">{hint}</p>}
+      {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
       <input ref={ref} type="file" accept="image/*" onChange={onFile} className="hidden" />
     </div>
   )

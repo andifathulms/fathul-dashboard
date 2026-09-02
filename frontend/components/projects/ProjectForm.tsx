@@ -133,7 +133,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         <Field label="Icon: click the avatar to choose a file, or paste a URL/path">
           <div className="flex gap-2">
             <input
-              className="input font-mono text-[13px]"
+              className="input font-mono text-base"
               placeholder="https://… or /logo.png"
               value={form.icon_url}
               onChange={(e) => set('icon_url', e.target.value)}
@@ -150,7 +150,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         </Field>
 
         {/* Optional brand lockups */}
-        <details className="rounded-lg border border-border bg-bg/40 px-3 py-2 [&_summary]:cursor-pointer">
+        <details className="rounded-lg border border-border bg-surface2/40 px-3 py-2 [&_summary]:cursor-pointer">
           <summary className="text-xs font-medium text-muted">Brand lockup (optional)</summary>
           <div className="mt-3 space-y-3">
             <AssetPicker
@@ -169,7 +169,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         </details>
         <Field label="Description">
           <textarea
-            className="input resize-none"
+            className="textarea resize-none"
             rows={2}
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
@@ -177,7 +177,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         </Field>
         <div className="grid grid-cols-3 gap-3">
           <Field label="Status">
-            <select className="input" value={form.status} onChange={(e) => set('status', e.target.value)}>
+            <select className="select" value={form.status} onChange={(e) => set('status', e.target.value)}>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {STATUS_LABELS[s]}
@@ -186,7 +186,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
             </select>
           </Field>
           <Field label="Category">
-            <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
+            <select className="select" value={form.category} onChange={(e) => set('category', e.target.value)}>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {CATEGORY_LABELS[c]}
@@ -195,7 +195,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
             </select>
           </Field>
           <Field label="Priority">
-            <select className="input" value={form.priority} onChange={(e) => set('priority', e.target.value)}>
+            <select className="select" value={form.priority} onChange={(e) => set('priority', e.target.value)}>
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
                   {PRIORITY_STYLES[p].label}
@@ -223,7 +223,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
           </div>
           <div className="space-y-2">
             {form.repos.length === 0 && (
-              <p className="text-[11px] text-muted">No repos yet. Click “Add repo”.</p>
+              <p className="text-sm text-muted">No repos yet. Click “Add repo”.</p>
             )}
             {form.repos.map((r, i) => (
               <div key={i} className="flex gap-2">
@@ -242,7 +242,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
                 <button
                   type="button"
                   onClick={() => removeRepo(i)}
-                  className="icon-btn shrink-0 hover:text-red-400"
+                  className="icon-btn shrink-0 hover:text-danger"
                   aria-label="Delete repo"
                 >
                   <Trash2 size={15} />
@@ -265,7 +265,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
         </Field>
         <Field label="Notes">
           <textarea
-            className="input resize-none"
+            className="textarea resize-none"
             rows={2}
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
@@ -279,7 +279,7 @@ export default function ProjectForm({ open, onClose, onSaved, initial }: Project
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   )

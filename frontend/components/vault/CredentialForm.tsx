@@ -97,7 +97,7 @@ export default function CredentialForm({
           </Field>
           {lockedProjectId == null && (
             <Field label="Project">
-              <select className="input" value={form.project} onChange={(e) => set('project', e.target.value)}>
+              <select className="select" value={form.project} onChange={(e) => set('project', e.target.value)}>
                 <option value="">No project</option>
                 {projects?.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -110,7 +110,7 @@ export default function CredentialForm({
         </div>
         <Field label="Notes">
           <textarea
-            className="input resize-none"
+            className="textarea resize-none"
             rows={2}
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
@@ -124,7 +124,7 @@ export default function CredentialForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   )
