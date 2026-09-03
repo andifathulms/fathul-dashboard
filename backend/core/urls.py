@@ -18,5 +18,6 @@ router.register('reviews', views.WeeklyReviewViewSet)
 urlpatterns = [
     path('ayat/today/', views.AyatTodayView.as_view(), name='ayat-today'),
     path('upload/', views.UploadView.as_view(), name='upload'),
+    path('github/activity/', views.GithubActivityView.as_view(), name='github-activity'),
     path('', include(router.urls)),
 ]

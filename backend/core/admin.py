@@ -11,6 +11,7 @@ from .models import (
     Project,
     Server,
     Task,
+    GithubAccountCache,
     UptimeCheck,
     WeeklyReview,
 )
@@ -88,3 +89,8 @@ class FocusSettingsAdmin(admin.ModelAdmin):
 @admin.register(WeeklyReview)
 class WeeklyReviewAdmin(admin.ModelAdmin):
     list_display = ('week_start', 'updated_at')
+
+
+@admin.register(GithubAccountCache)
+class GithubAccountCacheAdmin(admin.ModelAdmin):
+    list_display = ('key', 'fetched_at')

@@ -7,6 +7,7 @@ unauthenticated rate limit (60/hr -> 5000/hr).
 import json
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API = 'https://api.github.com'
@@ -26,15 +27,15 @@ def parse_repo(url):
     return m.group(1), m.group(2)
 
 
-def _get(path, token):
+def _get(path, token, timeout=8, accept='application/vnd.github+json'):
     """Return (status_code, parsed_json_or_None)."""
     req = urllib.request.Request(f'{API}{path}')
-    req.add_header('Accept', 'application/vnd.github+json')
+    req.add_header('Accept', accept)
     req.add_header('User-Agent', 'fathul-dashboard')
     if token:
         req.add_header('Authorization', f'Bearer {token}')
     try:
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read().decode('utf-8')
             data = json.loads(body) if body else None
             return resp.status, data
@@ -170,3 +171,161 @@ def fetch(url, token=None):
         'pull_requests': pull_requests,
         'open_issues': open_issues,
     }
+
+
+# --- Account-level analytics -------------------------------------------------
+# The per-repo REST endpoints above answer "how is this project doing". These
+# answer "what have I been doing", which needs the GraphQL API — REST has no
+# contribution calendar.
+
+GRAPHQL = 'https://api.github.com/graphql'
+
+
+def _graphql(query, variables, token):
+    """POST a GraphQL query. Returns (data, error_message)."""
+    payload = json.dumps({'query': query, 'variables': variables}).encode()
+    req = urllib.request.Request(GRAPHQL, data=payload, method='POST')
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('User-Agent', 'fathul-dashboard')
+    req.add_header('Authorization', f'Bearer {token}')
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        return None, f'http_{e.code}'
+    except Exception as exc:
+        return None, str(exc)[:120]
+    if body.get('errors'):
+        return None, body['errors'][0].get('message', 'graphql_error')[:160]
+    return body.get('data'), None
+
+
+_CONTRIBUTIONS_QUERY = """
+query($from: DateTime!, $to: DateTime!) {
+  viewer {
+    login
+    contributionsCollection(from: $from, to: $to) {
+      restrictedContributionsCount
+      totalCommitContributions
+      totalPullRequestContributions
+      totalPullRequestReviewContributions
+      totalIssueContributions
+      totalRepositoriesWithContributedCommits
+      contributionCalendar {
+        totalContributions
+        weeks { contributionDays { date contributionCount weekday } }
+      }
+      commitContributionsByRepository(maxRepositories: 100) {
+        repository {
+          nameWithOwner
+          isPrivate
+          url
+          primaryLanguage { name }
+        }
+        contributions { totalCount }
+      }
+    }
+  }
+}
+"""
+
+
+def contributions(token, date_from, date_to):
+    """The contribution calendar plus a per-repo commit breakdown.
+
+    `date_from` / `date_to` are ISO dates. GitHub caps a single query at one
+    year, which the caller is expected to respect.
+    """
+    if not token:
+        return {'ok': False, 'error': 'no_token'}
+
+    data, err = _graphql(
+        _CONTRIBUTIONS_QUERY,
+        {'from': f'{date_from}T00:00:00Z', 'to': f'{date_to}T23:59:59Z'},
+        token,
+    )
+    if err:
+        return {'ok': False, 'error': err}
+
+    viewer = data['viewer']
+    coll = viewer['contributionsCollection']
+    days = [
+        {'date': d['date'], 'count': d['contributionCount'], 'weekday': d['weekday']}
+        for week in coll['contributionCalendar']['weeks']
+        for d in week['contributionDays']
+    ]
+
+    repos, languages = [], {}
+    for entry in coll['commitContributionsByRepository']:
+        r = entry['repository']
+        count = entry['contributions']['totalCount']
+        lang = (r.get('primaryLanguage') or {}).get('name')
+        repos.append({
+            'name': r['nameWithOwner'],
+            'url': r['url'],
+            'is_private': r['isPrivate'],
+            'language': lang,
+            'commits': count,
+        })
+        if lang:
+            languages[lang] = languages.get(lang, 0) + count
+
+    return {
+        'ok': True,
+        'login': viewer['login'],
+        'from': date_from,
+        'to': date_to,
+        'total': coll['contributionCalendar']['totalContributions'],
+        'commits': coll['totalCommitContributions'],
+        'pull_requests': coll['totalPullRequestContributions'],
+        'reviews': coll['totalPullRequestReviewContributions'],
+        'issues': coll['totalIssueContributions'],
+        'repos_touched': coll['totalRepositoriesWithContributedCommits'],
+        # Contributions GitHub counted but would not name. Surfaced rather than
+        # swallowed, so a total that looks short is explained rather than wrong.
+        'restricted': coll['restrictedContributionsCount'],
+        'days': sorted(days, key=lambda d: d['date']),
+        'repos': sorted(repos, key=lambda r: -r['commits']),
+        'languages': sorted(
+            ({'name': k, 'commits': v} for k, v in languages.items()),
+            key=lambda x: -x['commits'],
+        ),
+    }
+
+
+def commits_on(token, login, date, per_page=100):
+    """Every commit you authored on one day, across all repos.
+
+    Uses the commit search API — the only endpoint that spans repositories.
+    It is rate limited far more tightly than the rest (30/min), which is why
+    callers cache the result.
+    """
+    if not token:
+        return {'ok': False, 'error': 'no_token'}
+
+    query = urllib.parse.quote(f'author:{login} author-date:{date}')
+    path = f'/search/commits?q={query}&per_page={per_page}&sort=author-date&order=asc'
+    # Search is markedly slower than the per-repo endpoints and the container's
+    # DNS occasionally hiccups, so give it room and one second chance. A
+    # status of 0 means the request never landed — worth retrying; a real HTTP
+    # error (rate limit, bad query) is not.
+    status, data = _get(path, token, timeout=25)
+    if status == 0:
+        status, data = _get(path, token, timeout=25)
+    if status != 200 or not data:
+        return {'ok': False, 'error': f'http_{status}'}
+
+    items = []
+    for it in data.get('items', []):
+        commit = it.get('commit', {})
+        repo = it.get('repository', {})
+        items.append({
+            'sha': it.get('sha', '')[:7],
+            'message': (commit.get('message') or '').split('\n')[0][:160],
+            'url': it.get('html_url'),
+            'repo': repo.get('full_name'),
+            'repo_url': repo.get('html_url'),
+            'is_private': repo.get('private', False),
+            'at': (commit.get('author') or {}).get('date'),
+        })
+    return {'ok': True, 'date': date, 'total': data.get('total_count', 0), 'commits': items}

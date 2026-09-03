@@ -308,6 +308,23 @@ class GithubCache(models.Model):
         return f'GitHub cache for {self.project_id}'
 
 
+class GithubAccountCache(models.Model):
+    """Cached account-level GitHub payloads, keyed by the query they answer.
+
+    The contribution calendar and the commit-search endpoint are both far more
+    rate limited than the per-repo REST calls, so every read goes through here.
+    """
+    key = models.CharField(max_length=200, unique=True)
+    payload = models.JSONField(default=dict)
+    fetched_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ['-fetched_at']
+
+    def __str__(self):
+        return f'{self.key} @ {self.fetched_at:%Y-%m-%d %H:%M}'
+
+
 class IbadahLog(models.Model):
     """One record per day tracking prayers and their rawatib sunnah.
 

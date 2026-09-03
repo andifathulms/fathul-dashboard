@@ -15,6 +15,7 @@ from .models import (
     DailyLog,
     EnvVar,
     FocusSession,
+    GithubAccountCache,
     FocusSettings,
     IbadahLog,
     Project,
@@ -780,3 +781,93 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
             'by_day': list(by_day.values()),
             'logs': DailyLogSerializer(logs, many=True).data,
         })
+
+
+class GithubActivityView(APIView):
+    """Account-level GitHub analytics: the heatmap, and one day's commits.
+
+    ?from=&to=  the contribution calendar and per-repo breakdown
+    ?date=      every commit authored that day, across all repos
+    &refresh=1  bypass the cache
+    """
+    # A day that has already happened cannot change; today's still can. The
+    # calendar is cheap to refetch, the commit search is not.
+    CALENDAR_TTL = 900
+    DAY_TTL = 1800
+
+    def _cached(self, key, ttl, producer, refresh=False):
+        from django.utils import timezone
+
+        row = GithubAccountCache.objects.filter(key=key).first()
+        if row and not refresh:
+            age = (timezone.now() - row.fetched_at).total_seconds()
+            if age < ttl:
+                return {**row.payload, 'cached': True, 'fetched_at': row.fetched_at}
+
+        payload = producer()
+        # Never overwrite good cached data with a failed fetch — a rate limit
+        # should degrade to slightly stale numbers, not to an empty page.
+        if not payload.get('ok') and row:
+            return {**row.payload, 'cached': True, 'stale': True, 'fetched_at': row.fetched_at}
+        if payload.get('ok'):
+            GithubAccountCache.objects.update_or_create(
+                key=key, defaults={'payload': payload, 'fetched_at': timezone.now()}
+            )
+        return {**payload, 'cached': False}
+
+    def get(self, request):
+        from datetime import date as date_cls
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from . import github as gh
+
+        token = settings.GITHUB_TOKEN
+        if not token:
+            return Response({'ok': False, 'error': 'no_token'})
+        refresh = request.query_params.get('refresh') in ('1', 'true', 'True')
+
+        date = request.query_params.get('date')
+        if date:
+            login = request.query_params.get('login') or self._login(token)
+            data = self._cached(
+                f'day:{login}:{date}',
+                self.DAY_TTL,
+                lambda: gh.commits_on(token, login, date),
+                refresh,
+            )
+            return Response(data)
+
+        today = timezone.localdate()
+        to_date = request.query_params.get('to') or today.isoformat()
+        from_date = request.query_params.get('from') or (today - timedelta(days=364)).isoformat()
+        # GitHub refuses a calendar span longer than a year.
+        if (date_cls.fromisoformat(to_date) - date_cls.fromisoformat(from_date)).days > 365:
+            from_date = (date_cls.fromisoformat(to_date) - timedelta(days=364)).isoformat()
+
+        data = self._cached(
+            f'cal:{from_date}:{to_date}',
+            self.CALENDAR_TTL,
+            lambda: gh.contributions(token, from_date, to_date),
+            refresh,
+        )
+        return Response(data)
+
+    @staticmethod
+    def _login(token):
+        """The authenticated user's login, cached for a day — it never changes."""
+        from django.utils import timezone
+
+        from . import github as gh
+
+        row = GithubAccountCache.objects.filter(key='login').first()
+        if row and (timezone.now() - row.fetched_at).total_seconds() < 86400:
+            return row.payload.get('login')
+        status, data = gh._get('/user', token)
+        login = (data or {}).get('login') if status == 200 else None
+        if login:
+            GithubAccountCache.objects.update_or_create(
+                key='login', defaults={'payload': {'login': login}, 'fetched_at': timezone.now()}
+            )
+        return login
