@@ -98,11 +98,17 @@ export default function ReviewPage() {
   // A week can be spent entirely in git. When no focus was tracked, the bars
   // would all be stubs, so they measure commits instead — and the card says so.
   const barsShowCommits = data.focus.total_sec === 0 && data.code?.ok && data.code.total > 0
+  const unlinkedRepos = data.code?.ok ? data.code.repos.filter((r) => r.project === null) : []
+  const unlinkedCommits = unlinkedRepos.reduce((sum, r) => sum + r.commits, 0)
+  const maxWork = Math.max(
+    1,
+    unlinkedCommits,
+    ...data.focus.by_project.map((x) => (barsShowCommits ? (x.commits ?? 0) : x.sec))
+  )
   const daysWorked = data.by_day.filter(
     (d) => d.sec > 0 || d.tasks_done > 0 || d.commits > 0
   ).length
-  // Monday-based count of days that have actually happened in this week.
-  const elapsed = data.is_current_week ? ((new Date().getDay() + 6) % 7) + 1 : 7
+  const elapsed = data.days_elapsed
   // Commits count as a week having happened. Without this a week of 251
   // commits and no ticked tasks still reported "nothing recorded".
   const quiet =
@@ -268,7 +274,7 @@ export default function ReviewPage() {
               title={barsShowCommits ? 'Where the work went' : 'Where the time went'}
               icon={<Timer size={16} />}
             >
-              {data.focus.by_project.length === 0 ? (
+              {data.focus.by_project.length === 0 && unlinkedCommits === 0 ? (
                 <EmptyState compact title="No focus tracked" hint="Run the timer and this fills in." />
               ) : (
                 <div className="flex flex-col gap-3">
@@ -282,7 +288,9 @@ export default function ReviewPage() {
                             <span className="ml-1.5 text-sm text-highlight">· {p.tasks_done}✓</span>
                           )}
                           {(p.commits ?? 0) > 0 && (
-                            <span className="ml-1.5 text-sm text-accent1">· {p.commits} commits</span>
+                            <span className="ml-1.5 text-sm text-accent1">
+                              · {p.commits} commit{p.commits === 1 ? '' : 's'}
+                            </span>
                           )}
                         </span>
                       </div>
@@ -295,17 +303,33 @@ export default function ReviewPage() {
                           style={{
                             width: `${Math.max(
                               2,
-                              barsShowCommits
-                                ? ((p.commits ?? 0) /
-                                    Math.max(1, ...data.focus.by_project.map((x) => x.commits ?? 0))) *
-                                    100
-                                : (p.sec / Math.max(1, data.focus.by_project[0].sec)) * 100
+                              ((barsShowCommits ? (p.commits ?? 0) : p.sec) / maxWork) * 100
                             )}%`,
                           }}
                         />
                       </div>
                     </div>
                   ))}
+
+                  {unlinkedCommits > 0 && (
+                    <div className="flex flex-col gap-1 border-t border-border pt-3">
+                      <div className="flex items-baseline justify-between gap-2 text-base">
+                        <span className="min-w-0 truncate text-muted">
+                          {unlinkedRepos.length} repo{unlinkedRepos.length === 1 ? '' : 's'} no
+                          project claims
+                        </span>
+                        <span className="shrink-0 text-muted tnum">
+                          {unlinkedCommits} commit{unlinkedCommits === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-surface2">
+                        <div
+                          className="h-full rounded-full bg-muted"
+                          style={{ width: `${Math.max(2, (unlinkedCommits / maxWork) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </WidgetCard>

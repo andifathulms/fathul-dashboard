@@ -372,6 +372,9 @@ export interface ReviewSummary {
   start: string
   end: string
   is_current_week: boolean
+  /** Days of this week that have actually happened — computed server-side,
+   *  where the timezone is right. */
+  days_elapsed: number
   tasks: {
     completed: Task[]
     completed_count: number

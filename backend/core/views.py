@@ -793,6 +793,7 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
             'start': start.isoformat(),
             'end': end.isoformat(),
             'is_current_week': start <= today <= end,
+            'days_elapsed': (min(today, end) - start).days + 1,
             'tasks': {
                 'completed': TaskSerializer(completed, many=True).data,
                 'completed_count': len(completed),
