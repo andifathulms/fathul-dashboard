@@ -339,10 +339,33 @@ export interface ReviewDay {
   sec: number
   sessions: number
   tasks_done: number
+  commits: number
 }
 
 export interface ReviewProjectStat extends FocusProjectStat {
   tasks_done: number
+  /** Present only when the project claims a repo you committed to. */
+  commits?: number
+}
+
+export interface ReviewRepo {
+  repo: string
+  url: string
+  is_private: boolean
+  language: string | null
+  commits: number
+  /** Project id the repo belongs to, or null when nothing claims it. */
+  project: number | null
+}
+
+export interface ReviewCode {
+  ok: boolean
+  error?: string
+  total: number
+  restricted: number
+  repos: ReviewRepo[]
+  cached?: boolean
+  stale?: boolean
 }
 
 export interface ReviewSummary {
@@ -364,4 +387,59 @@ export interface ReviewSummary {
   }
   by_day: ReviewDay[]
   logs: DailyLog[]
+  code: ReviewCode
+}
+
+export interface ContribDay {
+  date: string
+  count: number
+  weekday: number
+}
+
+export interface ContribRepo {
+  name: string
+  url: string
+  is_private: boolean
+  language: string | null
+  commits: number
+}
+
+export interface GithubActivity {
+  ok: boolean
+  error?: string
+  login: string
+  from: string
+  to: string
+  total: number
+  commits: number
+  pull_requests: number
+  reviews: number
+  issues: number
+  repos_touched: number
+  /** Contributions GitHub counted but would not name. */
+  restricted: number
+  days: ContribDay[]
+  repos: ContribRepo[]
+  languages: { name: string; commits: number }[]
+  cached?: boolean
+  stale?: boolean
+}
+
+export interface DayCommit {
+  sha: string
+  message: string
+  url: string | null
+  repo: string
+  repo_url: string | null
+  is_private: boolean
+  at: string | null
+}
+
+export interface GithubDay {
+  ok: boolean
+  error?: string
+  date: string
+  total: number
+  commits: DayCommit[]
+  cached?: boolean
 }

@@ -724,7 +724,7 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
         by_project, by_day = {}, {}
         for i in range(7):
             day = (start + timedelta(days=i)).isoformat()
-            by_day[day] = {'date': day, 'sec': 0, 'sessions': 0, 'tasks_done': 0}
+            by_day[day] = {'date': day, 'sec': 0, 'sessions': 0, 'tasks_done': 0, 'commits': 0}
         total_sec = done_sessions = 0
         for s in sessions:
             local = timezone.localtime(s.started_at)
@@ -761,6 +761,34 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
             date__gte=start, date__lte=end
         ).exclude(journal='').order_by('date')
 
+        # What you shipped, next to what you planned. Repos map back to
+        # projects through the URLs already stored on Project.repos, so a
+        # week reads as one story rather than two disconnected ones.
+        code = self._week_code(start, end)
+        if code.get('ok'):
+            for day in code.get('days', []):
+                bucket = by_day.get(day['date'])
+                if bucket:
+                    bucket['commits'] = day['count']
+            owned = self._repo_to_project()
+            for repo in code['repos']:
+                pid = owned.get(repo['repo'].lower())
+                repo['project'] = pid
+                if pid is None:
+                    continue
+                entry = by_project.get(pid)
+                if entry is None:
+                    project = Project.objects.filter(pk=pid).first()
+                    entry = by_project[pid] = {
+                        'project': pid,
+                        'name': project.name if project else 'Unknown',
+                        'category': project.category if project else None,
+                        'sec': 0,
+                        'sessions': 0,
+                        'tasks_done': 0,
+                    }
+                entry['commits'] = entry.get('commits', 0) + repo['commits']
+
         return Response({
             'start': start.isoformat(),
             'end': end.isoformat(),
@@ -776,11 +804,79 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
             'focus': {
                 'total_sec': total_sec,
                 'sessions': done_sessions,
-                'by_project': sorted(by_project.values(), key=lambda x: -x['sec']),
+                'by_project': sorted(
+                    by_project.values(),
+                    key=lambda x: (-x['sec'], -x.get('commits', 0)),
+                ),
             },
             'by_day': list(by_day.values()),
             'logs': DailyLogSerializer(logs, many=True).data,
+            'code': code,
         })
+
+    @staticmethod
+    def _repo_to_project():
+        """Map "owner/repo" (lowercased) to the project id that claims it."""
+        from . import github as gh
+
+        mapping = {}
+        for project in Project.objects.all():
+            urls = [e.get('url') for e in (project.repos or []) if e.get('url')]
+            if project.repo_url:
+                urls.append(project.repo_url)
+            for url in urls:
+                parsed = gh.parse_repo(url)
+                if parsed:
+                    mapping[f'{parsed[0]}/{parsed[1]}'.lower()] = project.id
+        return mapping
+
+    def _week_code(self, start, end):
+        """This week's commits, cached — search is the tightest rate limit here."""
+        from django.utils import timezone
+
+        from . import github as gh
+
+        token = settings.GITHUB_TOKEN
+        if not token:
+            return {'ok': False, 'error': 'no_token'}
+
+        key = f'week:{start}:{end}'
+        row = GithubAccountCache.objects.filter(key=key).first()
+        # A week that has ended is settled; the current one is still moving.
+        ttl = 1800 if end >= timezone.localdate() else 86400
+        if row and (timezone.now() - row.fetched_at).total_seconds() < ttl:
+            return {**row.payload, 'cached': True}
+
+        # The GraphQL calendar is used here rather than commit search: it
+        # returns exact per-repo totals in a single request, where search would
+        # have to page through a heavy week and still only sample it.
+        raw = gh.contributions(token, start.isoformat(), end.isoformat())
+        data = (
+            {
+                'ok': True,
+                'total': raw['commits'],
+                'restricted': raw['restricted'],
+                'days': raw['days'],
+                'repos': [
+                    {
+                        'repo': r['name'],
+                        'url': r['url'],
+                        'is_private': r['is_private'],
+                        'language': r['language'],
+                        'commits': r['commits'],
+                    }
+                    for r in raw['repos']
+                ],
+            }
+            if raw.get('ok')
+            else raw
+        )
+        if not data.get('ok'):
+            return {**row.payload, 'cached': True, 'stale': True} if row else data
+        GithubAccountCache.objects.update_or_create(
+            key=key, defaults={'payload': data, 'fetched_at': timezone.now()}
+        )
+        return data
 
 
 class GithubActivityView(APIView):

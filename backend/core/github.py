@@ -329,3 +329,4 @@ def commits_on(token, login, date, per_page=100):
             'at': (commit.get('author') or {}).get('date'),
         })
     return {'ok': True, 'date': date, 'total': data.get('total_count', 0), 'commits': items}
+

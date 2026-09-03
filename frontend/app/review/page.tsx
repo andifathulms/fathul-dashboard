@@ -6,10 +6,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Github,
   NotebookPen,
   PauseCircle,
   Timer,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 
@@ -92,11 +94,22 @@ export default function ReviewPage() {
   }
 
   const maxSec = Math.max(1, ...data.by_day.map((d) => d.sec))
-  const daysWorked = data.by_day.filter((d) => d.sec > 0 || d.tasks_done > 0).length
+  const maxCommits = Math.max(1, ...data.by_day.map((d) => d.commits))
+  // A week can be spent entirely in git. When no focus was tracked, the bars
+  // would all be stubs, so they measure commits instead — and the card says so.
+  const barsShowCommits = data.focus.total_sec === 0 && data.code?.ok && data.code.total > 0
+  const daysWorked = data.by_day.filter(
+    (d) => d.sec > 0 || d.tasks_done > 0 || d.commits > 0
+  ).length
   // Monday-based count of days that have actually happened in this week.
   const elapsed = data.is_current_week ? ((new Date().getDay() + 6) % 7) + 1 : 7
+  // Commits count as a week having happened. Without this a week of 251
+  // commits and no ticked tasks still reported "nothing recorded".
   const quiet =
-    data.tasks.completed_count === 0 && data.focus.total_sec === 0 && data.logs.length === 0
+    data.tasks.completed_count === 0 &&
+    data.focus.total_sec === 0 &&
+    data.logs.length === 0 &&
+    !(data.code?.ok && data.code.total > 0)
 
   return (
     <div>
@@ -166,15 +179,27 @@ export default function ReviewPage() {
               }
             />
             <Tile
-              icon={<PauseCircle size={14} />}
-              label="Still blocked"
-              value={String(data.tasks.waiting.length)}
-              hint="waiting on someone"
+              icon={<Github size={14} />}
+              label="Commits"
+              value={data.code?.ok ? data.code.total.toLocaleString() : '—'}
+              hint={
+                data.code?.ok
+                  ? `${data.code.repos.length} repos`
+                  : (data.code?.error ?? 'GitHub unavailable')
+              }
             />
           </div>
 
           {/* One axis: bars are focus time, the number underneath is tasks. */}
-          <WidgetCard title="The week, day by day" icon={<CalendarRange size={16} />}>
+          <WidgetCard
+            title="The week, day by day"
+            icon={<CalendarRange size={16} />}
+            action={
+              <span className="text-sm text-muted">
+                bars are {barsShowCommits ? 'commits' : 'focus time'}
+              </span>
+            }
+          >
             <div className="flex h-36 items-stretch gap-2">
               {data.by_day.map((d) => {
                 const date = new Date(`${d.date}T00:00:00`)
@@ -182,21 +207,31 @@ export default function ReviewPage() {
                   <div key={d.date} className="flex flex-1 flex-col items-center gap-1.5">
                     <div
                       className="flex w-full flex-1 items-end justify-center"
-                      title={`${formatDateShort(d.date)} — ${formatDuration(d.sec)}, ${d.tasks_done} tasks`}
+                      title={`${formatDateShort(d.date)} — ${formatDuration(d.sec)}, ${d.tasks_done} tasks, ${d.commits} commits`}
                     >
                       <div
                         className={cn(
                           'w-full max-w-[40px] rounded-t-[4px]',
-                          d.sec > 0 ? 'bg-accent2' : 'bg-surface2'
+                          (barsShowCommits ? d.commits : d.sec) > 0 ? 'bg-accent2' : 'bg-surface2'
                         )}
-                        style={{ height: `${Math.max(d.sec > 0 ? 4 : 2, (d.sec / maxSec) * 100)}%` }}
+                        style={{
+                          height: `${Math.max(
+                            (barsShowCommits ? d.commits : d.sec) > 0 ? 4 : 2,
+                            barsShowCommits
+                              ? (d.commits / maxCommits) * 100
+                              : (d.sec / maxSec) * 100
+                          )}%`,
+                        }}
                       />
                     </div>
                     <span className="text-xs font-medium text-muted">
                       {WEEKDAY_INITIALS[date.getDay()]}
                     </span>
-                    <span className={cn('text-xs tnum', d.tasks_done ? 'text-highlight' : 'text-muted/50')}>
-                      {d.tasks_done ? `${d.tasks_done}✓` : '–'}
+                    <span className="flex items-baseline gap-1.5 text-xs tnum">
+                      <span className={d.tasks_done ? 'text-highlight' : 'text-muted/40'}>
+                        {d.tasks_done ? `${d.tasks_done}✓` : '–'}
+                      </span>
+                      {d.commits > 0 && <span className="text-accent1">{d.commits}c</span>}
                     </span>
                   </div>
                 )
@@ -229,7 +264,10 @@ export default function ReviewPage() {
               )}
             </WidgetCard>
 
-            <WidgetCard title="Where the time went" icon={<Timer size={16} />}>
+            <WidgetCard
+              title={barsShowCommits ? 'Where the work went' : 'Where the time went'}
+              icon={<Timer size={16} />}
+            >
               {data.focus.by_project.length === 0 ? (
                 <EmptyState compact title="No focus tracked" hint="Run the timer and this fills in." />
               ) : (
@@ -239,9 +277,12 @@ export default function ReviewPage() {
                       <div className="flex items-baseline justify-between gap-2 text-base">
                         <span className="min-w-0 truncate">{p.name}</span>
                         <span className="shrink-0 text-muted tnum">
-                          {formatDuration(p.sec)}
+                          {p.sec > 0 && formatDuration(p.sec)}
                           {p.tasks_done > 0 && (
                             <span className="ml-1.5 text-sm text-highlight">· {p.tasks_done}✓</span>
+                          )}
+                          {(p.commits ?? 0) > 0 && (
+                            <span className="ml-1.5 text-sm text-accent1">· {p.commits} commits</span>
                           )}
                         </span>
                       </div>
@@ -252,7 +293,14 @@ export default function ReviewPage() {
                             p.category ? CATEGORY_STYLES[p.category].bar : 'bg-muted'
                           )}
                           style={{
-                            width: `${Math.max(2, (p.sec / Math.max(1, data.focus.by_project[0].sec)) * 100)}%`,
+                            width: `${Math.max(
+                              2,
+                              barsShowCommits
+                                ? ((p.commits ?? 0) /
+                                    Math.max(1, ...data.focus.by_project.map((x) => x.commits ?? 0))) *
+                                    100
+                                : (p.sec / Math.max(1, data.focus.by_project[0].sec)) * 100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -334,6 +382,44 @@ export default function ReviewPage() {
               )}
             </WidgetCard>
           </div>
+
+          {data.code?.ok && data.code.repos.length > 0 && (
+            <WidgetCard
+              title={`What you shipped (${data.code.total.toLocaleString()} commits)`}
+              icon={<Github size={16} />}
+              action={
+                <Link href="/code" className="text-sm text-accent1 hover:underline">
+                  All activity
+                </Link>
+              }
+            >
+              <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                {data.code.repos.slice(0, 12).map((r) => (
+                  <div key={r.repo} className="flex items-baseline justify-between gap-2 text-base">
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="min-w-0 truncate hover:text-accent1"
+                    >
+                      {r.repo.split('/')[1]}
+                    </a>
+                    <span className="flex shrink-0 items-baseline gap-1.5 text-muted tnum">
+                      {r.project === null && (
+                        <span className="text-xs text-muted/70">unlinked</span>
+                      )}
+                      {r.commits}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {data.code.repos.length > 12 && (
+                <p className="mt-2 text-sm text-muted">
+                  and {data.code.repos.length - 12} more repos.
+                </p>
+              )}
+            </WidgetCard>
+          )}
 
           {data.logs.length > 0 && (
             <WidgetCard title="Your week in words" icon={<NotebookPen size={16} />}>

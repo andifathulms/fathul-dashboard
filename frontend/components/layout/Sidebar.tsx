@@ -8,6 +8,7 @@ import {
   TerminalSquare,
   Timer,
   CalendarRange,
+  Github,
   Server,
   NotebookPen,
   Moon,
@@ -35,6 +36,7 @@ const GROUPS = [
       { href: '/tasks', label: 'Tasks', icon: CheckSquare },
       { href: '/focus', label: 'Focus', icon: Timer },
       { href: '/review', label: 'Review', icon: CalendarRange },
+      { href: '/code', label: 'Code', icon: Github },
     ],
   },
   {
