@@ -187,7 +187,7 @@ export default function ProjectsPage() {
 
       {/* Grid view */}
       {view === 'grid' && (
-        <div className="stagger-in grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger-in grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered?.map((p) => (
             <Link
               key={p.id}
@@ -238,13 +238,17 @@ export default function ProjectsPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-auto flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
-                <span className="inline-flex items-center gap-1" title="Tasks">
-                  <CheckSquare size={12} /> {p.tasks_count}
-                </span>
-                <span className="inline-flex items-center gap-1" title="Credentials">
-                  <KeyRound size={12} /> {p.credentials_count}
-                </span>
+              <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
+                {p.tasks_count > 0 && (
+                  <span className="inline-flex items-center gap-1" title="Tasks">
+                    <CheckSquare size={12} /> {p.tasks_count}
+                  </span>
+                )}
+                {p.credentials_count > 0 && (
+                  <span className="inline-flex items-center gap-1" title="Credentials">
+                    <KeyRound size={12} /> {p.credentials_count}
+                  </span>
+                )}
                 <span className="ml-auto" title={`Updated ${p.updated_at.slice(0, 10)}`}>
                   {ago(p.updated_at)}
                 </span>
@@ -267,12 +271,16 @@ export default function ProjectsPage() {
               <div className="min-w-0 flex-1">
                 <span className="truncate text-base font-medium">{p.name}</span>
                 <div className="flex items-center gap-2.5 text-sm text-muted tnum">
-                  <span className="inline-flex items-center gap-1">
-                    <CheckSquare size={11} /> {p.tasks_count}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <KeyRound size={11} /> {p.credentials_count}
-                  </span>
+                  {p.tasks_count > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <CheckSquare size={11} /> {p.tasks_count}
+                    </span>
+                  )}
+                  {p.credentials_count > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <KeyRound size={11} /> {p.credentials_count}
+                    </span>
+                  )}
                   {p.tech_stack?.length > 0 && (
                     <span className="hidden truncate font-mono md:inline">
                     {p.tech_stack.slice(0, 3).join(' · ')}
