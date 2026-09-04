@@ -18,6 +18,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
 import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
+import UnlinkedRepos from '@/components/projects/UnlinkedRepos'
 import { CategoryBadge, StatusBadge } from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 import Segmented from '@/components/ui/Segmented'
@@ -161,6 +162,8 @@ export default function ProjectsPage() {
           <SearchField value={q} onChange={setQ} placeholder="Search projects" className="sm:w-48" />
         </div>
       </FilterBar>
+
+      <UnlinkedRepos projects={projects} onLinked={mutate} />
 
       {isLoading && <SkeletonCards count={6} />}
       {filtered?.length === 0 && (

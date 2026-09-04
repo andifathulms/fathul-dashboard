@@ -19,5 +19,6 @@ urlpatterns = [
     path('ayat/today/', views.AyatTodayView.as_view(), name='ayat-today'),
     path('upload/', views.UploadView.as_view(), name='upload'),
     path('github/activity/', views.GithubActivityView.as_view(), name='github-activity'),
+    path('github/unlinked/', views.GithubUnlinkedView.as_view(), name='github-unlinked'),
     path('', include(router.urls)),
 ]

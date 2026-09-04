@@ -968,3 +968,100 @@ class GithubActivityView(APIView):
                 key='login', defaults={'payload': {'login': login}, 'fetched_at': timezone.now()}
             )
         return login
+
+
+class GithubUnlinkedView(APIView):
+    """Repos you commit to that no project claims — and the two ways to fix it.
+
+    GET  ?from=&to=   the unclaimed repos, busiest first
+    POST {repo, project}         attach the repo to an existing project
+    POST {repo, create: true}    create a project seeded from the repo
+    """
+
+    def get(self, request):
+        from datetime import date as date_cls
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from . import github as gh
+
+        token = settings.GITHUB_TOKEN
+        if not token:
+            return Response({'ok': False, 'error': 'no_token', 'repos': []})
+
+        today = timezone.localdate()
+        to_date = request.query_params.get('to') or today.isoformat()
+        from_date = request.query_params.get('from') or (today - timedelta(days=364)).isoformat()
+        if (date_cls.fromisoformat(to_date) - date_cls.fromisoformat(from_date)).days > 365:
+            from_date = (date_cls.fromisoformat(to_date) - timedelta(days=364)).isoformat()
+
+        # Same cache as the Code page, so opening both costs one fetch.
+        activity = GithubActivityView()
+        data = activity._cached(
+            f'cal:{from_date}:{to_date}',
+            GithubActivityView.CALENDAR_TTL,
+            lambda: gh.contributions(token, from_date, to_date),
+            request.query_params.get('refresh') in ('1', 'true', 'True'),
+        )
+        if not data.get('ok'):
+            return Response({'ok': False, 'error': data.get('error'), 'repos': []})
+
+        claimed = WeeklyReviewViewSet._repo_to_project()
+        repos = [r for r in data['repos'] if r['name'].lower() not in claimed]
+        return Response({
+            'ok': True,
+            'from': from_date,
+            'to': to_date,
+            'repos': repos,
+            'total_commits': sum(r['commits'] for r in repos),
+        })
+
+    def post(self, request):
+        from . import github as gh
+
+        full_name = (request.data.get('repo') or '').strip()
+        if not gh.parse_repo(f'https://github.com/{full_name}'):
+            return Response({'detail': 'repo must look like owner/name'}, status=400)
+        url = f'https://github.com/{full_name}'
+        short = full_name.split('/')[-1]
+
+        if request.data.get('create'):
+            info = self._repo_info(full_name)
+            project = Project.objects.create(
+                name=request.data.get('name') or short,
+                description=info.get('description') or '',
+                category=request.data.get('category') or 'personal',
+                live_url=info.get('homepage') or '',
+                tech_stack=[info['language']] if info.get('language') else [],
+                repos=[{'label': 'Repo', 'url': url}],
+                repo_url=url,
+            )
+            return Response(ProjectSerializer(project).data, status=201)
+
+        project = Project.objects.filter(pk=request.data.get('project')).first()
+        if not project:
+            return Response({'detail': 'unknown project'}, status=400)
+        entries = list(project.repos or [])
+        if any(gh.parse_repo(e.get('url') or '') == gh.parse_repo(url) for e in entries):
+            return Response(ProjectSerializer(project).data)
+        entries.append({'label': short, 'url': url})
+        project.repos = entries
+        if not project.repo_url:
+            project.repo_url = url
+        project.save()
+        return Response(ProjectSerializer(project).data)
+
+    @staticmethod
+    def _repo_info(full_name):
+        """Description, homepage and language, to seed a new project."""
+        from . import github as gh
+
+        status, data = gh._get(f'/repos/{full_name}', settings.GITHUB_TOKEN)
+        if status != 200 or not data:
+            return {}
+        return {
+            'description': data.get('description'),
+            'homepage': data.get('homepage'),
+            'language': data.get('language'),
+        }

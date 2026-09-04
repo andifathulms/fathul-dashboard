@@ -314,10 +314,14 @@ export default function ReviewPage() {
                   {unlinkedCommits > 0 && (
                     <div className="flex flex-col gap-1 border-t border-border pt-3">
                       <div className="flex items-baseline justify-between gap-2 text-base">
-                        <span className="min-w-0 truncate text-muted">
+                        <Link
+                          href="/projects"
+                          className="min-w-0 truncate text-muted hover:text-accent1"
+                          title="Link them to a project"
+                        >
                           {unlinkedRepos.length} repo{unlinkedRepos.length === 1 ? '' : 's'} no
                           project claims
-                        </span>
+                        </Link>
                         <span className="shrink-0 text-muted tnum">
                           {unlinkedCommits} commit{unlinkedCommits === 1 ? '' : 's'}
                         </span>
