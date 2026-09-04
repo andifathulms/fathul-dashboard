@@ -40,9 +40,96 @@ from .serializers import (
 )
 
 
+def github_cached(key, ttl, producer, refresh=False):
+    """Read a cached GitHub payload, refetching only once it goes stale.
+
+    A failed fetch never overwrites good cached data: a rate limit should
+    degrade to slightly stale numbers, not to an empty page.
+    """
+    from django.utils import timezone
+
+    row = GithubAccountCache.objects.filter(key=key).first()
+    if row and not refresh:
+        age = (timezone.now() - row.fetched_at).total_seconds()
+        if age < ttl:
+            return {**row.payload, 'cached': True, 'fetched_at': row.fetched_at}
+
+    payload = producer()
+    if not payload.get('ok') and row:
+        return {**row.payload, 'cached': True, 'stale': True, 'fetched_at': row.fetched_at}
+    if payload.get('ok'):
+        GithubAccountCache.objects.update_or_create(
+            key=key, defaults={'payload': payload, 'fetched_at': timezone.now()}
+        )
+    return {**payload, 'cached': False}
+
+
+def repo_project_map():
+    """Map "owner/repo" (lowercased) to the project id that claims it.
+
+    Both `Project.repos` and the legacy `Project.repo_url` count as a claim.
+    """
+    from . import github as gh
+
+    mapping = {}
+    for project in Project.objects.all():
+        urls = [e.get('url') for e in (project.repos or []) if e.get('url')]
+        if project.repo_url:
+            urls.append(project.repo_url)
+        for url in urls:
+            parsed = gh.parse_repo(url)
+            if parsed:
+                mapping[f'{parsed[0]}/{parsed[1]}'.lower()] = project.id
+    return mapping
+
+
+def year_commits_by_project(max_age=86400):
+    """{project_id: commits in the last year}, from cache wherever possible.
+
+    Deliberately tolerant of stale data: the project list must never sit
+    waiting on GitHub, and "roughly how alive is this" does not need to be
+    accurate to the minute. Returns {} when there is no token or no answer.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from . import github as gh
+
+    token = settings.GITHUB_TOKEN
+    if not token:
+        return {}
+
+    today = timezone.localdate()
+    from_date = (today - timedelta(days=364)).isoformat()
+    key = f'cal:{from_date}:{today.isoformat()}'
+    data = github_cached(key, max_age, lambda: gh.contributions(token, from_date, today.isoformat()))
+    if not data.get('ok'):
+        return {}
+
+    owned = repo_project_map()
+    totals = {}
+    for repo in data['repos']:
+        pid = owned.get(repo['name'].lower())
+        if pid is not None:
+            totals[pid] = totals.get(pid, 0) + repo['commits']
+    return totals
+
+
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.request.method == 'GET':
+            try:
+                context['commits_by_project'] = year_commits_by_project()
+            except Exception:
+                # Commit counts are a nicety on a card; never a reason for the
+                # project list to fail.
+                context['commits_by_project'] = {}
+        return context
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -817,19 +904,7 @@ class WeeklyReviewViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _repo_to_project():
-        """Map "owner/repo" (lowercased) to the project id that claims it."""
-        from . import github as gh
-
-        mapping = {}
-        for project in Project.objects.all():
-            urls = [e.get('url') for e in (project.repos or []) if e.get('url')]
-            if project.repo_url:
-                urls.append(project.repo_url)
-            for url in urls:
-                parsed = gh.parse_repo(url)
-                if parsed:
-                    mapping[f'{parsed[0]}/{parsed[1]}'.lower()] = project.id
-        return mapping
+        return repo_project_map()
 
     def _week_code(self, start, end):
         """This week's commits, cached — search is the tightest rate limit here."""
@@ -893,24 +968,7 @@ class GithubActivityView(APIView):
     DAY_TTL = 1800
 
     def _cached(self, key, ttl, producer, refresh=False):
-        from django.utils import timezone
-
-        row = GithubAccountCache.objects.filter(key=key).first()
-        if row and not refresh:
-            age = (timezone.now() - row.fetched_at).total_seconds()
-            if age < ttl:
-                return {**row.payload, 'cached': True, 'fetched_at': row.fetched_at}
-
-        payload = producer()
-        # Never overwrite good cached data with a failed fetch — a rate limit
-        # should degrade to slightly stale numbers, not to an empty page.
-        if not payload.get('ok') and row:
-            return {**row.payload, 'cached': True, 'stale': True, 'fetched_at': row.fetched_at}
-        if payload.get('ok'):
-            GithubAccountCache.objects.update_or_create(
-                key=key, defaults={'payload': payload, 'fetched_at': timezone.now()}
-            )
-        return {**payload, 'cached': False}
+        return github_cached(key, ttl, producer, refresh)
 
     def get(self, request):
         from datetime import date as date_cls

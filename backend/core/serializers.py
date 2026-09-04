@@ -19,6 +19,7 @@ from .models import (
 class ProjectSerializer(serializers.ModelSerializer):
     tasks_count = serializers.SerializerMethodField()
     credentials_count = serializers.SerializerMethodField()
+    commits_year = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -26,7 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'icon_url', 'lockup_horizontal_url',
             'lockup_vertical_url', 'status', 'category', 'priority', 'tech_stack',
             'repos', 'repo_url', 'live_url', 'local_path', 'notes', 'tasks_count',
-            'credentials_count', 'created_at', 'updated_at',
+            'credentials_count', 'commits_year', 'created_at', 'updated_at',
         ]
 
     def get_tasks_count(self, obj):
@@ -34,6 +35,10 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_credentials_count(self, obj):
         return obj.credentials.count()
+
+    def get_commits_year(self, obj):
+        """Commits in the last year, computed once per request by the view."""
+        return self.context.get('commits_by_project', {}).get(obj.id)
 
 
 class TaskSerializer(serializers.ModelSerializer):

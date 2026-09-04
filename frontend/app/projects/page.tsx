@@ -9,6 +9,7 @@ import {
   List,
   CheckSquare,
   KeyRound,
+  GitCommitHorizontal,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -47,11 +48,12 @@ const FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
 
 const CATEGORIES: ProjectCategory[] = ['oikn', 'freelance', 'personal', 'side']
 
-type Sort = 'priority' | 'status' | 'recent' | 'name'
+type Sort = 'priority' | 'status' | 'recent' | 'commits' | 'name'
 const SORTS: { key: Sort; label: string }[] = [
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
   { key: 'recent', label: 'Recent' },
+  { key: 'commits', label: 'Commits' },
   { key: 'name', label: 'Name' },
 ]
 
@@ -82,6 +84,11 @@ export default function ProjectsPage() {
     .sort((a, b) => {
       if (sort === 'name') return a.name.localeCompare(b.name)
       if (sort === 'recent') return b.updated_at.localeCompare(a.updated_at)
+      // Which of 64 projects is actually alive — the one thing priority and
+      // status, both set by hand, cannot tell you.
+      if (sort === 'commits') {
+        return (b.commits_year ?? -1) - (a.commits_year ?? -1) || a.name.localeCompare(b.name)
+      }
       const pa = PRIORITY_STYLES[a.priority].rank
       const pb = PRIORITY_STYLES[b.priority].rank
       const sa = STATUS_RANK[a.status]
@@ -249,6 +256,14 @@ export default function ProjectsPage() {
                     <KeyRound size={12} /> {p.credentials_count}
                   </span>
                 )}
+                {p.commits_year != null && p.commits_year > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 text-highlight"
+                    title={`${p.commits_year} commits in the last year`}
+                  >
+                    <GitCommitHorizontal size={12} /> {p.commits_year}
+                  </span>
+                )}
                 <span className="ml-auto" title={`Updated ${p.updated_at.slice(0, 10)}`}>
                   {ago(p.updated_at)}
                 </span>
@@ -279,6 +294,14 @@ export default function ProjectsPage() {
                   {p.credentials_count > 0 && (
                     <span className="inline-flex items-center gap-1">
                       <KeyRound size={11} /> {p.credentials_count}
+                    </span>
+                  )}
+                  {p.commits_year != null && p.commits_year > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 text-highlight"
+                      title={`${p.commits_year} commits in the last year`}
+                    >
+                      <GitCommitHorizontal size={11} /> {p.commits_year}
                     </span>
                   )}
                   {p.tech_stack?.length > 0 && (

@@ -27,6 +27,8 @@ export interface Project {
   notes: string
   tasks_count: number
   credentials_count: number
+  /** Commits in the last year, or null when GitHub has nothing to say. */
+  commits_year: number | null
   created_at: string
   updated_at: string
 }
