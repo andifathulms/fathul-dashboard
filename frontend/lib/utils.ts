@@ -23,12 +23,12 @@ export function toISODate(d: Date): string {
 // Chips follow DESIGN.md §2: a 10% tint, the color as ink, a 25% inset ring.
 export const CATEGORY_STYLES: Record<
   ProjectCategory,
-  { dot: string; bar: string; chip: string; label: string }
+  { dot: string; bar: string; chip: string; banner: string; label: string }
 > = {
-  oikn: { dot: 'bg-accent1', bar: 'bg-accent1', chip: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/25', label: 'OIKN' },
-  freelance: { dot: 'bg-accent2', bar: 'bg-accent2', chip: 'bg-accent2/10 text-accent2 ring-1 ring-inset ring-accent2/25', label: 'Freelance' },
-  personal: { dot: 'bg-highlight', bar: 'bg-highlight', chip: 'bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/25', label: 'Personal' },
-  side: { dot: 'bg-muted', bar: 'bg-muted', chip: 'bg-muted/10 text-muted ring-1 ring-inset ring-muted/30', label: 'Side' },
+  oikn: { dot: 'bg-accent1', bar: 'bg-accent1', chip: 'bg-accent1/10 text-accent1 ring-1 ring-inset ring-accent1/25', banner: 'bg-accent1/5', label: 'OIKN' },
+  freelance: { dot: 'bg-accent2', bar: 'bg-accent2', chip: 'bg-accent2/10 text-accent2 ring-1 ring-inset ring-accent2/25', banner: 'bg-accent2/5', label: 'Freelance' },
+  personal: { dot: 'bg-highlight', bar: 'bg-highlight', chip: 'bg-highlight/10 text-highlight ring-1 ring-inset ring-highlight/25', banner: 'bg-highlight/5', label: 'Personal' },
+  side: { dot: 'bg-muted', bar: 'bg-muted', chip: 'bg-muted/10 text-muted ring-1 ring-inset ring-muted/30', banner: 'bg-muted/10', label: 'Side' },
 }
 
 export const STATUS_STYLES: Record<string, string> = {

@@ -17,6 +17,7 @@ import useSWR from 'swr'
 
 import PageHeader from '@/components/layout/PageHeader'
 import ProjectAvatar from '@/components/projects/ProjectAvatar'
+import ProjectBanner from '@/components/projects/ProjectBanner'
 import PriorityToggle from '@/components/projects/PriorityToggle'
 import ProjectForm from '@/components/projects/ProjectForm'
 import UnlinkedRepos from '@/components/projects/UnlinkedRepos'
@@ -194,37 +195,14 @@ export default function ProjectsPage() {
 
       {/* Grid view */}
       {view === 'grid' && (
-        <div className="stagger-in grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger-in grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered?.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
               className="group card card-hover flex flex-col overflow-hidden p-4"
             >
-              {p.lockup_horizontal_url ? (
-                <div className="relative -mx-4 -mt-4 mb-3 h-24 overflow-hidden border-b border-border bg-surface2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.lockup_horizontal_url}
-                    alt={p.name}
-                    className="h-full w-full object-cover"
-                  />
-                  <ArrowUpRight
-                    size={16}
-                    className="absolute right-3 top-3 rounded bg-surface/80 p-px text-muted backdrop-blur transition-colors group-hover:text-accent1"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <ProjectAvatar project={p} size={32} />
-                    <h3 className="truncate font-display text-md font-semibold leading-tight">
-                      {p.name}
-                    </h3>
-                  </div>
-                  <ArrowUpRight size={16} className="shrink-0 text-muted transition-colors group-hover:text-accent1" />
-                </div>
-              )}
+              <ProjectBanner project={p} />
               {p.description && (
                 <p className="mt-1.5 line-clamp-2 text-base text-muted">{p.description}</p>
               )}
@@ -245,7 +223,7 @@ export default function ProjectsPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-3 flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
+              <div className="mt-auto flex items-center gap-3 border-t border-border pt-2.5 text-sm text-muted tnum">
                 {p.tasks_count > 0 && (
                   <span className="inline-flex items-center gap-1" title="Tasks">
                     <CheckSquare size={12} /> {p.tasks_count}
